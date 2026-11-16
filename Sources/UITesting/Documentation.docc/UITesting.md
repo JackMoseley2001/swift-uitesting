@@ -87,9 +87,8 @@ or text view can be typed into, with ``UITestElement/enter(_:within:filePath:lin
 ``UITestElement/clear(within:filePath:line:)``. ``UITestElement/text`` reads what a
 field holds.
 
-To finish with a single-line field, press Return with
-``UITestElement/submit(within:filePath:line:)``. Anywhere else, put the keyboard away
-with `dismissKeyboard()` on the app.
+To press Return in a single-line field, use
+``UITestElement/submit(within:filePath:line:)``.
 
 ### Check the app
 
