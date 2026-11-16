@@ -6,4 +6,9 @@ enum AccessibilityID {
     static let promoBanner = "promo-banner"
     static let loadMessageButton = "load-message-button"
     static let message = "message"
+
+    static let preferredLanguage = "preferred-language"
+    static let region = "region"
+    static let betaFeatures = "beta-features"
+    static let orientation = "orientation"
 }

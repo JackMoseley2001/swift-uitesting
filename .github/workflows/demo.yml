@@ -55,9 +55,12 @@ jobs:
           done
           exit 1
 
-      - name: Show simulator state
+      - name: Show failure details
         if: failure()
         run: |
+          # The formatted log shows only the first line of each failure message, so print
+          # everything xcodebuild logged for each test that failed.
+          awk '/^Test Case .* started\.$/ { lines = "" } { lines = lines $0 "\n" } /^Test Case .* failed \(/ { printf "%s\n", lines }' xcodebuild.log | head -n 400 || true
           xcrun simctl runtime list || true
           xcrun simctl list devices available || true
           ls -lt ~/Library/Logs/DiagnosticReports 2>/dev/null | head -n 10 || true

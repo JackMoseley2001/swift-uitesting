@@ -153,6 +153,12 @@ A trait is a reusable piece of configuration or behaviour. These are built in:
 | `.launchArguments(["-key", "value"])` | Adds several launch arguments. |
 | `.environment("NAME", "value")` | Sets a launch environment variable. |
 | `.launch(payload)` | Sends a `LaunchPayload` to the app. |
+| `.language("fr")` | Launches the app in a language. |
+| `.locale("fr_FR")` | Launches the app in a locale. |
+| `.userDefault("key", true)` | Overrides a `UserDefaults` value for the launch. Takes a `Bool`, `Int`, `Double` or `String`. |
+| `.orientation(.landscapeLeft)` | Rotates the device for the test, and puts it back afterwards. iOS only. |
+| `.enabled(if: condition)` | Skips the test unless the condition is true. |
+| `.disabled("reason")` | Skips the test. `.disabled(if:)` skips it when a condition is true. |
 
 Traits are applied in the order they are written, the suite's before the test's, so a
 test can override its suite.
