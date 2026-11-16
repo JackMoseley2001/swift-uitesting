@@ -77,10 +77,16 @@ extension UITestTrait {
 extension LaunchConfiguration {
     /// Creates the launch configuration for a UI test by applying each trait in order.
     init(applying traits: [any UITestTrait]) throws {
-        self.init()
+        self = try LaunchConfiguration().applying(traits)
+    }
+
+    /// Returns a copy of this configuration with each trait applied in order, on top of what it already holds.
+    func applying(_ traits: [any UITestTrait]) throws -> LaunchConfiguration {
+        var launch = self
         for trait in traits {
-            try trait.prepare(&self)
+            try trait.prepare(&launch)
         }
-        markAsUITesting()
+        launch.markAsUITesting()
+        return launch
     }
 }
