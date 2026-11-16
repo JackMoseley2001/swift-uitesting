@@ -23,7 +23,7 @@
 ///     .accessibilityIdentifier(LoginID.signInButton)
 ///
 /// // In a UI test
-/// app[LoginID.signInButton].tap()
+/// try app[LoginID.signInButton].tap()
 /// ```
 ///
 /// ## Kinds of element
@@ -60,7 +60,7 @@
 /// }
 ///
 /// // In a UI test
-/// app[InboxID.row(1234)].tap()
+/// try app[InboxID.row(1234)].tap()
 /// ```
 ///
 /// `InboxID.row(1234)` is `"InboxID.row(1234)"`, and `InboxID.deleteButton(row: 1234)`

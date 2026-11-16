@@ -161,6 +161,7 @@ A trait is a reusable piece of configuration or behaviour. These are built in:
 | `.orientation(.landscapeLeft)` | Rotates the device for the test, and puts it back afterwards. iOS only. |
 | `.resetAuthorization(for: .photos)` | Makes the app forget a permission before it launches, so the system asks again. |
 | `.manualLaunch` | Leaves launching the app to the test. See [Launching and relaunching](#launching-and-relaunching). |
+| `.actionTimeout(.seconds(10))` | Sets how long actions on elements wait. See [Actions that wait](#actions-that-wait). |
 | `.enabled(if: condition)` | Skips the test unless the condition is true. |
 | `.disabled("reason")` | Skips the test. `.disabled(if:)` skips it when a condition is true. |
 
@@ -360,7 +361,7 @@ Button("Sign in") { signIn() }
     .accessibilityIdentifier(LoginID.signInButton)
 
 // In a UI test
-app[LoginID.signInButton].tap()
+try app[LoginID.signInButton].tap()
 #expect(app[LoginID.title].label == "Welcome")
 ```
 
@@ -416,7 +417,7 @@ ForEach(messages) { message in
 }
 
 // In a UI test
-app[InboxID.row(1234)].tap()
+try app[InboxID.row(1234)].tap()
 ```
 
 `InboxID.row(1234)` is `"InboxID.row(1234)"`.
@@ -437,6 +438,66 @@ Things to know:
   its kind: `app.tables.cells[InboxID.row(1234)]`.
 - **UIKit and AppKit.** Set the element's identifier to the string:
   `button.accessibilityIdentifier = LoginID.signInButton.accessibilityIdentifier`.
+
+## Actions that wait
+
+XCTest's own `tap()` fails at once if the element is not there yet, so tests end up
+pairing every action with a wait. An element found by a typed identifier does the
+waiting itself:
+
+```swift
+@UITest
+func deletesAMessage(app: XCUIApplication) throws {
+    try app[InboxID.row(1234)].tap()              // waits until it exists and is enabled
+    try app[MessageID.deleteButton].tap()
+    try app[InboxID.row(1234)].waitToDisappear()
+}
+```
+
+| Action | Waits until |
+|---|---|
+| `tap()` | The element exists and is enabled, then taps it. |
+| `waitToAppear()` | The element exists. |
+| `waitToDisappear()` | The element no longer exists. |
+
+If the element is not ready in time, the failure is recorded at the line of the call
+and the test ends, so actions are written with `try`. The message says what went wrong:
+
+```
+Could not tap LoginID.signInButton: the button was still disabled after 5 seconds
+```
+
+```
+Could not tap LoginID.title: no button with this identifier appeared within 5 seconds
+An element of type staticText has this identifier. Is the identifier declared as the wrong kind?
+```
+
+Actions wait for up to 5 seconds. Change that for a suite or a test with the
+`.actionTimeout(_:)` trait, or for one call with `within:`:
+
+```swift
+@UITestSuite(traits: .actionTimeout(.seconds(2)))
+final class InboxTests: XCTestCase {
+    @UITest
+    func loadsALongThread(app: XCUIApplication) throws {
+        try app[InboxID.row(1234)].tap()
+        try app[ThreadID.spinner].waitToDisappear(within: .seconds(30))
+    }
+}
+```
+
+Things to know:
+
+- **Reading does not wait.** `app[id].label`, `exists` and the other properties of
+  `XCUIElement` are read straight away. To wait for a value, use
+  `#expect(…, within:)`.
+- **The rest of `XCUIElement`.** `app[id]` is a `UITestElement`, not an `XCUIElement`.
+  Use its `element` property for anything it does not have, such as
+  `app[id].element.swipeUp()`.
+- **Waits block.** An action blocks while it waits, in an `async` test too, in the same
+  way as `waitForExistence(timeout:)`.
+- **Elements found by a string.** `app.buttons["save"]` is a plain `XCUIElement`, with
+  XCTest's own actions.
 
 ## Expectations
 
