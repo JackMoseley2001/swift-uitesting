@@ -12,14 +12,14 @@ UITesting re-exports.
 
 ### Run a test
 
-Mark the test case with ``UITestSuite(_:)`` and call
+Mark the test case with ``UITestSuite(traits:)`` and call
 ``UITestRunner/run(_:traits:body:)`` from a test method.
 
 ```swift
 import UITesting
 import XCTest
 
-@UITestSuite(.launch(AuthState(isLoggedIn: false)))
+@UITestSuite(traits: .launch(AuthState(isLoggedIn: false)))
 final class LoginTests: XCTestCase {
     @MainActor
     func testShowsSignInButton() async throws {
@@ -62,7 +62,7 @@ extension UITestTrait where Self == DismissSystemAlerts {
 
 ### Running tests
 
-- ``UITestSuite(_:)``
+- ``UITestSuite(traits:)``
 - ``UITestRunner``
 - ``UITestSuite``
 - ``UITestContext``

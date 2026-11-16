@@ -3,14 +3,14 @@ import XCTest
 
 @testable import UITesting
 
-@UITestSuite(.launchArgument("--suite"), .environment("SCOPE", "suite"))
+@UITestSuite(traits: .launchArgument("--suite"), .environment("SCOPE", "suite"))
 final class SuiteWithTraits: XCTestCase {}
 
 @UITestSuite
 final class SuiteWithoutTraits: XCTestCase {}
 
 @MainActor
-@UITestSuite(.launchArgument("--main-actor"))
+@UITestSuite(traits: .launchArgument("--main-actor"))
 final class MainActorSuite: XCTestCase {}
 
 @Suite

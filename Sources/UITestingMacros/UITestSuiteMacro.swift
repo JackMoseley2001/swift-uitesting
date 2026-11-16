@@ -34,7 +34,7 @@ public struct UITestSuiteMacro: ExtensionMacro {
         // The compiler passes the conformance only when the class does not already have it.
         let conformance = protocols.isEmpty ? "" : ": \(RuntimeName.suiteProtocol)"
         let access = classDecl.memberAccessModifier.map { "\($0) " } ?? ""
-        let traits = node.argumentExpressions.map(\.trimmedDescription).joined(separator: ", ")
+        let traits = node.traitExpressions.map(\.trimmedDescription).joined(separator: ", ")
 
         // `nonisolated` lets the property satisfy the protocol when the class is isolated to a global actor.
         let decl: DeclSyntax = """
@@ -49,10 +49,16 @@ public struct UITestSuiteMacro: ExtensionMacro {
 }
 
 extension AttributeSyntax {
-    /// The expressions passed as arguments to the attribute, in order.
-    fileprivate var argumentExpressions: [ExprSyntax] {
+    /// The expressions passed for the variadic `traits:` parameter, in order.
+    ///
+    /// The first carries the label and the rest follow it without one.
+    fileprivate var traitExpressions: [ExprSyntax] {
         guard let arguments = arguments?.as(LabeledExprListSyntax.self) else { return [] }
-        return arguments.map(\.expression)
+        return arguments
+            .drop { $0.label?.text != MacroParameter.traits }
+            .enumerated()
+            .prefix { index, argument in index == 0 || argument.label == nil }
+            .map(\.element.expression)
     }
 }
 

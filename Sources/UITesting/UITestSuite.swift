@@ -2,7 +2,7 @@ import XCTest
 
 /// A test case whose tests are run by ``UITestRunner``.
 ///
-/// The ``UITestSuite(_:)`` macro adds this conformance for you. To conform by hand,
+/// The ``UITestSuite(traits:)`` macro adds this conformance for you. To conform by hand,
 /// declare the suite's traits yourself:
 ///
 /// ```swift

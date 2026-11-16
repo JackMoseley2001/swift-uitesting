@@ -4,7 +4,7 @@
 /// the ``UITestSuite`` protocol and uses the macro's arguments as the suite's traits.
 ///
 /// ```swift
-/// @UITestSuite(.launch(AuthState(isLoggedIn: false)), .launchArgument("--skip-onboarding"))
+/// @UITestSuite(traits: .launch(AuthState(isLoggedIn: false)), .launchArgument("--skip-onboarding"))
 /// final class LoginTests: XCTestCase {
 ///     @MainActor
 ///     func testShowsSignInButton() async throws {
@@ -16,9 +16,9 @@
 /// ```
 ///
 /// The suite's traits are applied before the traits of an individual test, so a test can
-/// override them. With no arguments, the suite has no traits.
+/// override them. Written as `@UITestSuite` with no arguments, the suite has no traits.
 ///
 /// - Parameter traits: The traits that apply to every test in the suite.
 @attached(extension, conformances: UITestSuite, names: named(suiteTraits))
-public macro UITestSuite(_ traits: any UITestTrait...) =
+public macro UITestSuite(traits: any UITestTrait...) =
     #externalMacro(module: "UITestingMacros", type: "UITestSuiteMacro")

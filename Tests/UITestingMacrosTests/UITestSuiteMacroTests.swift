@@ -10,7 +10,7 @@ struct UITestSuiteMacroTests {
     func addsConformanceAndTraits() {
         assertMacro {
             """
-            @UITestSuite(.loggedOut, .launchArgument("--skip-onboarding"))
+            @UITestSuite(traits: .loggedOut, .launchArgument("--skip-onboarding"))
             final class LoginTests: XCTestCase {
                 func testShowsSignInButton() {}
             }
@@ -79,7 +79,7 @@ struct UITestSuiteMacroTests {
         assertMacro {
             """
             @UITestSuite(
-                .launch(AuthState(isLoggedIn: true, name: "Ada")),
+                traits: .launch(AuthState(isLoggedIn: true, name: "Ada")),
                 .environment("API_BASE_URL", "http://localhost:8080")
             )
             final class LoginTests: XCTestCase {
@@ -103,7 +103,7 @@ struct UITestSuiteMacroTests {
     func publicClassGetsAPublicProperty() {
         assertMacro {
             """
-            @UITestSuite(.loggedOut)
+            @UITestSuite(traits: .loggedOut)
             public final class LoginTests: XCTestCase {
             }
             """
@@ -125,7 +125,7 @@ struct UITestSuiteMacroTests {
     func openClassGetsAPublicProperty() {
         assertMacro {
             """
-            @UITestSuite(.loggedOut)
+            @UITestSuite(traits: .loggedOut)
             open class LoginTests: XCTestCase {
             }
             """
@@ -147,7 +147,7 @@ struct UITestSuiteMacroTests {
     func classThatAlreadyConformsOnlyGetsTheTraits() {
         assertMacro([MacroName.uiTestSuite: MacroSpec(type: UITestSuiteMacro.self)]) {
             """
-            @UITestSuite(.loggedOut)
+            @UITestSuite(traits: .loggedOut)
             final class LoginTests: XCTestCase, UITestSuite {
             }
             """
@@ -210,13 +210,13 @@ struct UITestSuiteMacroTests {
     func classWithoutASuperclassOffersToInheritFromXCTestCase() {
         assertMacro {
             """
-            @UITestSuite(.loggedOut)
+            @UITestSuite(traits: .loggedOut)
             final class LoginTests {
             }
             """
         } diagnostics: {
             """
-            @UITestSuite(.loggedOut)
+            @UITestSuite(traits: .loggedOut)
             final class LoginTests {
                         ┬─────────
                         ╰─ 🛑 '@UITestSuite' can only be applied to a class that inherits from 'XCTestCase'
@@ -225,7 +225,7 @@ struct UITestSuiteMacroTests {
             """
         } fixes: {
             """
-            @UITestSuite(.loggedOut)
+            @UITestSuite(traits: .loggedOut)
             final class LoginTests: XCTestCase {
             }
             """

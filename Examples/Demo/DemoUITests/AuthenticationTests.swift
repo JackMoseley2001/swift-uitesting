@@ -1,7 +1,7 @@
 import UITesting
 import XCTest
 
-@UITestSuite(.loggedIn(as: "Ada"))
+@UITestSuite(traits: .loggedIn(as: "Ada"))
 final class AuthenticationTests: XCTestCase {
     @MainActor
     func testShowsTheNamePassedByTheTest() async throws {

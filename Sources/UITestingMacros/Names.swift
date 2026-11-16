@@ -6,6 +6,11 @@ enum MacroName {
     static let uiTestSuite = "UITestSuite"
 }
 
+/// The labels of the macros' parameters.
+enum MacroParameter {
+    static let traits = "traits"
+}
+
 /// The names of the declarations that macro expansions refer to.
 enum RuntimeName {
     /// The module that declares the macros and the runtime they expand into.
