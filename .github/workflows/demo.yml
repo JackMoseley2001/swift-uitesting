@@ -15,6 +15,7 @@ jobs:
   ui-test:
     name: Demo UI tests (Xcode 27)
     runs-on: xcode-27
+    timeout-minutes: 15
     steps:
       - name: Check out
         uses: actions/checkout@v7
@@ -40,9 +41,6 @@ jobs:
             -destination "id=$SIMULATOR_UDID" \
             -skipMacroValidation \
             | xcbeautify --renderer github-actions
-
-      - name: Wait for simulator
-        run: xcrun simctl bootstatus "$SIMULATOR_UDID"
 
       - name: Run UI tests
         run: |
