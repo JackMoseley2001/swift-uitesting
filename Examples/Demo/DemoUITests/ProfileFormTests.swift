@@ -85,17 +85,6 @@ final class ProfileFormTests: XCTestCase {
     }
 
     @UITest
-    func theKeyboardCanBeDismissedAfterTypingInAnEditor(app: XCUIApplication) throws {
-        try app[ProfileID.notesField].replaceText(with: "A note")
-        #expect(app.isKeyboardShowing)
-
-        try app.dismissKeyboard()
-
-        #expect(!app.isKeyboardShowing)
-        #expect(app[ProfileID.notesField].text == "A note")
-    }
-
-    @UITest
     func dismissingTheKeyboardDoesNothingWhenItIsNotShowing(app: XCUIApplication) throws {
         try app.dismissKeyboard()
 

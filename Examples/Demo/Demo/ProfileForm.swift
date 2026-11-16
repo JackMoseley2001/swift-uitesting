@@ -8,6 +8,12 @@ struct ProfileForm: View {
     @State private var password = ""
     @State private var notes = "First line\nSecond line"
 
+    private let keyboardDismissal: KeyboardDismissal
+
+    init(traits: LaunchTraits) {
+        keyboardDismissal = traits[KeyboardDismissal.self] ?? .immediately
+    }
+
     var body: some View {
         ScrollView {
             VStack(spacing: 8) {
@@ -32,8 +38,6 @@ struct ProfileForm: View {
             }
             .padding()
         }
-        // Lets a drag put the keyboard away, which is how UI tests dismiss it after
-        // typing into the multi-line editor.
-        .scrollDismissesKeyboard(.immediately)
+        .scrollDismissesKeyboard(keyboardDismissal.mode)
     }
 }
