@@ -135,6 +135,15 @@ func loadsTheMessage(app: XCUIApplication) throws {
 }
 ```
 
+### Name the steps of a test
+
+Wrap part of a test in `step(_:_:)` to give it a name. A failure
+inside it starts with that name, and Xcode's test report lists what the step did
+inside it. Steps are optional and can be nested.
+
+When a test fails, a screenshot and the app's element hierarchy are attached to it.
+``UITestTrait/failureAttachments(_:)`` turns that off.
+
 ### Configure the launch
 
 The built-in traits add launch arguments, environment variables and typed payloads.
@@ -228,6 +237,10 @@ extension UITestTrait where Self == DismissSystemAlerts {
 - ``UITestElement``
 - ``ScrollDirection``
 - ``ActionTimeoutTrait``
+
+### Steps and failures
+
+- ``FailureAttachmentsTrait``
 
 ### Expectations
 
