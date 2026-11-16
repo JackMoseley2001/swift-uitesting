@@ -1,9 +1,10 @@
-import XCTest
+import Testing
 
 @testable import UITesting
 
 @MainActor
-final class UITestRunnerTests: XCTestCase {
+@Suite
+final class UITestRunnerTests {
     private var events: [String] = []
     private var additionalErrors: [TestError] = []
 
@@ -39,64 +40,70 @@ final class UITestRunnerTests: XCTestCase {
         }
     }
 
-    func testStepsAreSetUpInOrderAndTornDownInReverse() async throws {
+    @Test
+    func stepsAreSetUpInOrderAndTornDownInReverse() async throws {
         try await run(steps: ["a", "b"]) {
             events.append("body")
         }
 
-        XCTAssertEqual(events, ["setUp a", "setUp b", "body", "tearDown b", "tearDown a"])
-        XCTAssertEqual(additionalErrors, [])
+        #expect(events == ["setUp a", "setUp b", "body", "tearDown b", "tearDown a"])
+        #expect(additionalErrors.isEmpty)
     }
 
-    func testBodyRunsWithoutSteps() async throws {
+    @Test
+    func bodyRunsWithoutSteps() async throws {
         try await run(steps: []) {
             events.append("body")
         }
 
-        XCTAssertEqual(events, ["body"])
+        #expect(events == ["body"])
     }
 
-    func testStepsAreTornDownWhenTheBodyThrows() async {
+    @Test
+    func stepsAreTornDownWhenTheBodyThrows() async {
         let error = await thrownError {
             try await run(steps: ["a", "b"]) {
                 throw TestError(message: "body")
             }
         }
 
-        XCTAssertEqual(error, TestError(message: "body"))
-        XCTAssertEqual(events, ["setUp a", "setUp b", "tearDown b", "tearDown a"])
-        XCTAssertEqual(additionalErrors, [])
+        #expect(error == TestError(message: "body"))
+        #expect(events == ["setUp a", "setUp b", "tearDown b", "tearDown a"])
+        #expect(additionalErrors.isEmpty)
     }
 
-    func testSetUpErrorStopsLaterStepsAndTheBody() async {
+    @Test
+    func setUpErrorStopsLaterStepsAndTheBody() async {
         let error = await thrownError {
             try await run(steps: ["a", "b", "c"], failingSetUp: "b") {
                 events.append("body")
             }
         }
 
-        XCTAssertEqual(error, TestError(message: "setUp b"))
-        XCTAssertEqual(events, ["setUp a", "setUp b", "tearDown b", "tearDown a"])
+        #expect(error == TestError(message: "setUp b"))
+        #expect(events == ["setUp a", "setUp b", "tearDown b", "tearDown a"])
     }
 
-    func testTearDownErrorIsThrownWhenNothingElseFailed() async {
+    @Test
+    func tearDownErrorIsThrownWhenNothingElseFailed() async {
         let error = await thrownError {
             try await run(steps: ["a", "b"], failingTearDown: "b")
         }
 
-        XCTAssertEqual(error, TestError(message: "tearDown b"))
-        XCTAssertEqual(events, ["setUp a", "setUp b", "tearDown b", "tearDown a"])
-        XCTAssertEqual(additionalErrors, [])
+        #expect(error == TestError(message: "tearDown b"))
+        #expect(events == ["setUp a", "setUp b", "tearDown b", "tearDown a"])
+        #expect(additionalErrors.isEmpty)
     }
 
-    func testTearDownErrorIsRecordedWhenTheBodyAlsoThrows() async {
+    @Test
+    func tearDownErrorIsRecordedWhenTheBodyAlsoThrows() async {
         let error = await thrownError {
             try await run(steps: ["a"], failingTearDown: "a") {
                 throw TestError(message: "body")
             }
         }
 
-        XCTAssertEqual(error, TestError(message: "body"))
-        XCTAssertEqual(additionalErrors, [TestError(message: "tearDown a")])
+        #expect(error == TestError(message: "body"))
+        #expect(additionalErrors == [TestError(message: "tearDown a")])
     }
 }

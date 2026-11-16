@@ -1,26 +1,31 @@
-import XCTest
+import Testing
 
 @testable import UITesting
 
-final class UITestTraitTests: XCTestCase {
-    func testLaunchIsMarkedAsUITesting() throws {
+@Suite
+struct UITestTraitTests {
+    @Test
+    func launchIsMarkedAsUITesting() throws {
         let launch = try LaunchConfiguration(applying: [])
 
-        XCTAssertTrue(LaunchTraits(environment: launch.environment).isUITesting)
-        XCTAssertEqual(launch.arguments, [])
+        #expect(LaunchTraits(environment: launch.environment).isUITesting)
+        #expect(launch.arguments.isEmpty)
     }
 
-    func testTraitWithoutAnImplementationChangesNothing() throws {
+    @Test
+    func traitWithoutAnImplementationChangesNothing() throws {
         let launch = try LaunchConfiguration(applying: [EmptyTrait()])
+        let launchWithoutTraits = try LaunchConfiguration(applying: [])
 
-        XCTAssertEqual(launch, try LaunchConfiguration(applying: []))
+        #expect(launch == launchWithoutTraits)
     }
 
-    func testPrepareErrorIsThrown() {
+    @Test
+    func prepareErrorIsThrown() {
         let trait = ThrowingTrait(error: TestError(message: "prepare"))
 
-        XCTAssertThrowsError(try LaunchConfiguration(applying: [EmptyTrait(), trait])) { error in
-            XCTAssertEqual(error as? TestError, TestError(message: "prepare"))
+        #expect(throws: TestError(message: "prepare")) {
+            try LaunchConfiguration(applying: [EmptyTrait(), trait])
         }
     }
 }
