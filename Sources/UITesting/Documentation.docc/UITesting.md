@@ -89,6 +89,24 @@ func loadsTheMessage(app: XCUIApplication) throws {
 The built-in traits add launch arguments, environment variables and typed payloads.
 The app reads them back with `LaunchTraits` from UITestingCore.
 
+Others set things the system reads for you: `.language(_:)` and `.locale(_:)` choose
+the language and region the app launches in, and `.userDefault(_:_:)` overrides a
+value in the app's `UserDefaults` for that launch.
+
+On iOS, `.orientation(_:)` rotates the device and `.appearance(_:)` switches between
+light and dark mode. Both put the device back when the test finishes.
+
+### Skip a test
+
+`.disabled(_:)` skips a test, and `.enabled(if:_:)` and `.disabled(if:_:)` skip it
+depending on a condition. The condition is evaluated when the test starts, before the
+app is launched.
+
+```swift
+@UITest(traits: .disabled("Waiting for the new checkout screen"))
+func completesAPurchase(app: XCUIApplication) { /* ... */ }
+```
+
 ### Limit how long a test takes
 
 Give a test, or a whole suite, a time limit. A test whose body runs past the limit
@@ -149,6 +167,10 @@ extension UITestTrait where Self == DismissSystemAlerts {
 - ``LaunchArgumentsTrait``
 - ``LaunchEnvironmentTrait``
 - ``LaunchPayloadTrait``
+
+### Skipping tests
+
+- ``ConditionTrait``
 
 ### Limiting how long a test takes
 
