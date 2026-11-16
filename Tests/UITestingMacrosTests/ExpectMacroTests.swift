@@ -355,6 +355,27 @@ struct ExpectMacroTests {
     }
 
     @Test
+    func awaitBeforeTheMacroIsKept() {
+        assertMacro {
+            """
+            await #expect(app.staticTexts["message"].exists, within: .seconds(5))
+            """
+        } expansion: {
+            """
+            await UITesting.__expect(
+                {
+                    app.staticTexts["message"].exists
+                },
+                expression: #"app.staticTexts["message"].exists"#,
+                timeout: .seconds(5),
+                filePath: "Test.swift",
+                line: 1
+            )
+            """
+        }
+    }
+
+    @Test
     func secondNameExpandsInTheSameWay() {
         assertMacro {
             """
