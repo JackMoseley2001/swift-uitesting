@@ -3,146 +3,102 @@ import XCTest
 
 @testable import UITesting
 
-final class UITestRunnerTests: XCTestCase, UITestSuite {
-    static var suiteTraits: [any UITestTrait] {
-        [.launchArgument("--suite"), .environment("SCOPE", "suite")]
-    }
+@MainActor
+final class UITestRunnerTests: XCTestCase {
+    private var events: [String] = []
+    private var additionalErrors: [TestError] = []
 
-    private let log = EventLog()
-
-    @MainActor
     private func run(
-        traits: [any UITestTrait],
-        body: @MainActor (UITestContext) async throws -> Void = { _ in }
+        steps: [String],
+        failingSetUp: String? = nil,
+        failingTearDown: String? = nil,
+        body: @MainActor () async throws -> Void = {}
     ) async throws {
-        try await UITestRunner.run(
-            self,
-            traits: traits,
-            makeApplication: { XCUIApplication(bundleIdentifier: "com.example.UITestingTests") },
-            launchApplication: { [log] app in
-                log.record("launch \(app.launchArguments) \(app.launchEnvironment["SCOPE"] ?? "nil")")
+        try await UITestRunner.withSteps(
+            steps,
+            setUp: { step in
+                events.append("setUp \(step)")
+                if step == failingSetUp { throw TestError(message: "setUp \(step)") }
+            },
+            tearDown: { step in
+                events.append("tearDown \(step)")
+                if step == failingTearDown { throw TestError(message: "tearDown \(step)") }
+            },
+            recordAdditionalError: { error in
+                additionalErrors.append(error as? TestError ?? TestError(message: "\(error)"))
             },
             body: body
         )
     }
 
-    private func trait(_ name: String) -> RecordingTrait {
-        RecordingTrait(name: name, log: log)
-    }
-
-    @MainActor
-    func testStepsRunInOrder() async throws {
-        try await run(traits: [trait("a"), trait("b")]) { [log] _ in
-            log.record("body")
-        }
-
-        XCTAssertEqual(log.events, [
-            "prepare a",
-            "prepare b",
-            #"launch ["--suite"] suite"#,
-            "setUp a",
-            "setUp b",
-            "body",
-            "tearDown b",
-            "tearDown a",
-        ])
-    }
-
-    @MainActor
-    func testSuiteTraitsAreAppliedBeforeTheTestsTraits() async throws {
-        try await run(traits: [.launchArgument("--test"), .environment("SCOPE", "test")]) { context in
-            XCTAssertEqual(context.launch.arguments, ["--suite", "--test"])
-            XCTAssertEqual(context.launch.environment["SCOPE"], "test")
-        }
-
-        XCTAssertEqual(log.events, [#"launch ["--suite", "--test"] test"#])
-    }
-
-    @MainActor
-    func testContextDescribesTheRunningTest() async throws {
-        try await run(traits: []) { context in
-            XCTAssertTrue(context.testCase === self)
-            XCTAssertEqual(context.app.launchArguments, context.launch.arguments)
-            XCTAssertEqual(context.app.launchEnvironment, context.launch.environment)
-            XCTAssertTrue(LaunchTraits(environment: context.launch.environment).isUITesting)
-        }
-    }
-
-    @MainActor
-    func testTearDownRunsWhenTheBodyThrows() async {
+    private func thrownError(_ operation: () async throws -> Void) async -> TestError? {
         do {
-            try await run(traits: [trait("a")]) { _ in
+            try await operation()
+            return nil
+        } catch {
+            return error as? TestError ?? TestError(message: "\(error)")
+        }
+    }
+
+    func testStepsAreSetUpInOrderAndTornDownInReverse() async throws {
+        try await run(steps: ["a", "b"]) {
+            events.append("body")
+        }
+
+        XCTAssertEqual(events, ["setUp a", "setUp b", "body", "tearDown b", "tearDown a"])
+        XCTAssertEqual(additionalErrors, [])
+    }
+
+    func testBodyRunsWithoutSteps() async throws {
+        try await run(steps: []) {
+            events.append("body")
+        }
+
+        XCTAssertEqual(events, ["body"])
+    }
+
+    func testStepsAreTornDownWhenTheBodyThrows() async {
+        let error = await thrownError {
+            try await run(steps: ["a", "b"]) {
                 throw TestError(message: "body")
             }
-            XCTFail("Expected an error to be thrown")
-        } catch {
-            XCTAssertEqual(error as? TestError, TestError(message: "body"))
         }
 
-        XCTAssertEqual(log.events.suffix(2), ["setUp a", "tearDown a"])
+        XCTAssertEqual(error, TestError(message: "body"))
+        XCTAssertEqual(events, ["setUp a", "setUp b", "tearDown b", "tearDown a"])
+        XCTAssertEqual(additionalErrors, [])
     }
 
-    @MainActor
-    func testSetUpErrorStopsLaterTraitsAndTheBody() async {
-        var failing = trait("b")
-        failing.setUpError = TestError(message: "setUp")
-
-        do {
-            try await run(traits: [trait("a"), failing, trait("c")]) { [log] _ in
-                log.record("body")
+    func testSetUpErrorStopsLaterStepsAndTheBody() async {
+        let error = await thrownError {
+            try await run(steps: ["a", "b", "c"], failingSetUp: "b") {
+                events.append("body")
             }
-            XCTFail("Expected an error to be thrown")
-        } catch {
-            XCTAssertEqual(error as? TestError, TestError(message: "setUp"))
         }
 
-        XCTAssertEqual(log.events.suffix(4), ["setUp a", "setUp b", "tearDown b", "tearDown a"])
+        XCTAssertEqual(error, TestError(message: "setUp b"))
+        XCTAssertEqual(events, ["setUp a", "setUp b", "tearDown b", "tearDown a"])
     }
 
-    @MainActor
-    func testTearDownErrorIsThrownWhenTheBodySucceeds() async {
-        var failing = trait("a")
-        failing.tearDownError = TestError(message: "tearDown")
-
-        do {
-            try await run(traits: [failing, trait("b")])
-            XCTFail("Expected an error to be thrown")
-        } catch {
-            XCTAssertEqual(error as? TestError, TestError(message: "tearDown"))
+    func testTearDownErrorIsThrownWhenNothingElseFailed() async {
+        let error = await thrownError {
+            try await run(steps: ["a", "b"], failingTearDown: "b")
         }
 
-        XCTAssertEqual(log.events.suffix(2), ["tearDown b", "tearDown a"])
+        XCTAssertEqual(error, TestError(message: "tearDown b"))
+        XCTAssertEqual(events, ["setUp a", "setUp b", "tearDown b", "tearDown a"])
+        XCTAssertEqual(additionalErrors, [])
     }
 
-    @MainActor
     func testTearDownErrorIsRecordedWhenTheBodyAlsoThrows() async {
-        var failing = trait("a")
-        failing.tearDownError = TestError(message: "tearDown")
-
-        XCTExpectFailure("The tear down error is recorded as a failure of the test.")
-        do {
-            try await run(traits: [failing]) { _ in
+        let error = await thrownError {
+            try await run(steps: ["a"], failingTearDown: "a") {
                 throw TestError(message: "body")
             }
-            XCTFail("Expected an error to be thrown")
-        } catch {
-            XCTAssertEqual(error as? TestError, TestError(message: "body"))
-        }
-    }
-
-    @MainActor
-    func testPrepareErrorPreventsTheLaunch() async {
-        var failing = trait("a")
-        failing.prepareError = TestError(message: "prepare")
-
-        do {
-            try await run(traits: [failing])
-            XCTFail("Expected an error to be thrown")
-        } catch {
-            XCTAssertEqual(error as? TestError, TestError(message: "prepare"))
         }
 
-        XCTAssertEqual(log.events, ["prepare a"])
+        XCTAssertEqual(error, TestError(message: "body"))
+        XCTAssertEqual(additionalErrors, [TestError(message: "tearDown a")])
     }
 }
 #endif

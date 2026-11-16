@@ -38,48 +38,56 @@ public enum UITestRunner {
         traits: [any UITestTrait] = [],
         body: @MainActor (UITestContext) async throws -> Void
     ) async throws {
-        try await run(
-            suite,
-            traits: traits,
-            makeApplication: { XCUIApplication() },
-            launchApplication: { $0.launch() },
-            body: body
-        )
-    }
-
-    @MainActor
-    static func run<Suite: UITestSuite>(
-        _ suite: Suite,
-        traits: [any UITestTrait],
-        makeApplication: @MainActor () -> XCUIApplication,
-        launchApplication: @MainActor (XCUIApplication) -> Void,
-        body: @MainActor (UITestContext) async throws -> Void
-    ) async throws {
         let traits = Suite.suiteTraits + traits
         let launch = try LaunchConfiguration(applying: traits)
 
-        let app = makeApplication()
+        let app = XCUIApplication()
         app.launchArguments = launch.arguments
         app.launchEnvironment = launch.environment
-        launchApplication(app)
+        app.launch()
 
         let context = UITestContext(app: app, testCase: suite, launch: launch)
-        var startedTraits: [any UITestTrait] = []
+        try await withSteps(
+            traits,
+            setUp: { try await $0.setUp(context) },
+            tearDown: { try await $0.tearDown(context) },
+            recordAdditionalError: { error in
+                suite.record(
+                    XCTIssue(type: .thrownError, compactDescription: "\(error)", associatedError: error)
+                )
+            },
+            body: { try await body(context) }
+        )
+    }
+
+    /// Sets up each step in order, runs the body, then tears the steps down in reverse order.
+    ///
+    /// A step is torn down if its set-up was started, even if the set-up or the body threw.
+    /// The first error is thrown, and any later error is passed to `recordAdditionalError`.
+    @MainActor
+    static func withSteps<Step>(
+        _ steps: [Step],
+        setUp: @MainActor (Step) async throws -> Void,
+        tearDown: @MainActor (Step) async throws -> Void,
+        recordAdditionalError: @MainActor (any Error) -> Void,
+        body: @MainActor () async throws -> Void
+    ) async throws {
+        var startedSteps: [Step] = []
         var errors: [any Error] = []
 
         do {
-            for trait in traits {
-                startedTraits.append(trait)
-                try await trait.setUp(context)
+            for step in steps {
+                startedSteps.append(step)
+                try await setUp(step)
             }
-            try await body(context)
+            try await body()
         } catch {
             errors.append(error)
         }
 
-        for trait in startedTraits.reversed() {
+        for step in startedSteps.reversed() {
             do {
-                try await trait.tearDown(context)
+                try await tearDown(step)
             } catch {
                 errors.append(error)
             }
@@ -87,9 +95,7 @@ public enum UITestRunner {
 
         guard let firstError = errors.first else { return }
         for error in errors.dropFirst() {
-            suite.record(
-                XCTIssue(type: .thrownError, compactDescription: "\(error)", associatedError: error)
-            )
+            recordAdditionalError(error)
         }
         throw firstError
     }

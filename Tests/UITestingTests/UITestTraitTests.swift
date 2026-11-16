@@ -18,9 +18,9 @@ final class UITestTraitTests: XCTestCase {
     }
 
     func testPrepareErrorIsThrown() {
-        let trait = RecordingTrait(name: "a", log: EventLog(), prepareError: TestError(message: "prepare"))
+        let trait = ThrowingTrait(error: TestError(message: "prepare"))
 
-        XCTAssertThrowsError(try LaunchConfiguration(applying: [trait])) { error in
+        XCTAssertThrowsError(try LaunchConfiguration(applying: [EmptyTrait(), trait])) { error in
             XCTAssertEqual(error as? TestError, TestError(message: "prepare"))
         }
     }
