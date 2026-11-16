@@ -5,11 +5,11 @@ import XCTest
 final class PromoBannerTests: XCTestCase {
     @UITest
     func bannerIsHiddenByDefault(app: XCUIApplication) {
-        XCTAssertFalse(app.staticTexts[AccessibilityID.promoBanner].exists)
+        #expect(!app.staticTexts[AccessibilityID.promoBanner].exists)
     }
 
     @UITest(traits: .promoBanner)
     func bannerIsShownWhenTheTestAsksForIt(app: XCUIApplication) {
-        XCTAssertTrue(app.staticTexts[AccessibilityID.promoBanner].exists)
+        #expect(app.staticTexts[AccessibilityID.promoBanner].exists)
     }
 }

@@ -24,19 +24,19 @@ struct UITestSuiteMacroTests {
     func traitsComeFromTheMacroArguments() throws {
         let launch = try LaunchConfiguration(applying: traits(of: SuiteWithTraits.self))
 
-        #expect(launch.arguments == ["--suite"])
-        #expect(launch.environment["SCOPE"] == "suite")
+        #Testing::expect(launch.arguments == ["--suite"])
+        #Testing::expect(launch.environment["SCOPE"] == "suite")
     }
 
     @Test
     func suiteWithoutArgumentsHasNoTraits() {
-        #expect(traits(of: SuiteWithoutTraits.self).isEmpty)
+        #Testing::expect(traits(of: SuiteWithoutTraits.self).isEmpty)
     }
 
     @Test
     func traitsOfAMainActorSuiteCanBeReadFromAnyContext() throws {
         let launch = try LaunchConfiguration(applying: traits(of: MainActorSuite.self))
 
-        #expect(launch.arguments == ["--main-actor"])
+        #Testing::expect(launch.arguments == ["--main-actor"])
     }
 }

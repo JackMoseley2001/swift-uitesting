@@ -8,8 +8,8 @@ struct UITestTraitTests {
     func launchIsMarkedAsUITesting() throws {
         let launch = try LaunchConfiguration(applying: [])
 
-        #expect(LaunchTraits(environment: launch.environment).isUITesting)
-        #expect(launch.arguments.isEmpty)
+        #Testing::expect(LaunchTraits(environment: launch.environment).isUITesting)
+        #Testing::expect(launch.arguments.isEmpty)
     }
 
     @Test
@@ -17,14 +17,14 @@ struct UITestTraitTests {
         let launch = try LaunchConfiguration(applying: [EmptyTrait()])
         let launchWithoutTraits = try LaunchConfiguration(applying: [])
 
-        #expect(launch == launchWithoutTraits)
+        #Testing::expect(launch == launchWithoutTraits)
     }
 
     @Test
     func prepareErrorIsThrown() {
         let trait = ThrowingTrait(error: TestError(message: "prepare"))
 
-        #expect(throws: TestError(message: "prepare")) {
+        #Testing::expect(throws: TestError(message: "prepare")) {
             try LaunchConfiguration(applying: [EmptyTrait(), trait])
         }
     }
