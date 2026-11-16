@@ -15,22 +15,26 @@ public struct ExpectMacro: ExpressionMacro {
         of node: some FreestandingMacroExpansionSyntax,
         in context: some MacroExpansionContext
     ) throws -> ExprSyntax {
+        let name = node.macroName.text
+
         // The compiler rejects a call without a condition before it reaches the macro, so an empty
         // argument list means this version of swift-syntax could not parse the call. That happens
         // when the macro is written with a module name, which older versions do not understand.
         guard let condition = node.arguments.first?.expression else {
-            throw DiagnosticsError(diagnostics: [Diagnostic(node: node, message: ExpectDiagnostic.missingCondition)])
+            throw DiagnosticsError(
+                diagnostics: [Diagnostic(node: node, message: ExpectDiagnostic.missingCondition(name: name))]
+            )
         }
 
         // The condition runs in a closure that is not `async`.
         if let awaitKeyword = condition.tokens(viewMode: .sourceAccurate).first(where: { $0.tokenKind == .keyword(.await) }) {
             throw DiagnosticsError(
-                diagnostics: [Diagnostic(node: awaitKeyword, message: ExpectDiagnostic.awaitInCondition)]
+                diagnostics: [Diagnostic(node: awaitKeyword, message: ExpectDiagnostic.awaitInCondition(name: name))]
             )
         }
 
         if condition.is(BooleanLiteralExprSyntax.self) {
-            context.diagnose(Diagnostic(node: condition, message: ExpectDiagnostic.constantCondition))
+            context.diagnose(Diagnostic(node: condition, message: ExpectDiagnostic.constantCondition(name: name)))
         }
 
         var arguments: [String]
@@ -100,33 +104,40 @@ public struct ExpectMacro: ExpressionMacro {
     }
 }
 
-enum ExpectDiagnostic: String, DiagnosticMessage {
-    case missingCondition
-    case awaitInCondition
-    case constantCondition
+struct ExpectDiagnostic: DiagnosticMessage {
+    let id: String
+    let message: String
+    let severity: DiagnosticSeverity
 
-    var message: String {
-        switch self {
-        case .missingCondition:
-            """
-            '#\(MacroName.expect)' could not read its condition; \
-            writing a module name before the macro requires swift-syntax 603 or later
-            """
-        case .awaitInCondition:
-            "'#\(MacroName.expect)' cannot await inside its condition; await the value first and pass the result"
-        case .constantCondition:
-            "'#\(MacroName.expect)' is given a constant, so it will always have the same result"
-        }
+    /// - Parameter name: The name the macro was written with, which is `expect` or its second name.
+    static func missingCondition(name: String) -> ExpectDiagnostic {
+        ExpectDiagnostic(
+            id: "missingCondition",
+            message: """
+                '#\(name)' could not read its condition; \
+                writing a module name before the macro requires swift-syntax 603 or later
+                """,
+            severity: .error
+        )
+    }
+
+    static func awaitInCondition(name: String) -> ExpectDiagnostic {
+        ExpectDiagnostic(
+            id: "awaitInCondition",
+            message: "'#\(name)' cannot await inside its condition; await the value first and pass the result",
+            severity: .error
+        )
+    }
+
+    static func constantCondition(name: String) -> ExpectDiagnostic {
+        ExpectDiagnostic(
+            id: "constantCondition",
+            message: "'#\(name)' is given a constant, so it will always have the same result",
+            severity: .warning
+        )
     }
 
     var diagnosticID: MessageID {
-        MessageID(domain: "UITestingMacros", id: "\(MacroName.expect).\(rawValue)")
-    }
-
-    var severity: DiagnosticSeverity {
-        switch self {
-        case .missingCondition, .awaitInCondition: .error
-        case .constantCondition: .warning
-        }
+        MessageID(domain: "UITestingMacros", id: "\(MacroName.expect).\(id)")
     }
 }

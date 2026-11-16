@@ -3,7 +3,7 @@ import Testing
 
 @testable import UITestingMacros
 
-@Suite(.macros([MacroName.expect: ExpectMacro.self]))
+@Suite(.macros([MacroName.expect: ExpectMacro.self, MacroName.uiTestingExpect: ExpectMacro.self]))
 struct ExpectMacroTests {
     @Test
     func condition() {
@@ -350,6 +350,48 @@ struct ExpectMacroTests {
                 filePath: "Test.swift",
                 line: 1
             )
+            """
+        }
+    }
+
+    @Test
+    func secondNameExpandsInTheSameWay() {
+        assertMacro {
+            """
+            #UITestingExpect(app.staticTexts["auth-status"].label == "Signed in", within: .seconds(5))
+            """
+        } expansion: {
+            """
+            UITesting.__expectEqual(
+                {
+                    app.staticTexts["auth-status"].label
+                },
+                {
+                    "Signed in"
+                },
+                {
+                    $0 == $1
+                },
+                expression: #"app.staticTexts["auth-status"].label == "Signed in""#,
+                timeout: .seconds(5),
+                filePath: "Test.swift",
+                line: 1
+            )
+            """
+        }
+    }
+
+    @Test
+    func diagnosticsUseTheNameTheMacroWasWrittenWith() {
+        assertMacro {
+            """
+            #UITestingExpect(await model.isLoaded)
+            """
+        } diagnostics: {
+            """
+            #UITestingExpect(await model.isLoaded)
+                             ┬────
+                             ╰─ 🛑 '#UITestingExpect' cannot await inside its condition; await the value first and pass the result
             """
         }
     }

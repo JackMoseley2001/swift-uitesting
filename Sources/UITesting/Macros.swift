@@ -110,10 +110,13 @@ public macro UITest(traits: any UITestTrait...) =
 ///
 /// ## Using Swift Testing in the same file
 ///
-/// Swift Testing has a macro with the same name. In a file that imports both `Testing`
-/// and `UITesting`, write the name of the module before the macro: `#UITesting::expect(…)`
-/// or `#Testing::expect(…)`. This requires Swift 6.3 or later, and swift-syntax 603 or
-/// later if your package graph pins it.
+/// Swift Testing has a macro with the same name, so `#expect` is ambiguous in a file
+/// that imports both `Testing` and `UITesting`. In such a file, use
+/// ``UITestingExpect(_:_:within:)``, which is this macro under a name of its own.
+///
+/// From Swift 6.3 you can also write the name of the module before either macro:
+/// `#UITesting::expect(…)` or `#Testing::expect(…)`. For this macro that form also
+/// needs swift-syntax 603 or later, if your package graph pins it.
 ///
 /// - Parameters:
 ///   - condition: The condition to check. It cannot contain `await`.
@@ -122,6 +125,28 @@ public macro UITest(traits: any UITestTrait...) =
 ///     condition is checked once.
 @freestanding(expression)
 public macro expect(
+    _ condition: Bool,
+    _ comment: @autoclosure () -> String? = nil,
+    within timeout: Duration? = nil
+) = #externalMacro(module: "UITestingMacros", type: "ExpectMacro")
+
+/// Checks that a condition is true, under a name that does not clash with Swift Testing.
+///
+/// This is ``expect(_:_:within:)`` with a different name. Use it in a file that imports
+/// both `Testing` and `UITesting`, where `#expect` is ambiguous. It works with every
+/// version of Swift this package supports.
+///
+/// ```swift
+/// #UITestingExpect(app.staticTexts["message"].exists, within: .seconds(5))
+/// ```
+///
+/// - Parameters:
+///   - condition: The condition to check. It cannot contain `await`.
+///   - comment: A comment to include in the failure message.
+///   - timeout: How long to wait for the condition to become true. By default the
+///     condition is checked once.
+@freestanding(expression)
+public macro UITestingExpect(
     _ condition: Bool,
     _ comment: @autoclosure () -> String? = nil,
     within timeout: Duration? = nil

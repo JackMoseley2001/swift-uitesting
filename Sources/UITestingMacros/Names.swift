@@ -6,6 +6,9 @@ enum MacroName {
     static let uiTestSuite = "UITestSuite"
     static let uiTest = "UITest"
     static let expect = "expect"
+
+    /// A second name for `expect`, for files that also import Swift Testing.
+    static let uiTestingExpect = "UITestingExpect"
 }
 
 /// The labels of the macros' parameters.

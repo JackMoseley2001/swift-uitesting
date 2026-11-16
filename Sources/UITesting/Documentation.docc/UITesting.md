@@ -95,6 +95,7 @@ extension UITestTrait where Self == DismissSystemAlerts {
 ### Expectations
 
 - ``expect(_:_:within:)``
+- ``UITestingExpect(_:_:within:)``
 
 ### Traits
 
