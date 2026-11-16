@@ -114,6 +114,23 @@ func signsOutAcrossARestart(context: UITestContext) throws {
 With `.manualLaunch`, the app is configured but not launched, so the test can do
 something first and then call `launch()` on the app.
 
+### Do something before the launch
+
+`.resetAuthorization(for:)` makes the app forget whether it was given access to a
+resource such as photos or the camera, so the system asks again during the test.
+
+```swift
+@UITest(traits: .resetAuthorization(for: .photos))
+func asksForAccessToPhotos(app: XCUIApplication) {
+    app.buttons["choose-photo-button"].tap()
+    // ...
+}
+```
+
+It does its work in the `willLaunch(_:)` step of ``UITestTrait``, which runs once the
+app has its launch arguments and environment and before it is launched. Your own
+traits can use the same step.
+
 ### Skip a test
 
 `.disabled(_:)` skips a test, and `.enabled(if:_:)` and `.disabled(if:_:)` skip it
@@ -127,8 +144,8 @@ func completesAPurchase(app: XCUIApplication) { /* ... */ }
 
 ### Write your own traits
 
-A ``UITestTrait`` can configure the launch, run code after the app has launched, and
-clean up after the test. A trait does not have to send anything to the app.
+A ``UITestTrait`` can configure the launch, run code just before and after the app
+launches, and clean up after the test. A trait does not have to send anything to the app.
 
 ```swift
 struct DismissSystemAlerts: UITestTrait {
@@ -171,6 +188,7 @@ extension UITestTrait where Self == DismissSystemAlerts {
 - ``LaunchEnvironmentTrait``
 - ``LaunchPayloadTrait``
 - ``ManualLaunchTrait``
+- ``ResetAuthorizationTrait``
 
 ### Skipping tests
 

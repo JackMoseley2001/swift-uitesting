@@ -108,4 +108,18 @@ struct BuiltInTraitTests {
 
         #Testing::expect(launch == (try LaunchConfiguration(applying: [.launchArgument("--flag")])))
     }
+
+    @Test
+    func resetAuthorizationKeepsItsResourcesInOrder() {
+        let trait: ResetAuthorizationTrait = .resetAuthorization(for: .photos, .camera)
+
+        #Testing::expect(trait.resources == [.photos, .camera])
+    }
+
+    @Test
+    func resetAuthorizationDoesNotChangeTheLaunchConfiguration() throws {
+        let launch = try LaunchConfiguration(applying: [.resetAuthorization(for: .photos)])
+
+        #Testing::expect(launch == (try LaunchConfiguration(applying: [])))
+    }
 }
