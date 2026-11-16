@@ -6,6 +6,9 @@ struct ExpectationFailure: Equatable, Sendable {
     var filePath: String
     var line: UInt
 
+    /// Says what the markers in a difference mean. It is shown above every difference.
+    static let differenceLegend = "(- expected, + actual)"
+
     /// Describes a failed expectation.
     ///
     /// - Parameters:
@@ -37,6 +40,7 @@ struct ExpectationFailure: Equatable, Sendable {
             lines.append(comment)
         }
         if let difference {
+            lines.append(differenceLegend)
             lines.append(difference)
         }
         return lines.joined(separator: "\n")

@@ -260,10 +260,11 @@ app.buttons["load-message-button"].tap()
 
 When a comparison with `==` fails, the message shows how the two values differ. Lines
 starting with `-` are what was expected, the value on the right of `==`. Lines starting
-with `+` are what was found, the value on the left.
+with `+` are what was found, the value on the left. The message says so itself.
 
 ```
 Expectation failed: app.staticTexts["auth-status"].label == "Signed in"
+(- expected, + actual)
 - "Signed in"
 + "Signed out"
 ```

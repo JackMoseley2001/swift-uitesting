@@ -121,6 +121,7 @@ public macro UITest(traits: any UITestTrait...) =
 ///
 /// ```
 /// Expectation failed: app.staticTexts["auth-status"].label == "Signed in"
+/// (- expected, + actual)
 /// - "Signed in"
 /// + "Signed out"
 /// ```
