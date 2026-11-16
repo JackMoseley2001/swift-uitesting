@@ -22,12 +22,34 @@ jobs:
       - name: Show toolchain
         run: xcodebuild -version
 
+      - name: Boot simulator
+        run: |
+          udid=$(xcodebuild -showdestinations -project Examples/Demo/Demo.xcodeproj -scheme Demo \
+            | sed -n 's/.*platform:iOS Simulator.*id:\([0-9A-Fa-f-]*\),.*name:iPhone 17 }.*/\1/p' \
+            | head -n 1)
+          test -n "$udid"
+          xcrun simctl boot "$udid"
+          echo "SIMULATOR_UDID=$udid" >> "$GITHUB_ENV"
+
+      - name: Build
+        run: |
+          set -o pipefail
+          xcodebuild build-for-testing \
+            -project Examples/Demo/Demo.xcodeproj \
+            -scheme Demo \
+            -destination "id=$SIMULATOR_UDID" \
+            -skipMacroValidation \
+            | xcbeautify --renderer github-actions
+
+      - name: Wait for simulator
+        run: xcrun simctl bootstatus "$SIMULATOR_UDID"
+
       - name: Run UI tests
         run: |
           set -o pipefail
-          xcodebuild test \
+          xcodebuild test-without-building \
             -project Examples/Demo/Demo.xcodeproj \
             -scheme Demo \
-            -destination "platform=iOS Simulator,name=iPhone 17" \
+            -destination "id=$SIMULATOR_UDID" \
             -skipMacroValidation \
             | xcbeautify --renderer github-actions
