@@ -188,6 +188,92 @@ struct UITestSuiteMacroTests {
     }
 
     @Test
+    func isolatesUITestFunctionsToTheMainActor() {
+        assertMacro {
+            """
+            @UITestSuite
+            final class LoginTests: XCTestCase {
+                @UITest
+                func showsSignInButton(app: XCUIApplication) {
+                }
+
+                @UITest(traits: .loggedOut)
+                func showsHome() async throws {
+                }
+
+                func helper() {
+                }
+
+                var isReady = false
+            }
+            """
+        } expansion: {
+            """
+            final class LoginTests: XCTestCase {
+                @UITest
+                @MainActor
+                func showsSignInButton(app: XCUIApplication) {
+                }
+
+                @UITest(traits: .loggedOut)
+                @MainActor
+                func showsHome() async throws {
+                }
+
+                func helper() {
+                }
+
+                var isReady = false
+            }
+
+            extension LoginTests: UITesting.UITestSuite {
+                nonisolated static var suiteTraits: [any UITesting.UITestTrait] {
+                    []
+                }
+            }
+            """
+        }
+    }
+
+    @Test
+    func leavesFunctionsThatAlreadyStateTheirIsolation() {
+        assertMacro {
+            """
+            @UITestSuite
+            final class LoginTests: XCTestCase {
+                @MainActor
+                @UITest
+                func showsSignInButton() {
+                }
+
+                @UITest
+                nonisolated func showsHome() {
+                }
+            }
+            """
+        } expansion: {
+            """
+            final class LoginTests: XCTestCase {
+                @MainActor
+                @UITest
+                func showsSignInButton() {
+                }
+
+                @UITest
+                nonisolated func showsHome() {
+                }
+            }
+
+            extension LoginTests: UITesting.UITestSuite {
+                nonisolated static var suiteTraits: [any UITesting.UITestTrait] {
+                    []
+                }
+            }
+            """
+        }
+    }
+
+    @Test
     func structIsRejected() {
         assertMacro {
             """

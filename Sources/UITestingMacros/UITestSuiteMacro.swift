@@ -6,8 +6,8 @@ import SwiftSyntaxMacros
 /// Implements `@UITestSuite`.
 ///
 /// Adds an extension that conforms the class to `UITestSuite` and returns the macro's
-/// arguments as the suite's traits.
-public struct UITestSuiteMacro: ExtensionMacro {
+/// arguments as the suite's traits, and isolates each `@UITest` function to the main actor.
+public struct UITestSuiteMacro: ExtensionMacro, MemberAttributeMacro {
     public static func expansion(
         of node: AttributeSyntax,
         attachedTo declaration: some DeclGroupSyntax,
@@ -32,33 +32,38 @@ public struct UITestSuiteMacro: ExtensionMacro {
         }
 
         // The compiler passes the conformance only when the class does not already have it.
-        let conformance = protocols.isEmpty ? "" : ": \(RuntimeName.suiteProtocol)"
+        let conformance = protocols.isEmpty ? "" : ": \(RuntimeName.qualifiedSuiteProtocol)"
         let access = classDecl.memberAccessModifier.map { "\($0) " } ?? ""
         let traits = node.traitExpressions.map(\.trimmedDescription).joined(separator: ", ")
 
         // `nonisolated` lets the property satisfy the protocol when the class is isolated to a global actor.
         let decl: DeclSyntax = """
             extension \(type.trimmed)\(raw: conformance) {
-                \(raw: access)nonisolated static var \(raw: RuntimeName.suiteTraits): [any \(raw: RuntimeName.traitProtocol)] {
+                \(raw: access)nonisolated static var \(raw: RuntimeName.suiteTraits): [any \(raw: RuntimeName.qualifiedTraitProtocol)] {
                     [\(raw: traits)]
                 }
             }
             """
         return [decl.cast(ExtensionDeclSyntax.self)]
     }
-}
 
-extension AttributeSyntax {
-    /// The expressions passed for the variadic `traits:` parameter, in order.
-    ///
-    /// The first carries the label and the rest follow it without one.
-    fileprivate var traitExpressions: [ExprSyntax] {
-        guard let arguments = arguments?.as(LabeledExprListSyntax.self) else { return [] }
-        return arguments
-            .drop { $0.label?.text != MacroParameter.traits }
-            .enumerated()
-            .prefix { index, argument in index == 0 || argument.label == nil }
-            .map(\.element.expression)
+    /// Adds `@MainActor` to each `@UITest` function, because the UI testing APIs a test
+    /// calls are isolated to the main actor.
+    public static func expansion(
+        of node: AttributeSyntax,
+        attachedTo declaration: some DeclGroupSyntax,
+        providingAttributesFor member: some DeclSyntaxProtocol,
+        in context: some MacroExpansionContext
+    ) throws -> [AttributeSyntax] {
+        guard
+            let function = member.as(FunctionDeclSyntax.self),
+            function.attributes.contains(attributeNamed: MacroName.uiTest),
+            !function.attributes.contains(attributeNamed: RuntimeName.mainActor),
+            !function.modifiers.contains(.nonisolated)
+        else {
+            return []
+        }
+        return ["@\(raw: RuntimeName.mainActor)"]
     }
 }
 
