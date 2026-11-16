@@ -10,6 +10,12 @@ struct ContentView: View {
     }
 
     var body: some View {
+        ScrollView {
+            content
+        }
+    }
+
+    private var content: some View {
         VStack(spacing: 24) {
             PromoBanner()
 
@@ -43,6 +49,10 @@ struct ContentView: View {
                 Text(message)
                     .accessibilityIdentifier(AccessibilityID.message)
             }
+
+            Divider()
+
+            LaunchSettingsView()
         }
         .padding()
     }
