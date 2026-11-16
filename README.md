@@ -479,6 +479,27 @@ func deletesAMessage(app: XCUIApplication) throws {
 
 Fields have more. See [Entering text](#entering-text).
 
+### Switches, sliders and pickers
+
+Identifiers declared as these kinds have actions of their own. Each waits for the
+element to exist and be enabled, like `tap()`.
+
+```swift
+try app[SettingsID.notificationsSwitch].setOn(true)
+try app[PlayerID.volumeSlider].adjust(to: 0.8)
+try app[SettingsID.sizePicker].select("Large")
+try app[ProfileID.countryPicker].select("France")
+```
+
+| Kind | Members | Why not XCTest's own |
+|---|---|---|
+| `Switch`, `Toggle` | `isOn`, `setOn(_:)`, `toggle()` | `XCUIElement` reports the state as the string `"1"` or `"0"`. `setOn(_:)` does nothing if the switch is already in that state, and checks that it changed. |
+| `Slider` | `position`, `adjust(to:tolerance:)` | `adjust(toNormalizedSliderPosition:)` can land several percent away. This drags the thumb, reads where it landed and drags again, until it is within the tolerance, which is 0.02 unless you pass one. |
+| `SegmentedControl` | `selection`, `select(_:)` | Finds the segment by its label, and the failure lists the segments if there is none. |
+| `Picker`, `PickerWheel` (iOS) | `selection()`, `select(_:)` | Finds the wheel inside a picker that has the identifier. Pass `inWheel:` for a picker with several wheels. |
+
+Positions of a slider run from 0 at its start to 1 at its end.
+
 ### Scrolling to an element
 
 A list only creates the rows near the ones on screen. A row further down does not
