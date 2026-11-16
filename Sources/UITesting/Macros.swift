@@ -115,12 +115,14 @@ public macro UITest(traits: any UITestTrait...) =
 /// ## Failure messages
 ///
 /// A failure shows the source code of the condition and, if you pass one, your comment.
-/// When the condition compares two values with `==`, it also shows how they differ:
+/// When the condition compares two values with `==`, it also shows how they differ.
+/// Lines starting with `-` are what was expected, the value on the right of `==`, and
+/// lines starting with `+` are what was found, the value on the left:
 ///
 /// ```
 /// Expectation failed: app.staticTexts["auth-status"].label == "Signed in"
-/// - "Signed out"
-/// + "Signed in"
+/// - "Signed in"
+/// + "Signed out"
 /// ```
 ///
 /// ## Using Swift Testing in the same file

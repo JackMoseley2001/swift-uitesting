@@ -83,8 +83,8 @@ struct ExpectMacroTests {
             failures.map(\.message) == [
                 """
                 Expectation failed: label == "Signed in"
-                - "Signed out"
-                + "Signed in"
+                - "Signed in"
+                + "Signed out"
                 """
             ]
         )
@@ -105,8 +105,8 @@ struct ExpectMacroTests {
                 after promotion
                   ExpectMacroTests.Account(
                     name: "Ada",
-                -   isAdmin: false
-                +   isAdmin: true
+                -   isAdmin: true
+                +   isAdmin: false
                   )
                 """
             ]
@@ -186,8 +186,8 @@ struct ExpectMacroTests {
                 """
                 Expectation failed after 0.25 seconds: label == "Loaded"
                 after loading
-                - "Loading"
-                + "Loaded"
+                - "Loaded"
+                + "Loading"
                 """
             ]
         )
