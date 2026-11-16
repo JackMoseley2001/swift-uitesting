@@ -49,25 +49,41 @@ public enum UITestRunner {
         app.configure(with: launch)
 
         let context = UITestContext(app: app, testCase: suite, launch: launch)
+        let capture = FailureAttachmentsTrait.isEnabled(in: traits) ? FailureCapture(app: app, testCase: suite) : nil
         try await endingOnFailedRequirement {
             try await ActionTimeout.$current.withValue(ActionTimeout.timeout(from: traits)) {
-                try await withSteps(
-                    traits,
-                    willLaunch: { try await $0.willLaunch(context) },
-                    launch: {
-                        if launchesAutomatically(with: traits) {
-                            app.launch()
+                try await RunningTest.$failureCapture.withValue(capture) {
+                    try await withSteps(
+                        traits,
+                        willLaunch: { try await $0.willLaunch(context) },
+                        launch: {
+                            if launchesAutomatically(with: traits) {
+                                app.launch()
+                            }
+                        },
+                        setUp: { try await $0.setUp(context) },
+                        tearDown: { try await $0.tearDown(context) },
+                        recordAdditionalError: { error in
+                            suite.record(
+                                XCTIssue(type: .thrownError, compactDescription: "\(error)", associatedError: error)
+                            )
+                        },
+                        body: {
+                            // A failure that this library reports is captured as it happens.
+                            // This covers the others, such as XCTest's own assertions and
+                            // thrown errors, before the traits tear anything down.
+                            do {
+                                try await body(context)
+                            } catch {
+                                capture?.captureOnce()
+                                throw error
+                            }
+                            if (suite.testRun?.totalFailureCount ?? 0) > 0 {
+                                capture?.captureOnce()
+                            }
                         }
-                    },
-                    setUp: { try await $0.setUp(context) },
-                    tearDown: { try await $0.tearDown(context) },
-                    recordAdditionalError: { error in
-                        suite.record(
-                            XCTIssue(type: .thrownError, compactDescription: "\(error)", associatedError: error)
-                        )
-                    },
-                    body: { try await body(context) }
-                )
+                    )
+                }
             }
         }
     }
