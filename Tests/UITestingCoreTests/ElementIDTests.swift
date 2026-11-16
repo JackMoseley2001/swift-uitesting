@@ -110,6 +110,17 @@ struct ElementIDTests {
     }
 
     @Test
+    func kindsThatTakeTextAreMarked() {
+        let kinds: [any ElementKind.Type] = [
+            ElementKinds.TextField.self, ElementKinds.SecureTextField.self,
+            ElementKinds.TextView.self, ElementKinds.SearchField.self,
+            ElementKinds.Button.self, ElementKinds.StaticText.self,
+        ]
+
+        #expect(kinds.map { $0 is any TextEntryKind.Type } == [true, true, true, true, false, false])
+    }
+
+    @Test
     func customKindCanBeUsed() {
         #expect(elementType(of: CustomKindID.rating) == .slider)
     }

@@ -368,3 +368,18 @@ extension ElementIDs {
     /// The type of an identifier for a key on a keyboard.
     public typealias Key = ElementID<ElementKinds.Key>
 }
+
+/// A kind of element that text can be typed into.
+///
+/// In a UI test, elements of these kinds have actions for entering, replacing and
+/// clearing text.
+public protocol TextEntryKind: ElementKind {}
+
+/// A kind of element that holds one line of text, where the Return key submits the
+/// text and does not start a new line.
+public protocol SingleLineTextEntryKind: TextEntryKind {}
+
+extension ElementKinds.TextField: SingleLineTextEntryKind {}
+extension ElementKinds.SecureTextField: SingleLineTextEntryKind {}
+extension ElementKinds.SearchField: SingleLineTextEntryKind {}
+extension ElementKinds.TextView: TextEntryKind {}
