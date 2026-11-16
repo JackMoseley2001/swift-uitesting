@@ -17,8 +17,9 @@ final class AuthenticationTests: XCTestCase {
     }
 
     @UITest
-    func signingOutUpdatesTheStatus(app: XCUIApplication) {
-        app[AccessibilityID.signOutButton].tap()
+    func signingOutUpdatesTheStatus(app: XCUIApplication) throws {
+        try app[AccessibilityID.signOutButton].tap()
+        try app[AccessibilityID.signOutButton].waitToDisappear()
 
         #expect(app[AccessibilityID.authStatus].label == "Signed out")
         #expect(!app[AccessibilityID.userName].exists)

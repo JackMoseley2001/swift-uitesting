@@ -46,7 +46,8 @@ struct ExpectationFailure: Equatable, Sendable {
         return lines.joined(separator: "\n")
     }
 
-    private static func describe(_ duration: Duration) -> String {
+    /// Describes a duration in seconds, such as "5 seconds".
+    static func describe(_ duration: Duration) -> String {
         let seconds = duration.timeInterval
         return "\(String(format: "%g", seconds)) \(seconds == 1 ? "second" : "seconds")"
     }

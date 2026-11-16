@@ -47,16 +47,29 @@ says what kind of element it is for, so the test does not have to.
 
 ```swift
 @UITest
-func deletesAMessage(app: XCUIApplication) {
-    app[InboxID.deleteButton(row: 1234)].tap()
-
-    #expect(!app[InboxID.row(1234)].exists)
+func deletesAMessage(app: XCUIApplication) throws {
+    try app[InboxID.deleteButton(row: 1234)].tap()
+    try app[InboxID.row(1234)].waitToDisappear()
 }
 ```
 
 `app[id]` looks for the kind of element the identifier declares, and `element[id]`
 looks only inside another element. To choose the query yourself, pass the identifier
 to it: `app.cells[InboxID.row(1234)]`.
+
+### Act on elements
+
+Looking an identifier up gives a ``UITestElement``. Its actions wait for the element to
+be ready, where XCTest's own fail at once if the element is not there yet:
+``UITestElement/tap(within:filePath:line:)`` waits until the element exists and is
+enabled, and ``UITestElement/waitToAppear(within:filePath:line:)`` and
+``UITestElement/waitToDisappear(within:filePath:line:)`` wait for it to come and go.
+
+If the element is not ready in time, the failure is recorded at the line of the call
+with a message that says why, and the test ends. Actions wait for up to 5 seconds, or
+for the time set with `.actionTimeout(_:)` on the suite or the test.
+
+The element's properties, such as `label` and `exists`, are read without waiting.
 
 ### Check the app
 
@@ -190,6 +203,11 @@ extension UITestTrait where Self == DismissSystemAlerts {
 - ``UITestRunner``
 - ``UITestSuite``
 - ``UITestContext``
+
+### Finding and acting on elements
+
+- ``UITestElement``
+- ``ActionTimeoutTrait``
 
 ### Expectations
 

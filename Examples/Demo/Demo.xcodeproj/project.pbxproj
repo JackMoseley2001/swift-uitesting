@@ -126,8 +126,8 @@
 				DE000000000000000000001A /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				DE000000000000000000000E /* DemoUITests */,
 				DE000000000000000000000D /* Shared */,
+				DE000000000000000000000E /* DemoUITests */,
 			);
 			name = DemoUITests;
 			packageProductDependencies = (
@@ -334,15 +334,6 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		DE000000000000000000001B /* Build configuration list for PBXProject "Demo" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				DE000000000000000000001D /* Debug */,
-				DE000000000000000000001E /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		DE0000000000000000000013 /* Build configuration list for PBXNativeTarget "Demo" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -361,12 +352,21 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		DE000000000000000000001B /* Build configuration list for PBXProject "Demo" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DE000000000000000000001D /* Debug */,
+				DE000000000000000000001E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
 		DE000000000000000000001C /* XCLocalSwiftPackageReference "../.." */ = {
 			isa = XCLocalSwiftPackageReference;
-			relativePath = "../..";
+			relativePath = ../..;
 		};
 /* End XCLocalSwiftPackageReference section */
 

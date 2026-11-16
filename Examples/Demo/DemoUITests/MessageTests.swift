@@ -8,9 +8,9 @@ final class MessageTests: XCTestCase {
         let message = app[AccessibilityID.message]
         #expect(!message.exists)
 
-        app[AccessibilityID.loadMessageButton].tap()
+        try app[AccessibilityID.loadMessageButton].tap()
 
-        try #require(message.exists, within: .seconds(5))
+        try message.waitToAppear()
         #expect(message.label == "Hello from the demo app")
     }
 
@@ -18,7 +18,7 @@ final class MessageTests: XCTestCase {
     func loadingShowsTheMessageInAnAsyncTest(app: XCUIApplication) async throws {
         let message = app[AccessibilityID.message]
 
-        app[AccessibilityID.loadMessageButton].tap()
+        try app[AccessibilityID.loadMessageButton].tap()
 
         try await #require(message.exists, within: .seconds(5))
         #expect(message.label == "Hello from the demo app")
