@@ -43,6 +43,32 @@ if let auth = traits[AuthState.self] {
 }
 ```
 
+### Read the launch in SwiftUI views
+
+In SwiftUI, the same traits are available from the environment as `launchTraits`.
+The value defaults to ``LaunchTraits/current``, and previews and unit tests can
+override it.
+
+```swift
+struct PromoBanner: View {
+    @Environment(\.launchTraits) private var launchTraits
+
+    var body: some View {
+        if launchTraits.hasArgument("--show-promo-banner") {
+            Text("Free delivery this week")
+        }
+    }
+}
+
+#Preview {
+    PromoBanner()
+        .environment(\.launchTraits, LaunchTraits(arguments: ["--show-promo-banner"]))
+}
+```
+
+Environment values are not available in a view's initialiser, so read
+``LaunchTraits/current`` directly when setting up a view's initial state.
+
 ### Share payload types between the app and its tests
 
 A payload type must be compiled into both the app and the UI test target. Put it in a

@@ -4,19 +4,14 @@ import UITestingCore
 struct ContentView: View {
     @State private var auth: AuthState
     @State private var message: String?
-    private let showsPromoBanner: Bool
 
     init(traits: LaunchTraits) {
         _auth = State(initialValue: traits[AuthState.self] ?? AuthState(isLoggedIn: false))
-        showsPromoBanner = traits.hasArgument(LaunchArgument.showPromoBanner)
     }
 
     var body: some View {
         VStack(spacing: 24) {
-            if showsPromoBanner {
-                Text("Free delivery this week")
-                    .accessibilityIdentifier(AccessibilityID.promoBanner)
-            }
+            PromoBanner()
 
             Text(auth.isLoggedIn ? "Signed in" : "Signed out")
                 .font(.title)
