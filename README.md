@@ -293,7 +293,9 @@ func loadsTheMessage(app: XCUIApplication) async throws {
 
     await #expect(app.staticTexts["message"].exists, within: .seconds(5))
     try await #require(app.staticTexts["message"].label == "Hello", within: .seconds(5))
-    let text = try await #require(app.staticTexts["message"].value as? String, within: .seconds(5))
+
+    let detail = try await #require(app.staticTexts["detail"].value as? String, within: .seconds(5))
+    #expect(detail.hasPrefix("Loaded"))
 }
 ```
 
