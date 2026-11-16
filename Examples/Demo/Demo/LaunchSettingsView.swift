@@ -7,20 +7,23 @@ struct LaunchSettingsView: View {
     @Environment(\.verticalSizeClass) private var verticalSizeClass
 
     var body: some View {
-        VStack(spacing: 8) {
-            row("Language", Locale.preferredLanguages.first ?? "", AccessibilityID.preferredLanguage)
-            row("Region", Locale.current.region?.identifier ?? "", AccessibilityID.region)
-            row(
-                "Beta features",
-                UserDefaults.standard.bool(forKey: DefaultsKey.showsBetaFeatures) ? "on" : "off",
-                AccessibilityID.betaFeatures
-            )
-            row("Orientation", verticalSizeClass == .compact ? "landscape" : "portrait", AccessibilityID.orientation)
+        ScrollView {
+            VStack(spacing: 8) {
+                row("Language", Locale.preferredLanguages.first ?? "", LaunchSettingsID.preferredLanguage)
+                row("Region", Locale.current.region?.identifier ?? "", LaunchSettingsID.region)
+                row(
+                    "Beta features",
+                    UserDefaults.standard.bool(forKey: DefaultsKey.showsBetaFeatures) ? "on" : "off",
+                    LaunchSettingsID.betaFeatures
+                )
+                row("Orientation", verticalSizeClass == .compact ? "landscape" : "portrait", LaunchSettingsID.orientation)
+            }
+            .font(.footnote)
+            .padding()
         }
-        .font(.footnote)
     }
 
-    private func row(_ title: String, _ value: String, _ identifier: AccessibilityID.StaticText) -> some View {
+    private func row(_ title: String, _ value: String, _ identifier: LaunchSettingsID.StaticText) -> some View {
         HStack {
             Text(title)
             Spacer()

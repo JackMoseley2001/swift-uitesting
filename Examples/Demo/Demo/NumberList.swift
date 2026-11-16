@@ -13,14 +13,11 @@ struct NumberList: View {
             Text(selection.map { "Selected \($0)" } ?? "No number selected")
                 .accessibilityIdentifier(NumberID.selection)
 
-            LazyVStack(spacing: 8) {
-                ForEach(1...Self.count, id: \.self) { number in
-                    Button("Number \(number)") {
-                        selection = number
-                    }
-                    .frame(height: 36)
-                    .accessibilityIdentifier(NumberID.row(number))
+            List(1...Self.count, id: \.self) { number in
+                Button("Number \(number)") {
+                    selection = number
                 }
+                .accessibilityIdentifier(NumberID.row(number))
             }
         }
     }
