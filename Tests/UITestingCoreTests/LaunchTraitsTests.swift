@@ -5,6 +5,14 @@ import UITestingCore
 @Suite
 struct LaunchTraitsTests {
     @Test
+    func animationsAreNotDisabledUnlessTheTestAsks() {
+        #expect(!LaunchTraits().animationsDisabled)
+        #expect(!LaunchTraits(environment: ["UITESTING_ACTIVE": "1"]).animationsDisabled)
+        #expect(!LaunchTraits(environment: ["UITESTING_ANIMATIONS_DISABLED": "0"]).animationsDisabled)
+        #expect(LaunchTraits(environment: ["UITESTING_ANIMATIONS_DISABLED": "1"]).animationsDisabled)
+    }
+
+    @Test
     func isUITestingIsFalseWithoutTheMarker() {
         #expect(!LaunchTraits().isUITesting)
         #expect(!LaunchTraits(environment: ["UITESTING_ACTIVE": "0"]).isUITesting)

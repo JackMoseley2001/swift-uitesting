@@ -65,6 +65,14 @@ public struct LaunchTraits: Sendable {
     /// Returns whether the app was launched with the given argument.
     ///
     /// - Parameter argument: The argument to look for, such as `"--skip-onboarding"`.
+    /// Whether the UI test that launched the app asked it to run without animations.
+    ///
+    /// The app has to act on this. In SwiftUI, add `uiTestAnimationsDisabled()` to the
+    /// root view. Otherwise call ``applyAnimationSetting()`` when the app starts.
+    public var animationsDisabled: Bool {
+        environment[LaunchEnvironmentKey.animationsDisabled] == "1"
+    }
+
     public func hasArgument(_ argument: String) -> Bool {
         arguments.contains(argument)
     }
