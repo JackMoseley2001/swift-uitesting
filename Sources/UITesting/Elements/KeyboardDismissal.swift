@@ -12,10 +12,15 @@ extension XCUIApplication {
 
     /// Puts the software keyboard away, if it is showing.
     ///
-    /// There is no gesture that dismisses the keyboard in every app. This makes a
-    /// short drag on the content above the keyboard, which dismisses it in a scroll
-    /// view that allows that, such as one with SwiftUI's
-    /// `scrollDismissesKeyboard(_:)`. The drag can scroll the content a little.
+    /// There is no gesture that dismisses the keyboard in every app. This drags from
+    /// the content above the keyboard down over the keyboard, which dismisses it in a
+    /// scroll view that is set up for that: one with SwiftUI's
+    /// `scrollDismissesKeyboard(_:)` set to `.immediately` or `.interactively`, or
+    /// UIKit's `keyboardDismissMode` set to `.onDrag` or `.interactive`. The drag can
+    /// scroll the content.
+    ///
+    /// It does not work where the scroll view never dismisses the keyboard, which
+    /// includes a SwiftUI `ScrollView` that does not set a mode.
     ///
     /// It does not look for a button to tap, such as "Done". A button's label changes
     /// with the language, and a button with the same label may do something else,
@@ -49,15 +54,20 @@ extension XCUIApplication {
         }
     }
 
-    /// Drags a short way down the content above the keyboard.
+    /// Drags slowly from the content above the keyboard to the bottom of the screen.
     ///
-    /// A swipe on the whole app starts too close to the keyboard to count as a drag
-    /// of the content, so this starts well above it.
+    /// A scroll view that dismisses the keyboard immediately does so as the drag
+    /// starts. One that dismisses it interactively needs the finger to carry on down
+    /// over the keyboard and stay there for a moment. The drag starts well above the
+    /// keyboard, because one that starts next to it is not taken as a drag of the content.
     private func dragAboveKeyboard() {
         let keyboardTop = keyboards.firstMatch.frame.minY / max(frame.height, 1)
-        let start = keyboardTop * 0.3
-        coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: start))
-            .press(forDuration: 0.05, thenDragTo: coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: start + 0.06)))
+        coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: keyboardTop * 0.3)).press(
+            forDuration: 0.05,
+            thenDragTo: coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.97)),
+            withVelocity: .slow,
+            thenHoldForDuration: 0.5
+        )
     }
 }
 
@@ -83,8 +93,8 @@ enum KeyboardDismissal {
         if polling.wait(timeout: timeout, until: { !isShowing() }) == .met {
             return nil
         }
-        return "Could not dismiss the keyboard: it was still showing after a drag on the content above it\n"
-            + "The drag only works in a scroll view that dismisses the keyboard when dragged. "
-            + "Otherwise, tap the app's own button for dismissing the keyboard."
+        return "Could not dismiss the keyboard: it was still showing after a drag from the content down over it\n"
+            + "The drag only works in a scroll view that dismisses the keyboard when dragged, "
+            + "immediately or interactively. Otherwise, tap the app's own button for dismissing the keyboard."
     }
 }
