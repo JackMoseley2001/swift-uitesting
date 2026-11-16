@@ -698,7 +698,8 @@ final class AccountTests: XCTestCase, UITestSuite {
 ## Demo
 
 `Examples/Demo` is a small SwiftUI app with a UI test target that uses everything
-above. Open `Examples/Demo/Demo.xcodeproj` in Xcode and run the tests, or run them from
+above. The app opens on a list of examples, each with its own screen, and each test
+suite opens the app on the screen it tests with a trait such as `.example(.fruitList)`. Open `Examples/Demo/Demo.xcodeproj` in Xcode and run the tests, or run them from
 the command line:
 
 ```bash
