@@ -6,4 +6,5 @@ enum ProfileID: ElementIDs {
     static var passwordField: SecureTextField { element() }
     static var notesField: TextView { element() }
     static var summary: StaticText { element() }
+    static var keyboardDoneButton: Button { element() }
 }

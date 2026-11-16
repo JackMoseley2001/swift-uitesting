@@ -580,16 +580,60 @@ try app.dismissKeyboard()
 #expect(!app.isKeyboardShowing)
 ```
 
-iOS has no gesture that hides the keyboard in every app. `dismissKeyboard()` makes a
-short drag on the content above the keyboard, which hides it in a scroll view that
-allows that, such as one with SwiftUI's `scrollDismissesKeyboard(_:)`. It does nothing
-if the keyboard is not showing, and if the keyboard is still there afterwards the test
-ends with a failure.
+iOS has no gesture that hides the keyboard in every app. `dismissKeyboard()` drags
+from the content above the keyboard down over it, which hides the keyboard in a scroll
+view that is set up for that:
 
-It does not look for a button such as "Done". A button's label changes with the
-language, and a button with the same label may do something else, such as close a
-sheet. If the app has its own button for hiding the keyboard, give it an identifier
-and tap it: `try app[NotesID.keyboardDoneButton].tap()`.
+| `scrollDismissesKeyboard` | `dismissKeyboard()` |
+|---|---|
+| `.immediately` | Works. |
+| `.interactively` | Works. |
+| `.never` | Fails. The app does not allow it. |
+| `.automatic`, or not set, on a `ScrollView` | Fails. It behaved like `.never` when tested. |
+
+It does nothing if the keyboard is not showing. If the keyboard is still there
+afterwards, the test ends with a failure.
+
+#### When a drag cannot dismiss the keyboard
+
+If the app's scroll view is not set up to dismiss the keyboard, or the field is not in
+a scroll view at all, give the app its own way of putting the keyboard away and have
+the test use that. A button above the keyboard is the usual one:
+
+```swift
+// In the app
+struct NotesForm: View {
+    @State private var notes = ""
+    @FocusState private var isEditing: Bool
+
+    var body: some View {
+        TextEditor(text: $notes)
+            .focused($isEditing)
+            .accessibilityIdentifier(NotesID.notesField)
+            .toolbar {
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Done") { isEditing = false }
+                        .accessibilityIdentifier(NotesID.keyboardDoneButton)
+                }
+            }
+    }
+}
+```
+
+```swift
+// In the test
+try app[NotesID.notesField].enter("A longer note")
+try app[NotesID.keyboardDoneButton].tap()
+```
+
+Anything that takes the focus away from the field works in the same way, as long as
+the test can reach it by an identifier: a "Save" button that ends editing, or a tap on
+a background that clears the focus.
+
+`dismissKeyboard()` does not look for such a button itself. A button's label changes
+with the language, and a button with the same label may do something else, such as
+close a sheet.
 
 Things to know:
 

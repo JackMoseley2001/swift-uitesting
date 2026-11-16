@@ -8,6 +8,13 @@ struct ProfileForm: View {
     @State private var password = ""
     @State private var notes = "First line\nSecond line"
 
+    @FocusState private var isEditing: Bool
+    private let keyboardDismissal: KeyboardDismissal
+
+    init(traits: LaunchTraits) {
+        keyboardDismissal = traits[KeyboardDismissal.self] ?? .immediately
+    }
+
     var body: some View {
         ScrollView {
             VStack(spacing: 8) {
@@ -32,8 +39,18 @@ struct ProfileForm: View {
             }
             .padding()
         }
-        // Lets a drag put the keyboard away, which is how UI tests dismiss it after
-        // typing into the multi-line editor.
-        .scrollDismissesKeyboard(.immediately)
+        .scrollDismissesKeyboard(keyboardDismissal.mode)
+        .focused($isEditing)
+        // A button above the keyboard that puts it away, for when the scroll view is
+        // not set up to. UI tests tap it by its identifier.
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Done") {
+                    isEditing = false
+                }
+                .accessibilityIdentifier(ProfileID.keyboardDoneButton)
+            }
+        }
     }
 }

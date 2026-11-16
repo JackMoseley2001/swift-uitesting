@@ -25,3 +25,10 @@ extension UITestTrait where Self == LaunchPayloadTrait<Example> {
         .launch(example)
     }
 }
+
+extension UITestTrait where Self == LaunchPayloadTrait<KeyboardDismissal> {
+    /// Sets how the profile form's scroll view dismisses the keyboard when it is dragged.
+    static func keyboardDismissal(_ dismissal: KeyboardDismissal) -> Self {
+        .launch(dismissal)
+    }
+}
