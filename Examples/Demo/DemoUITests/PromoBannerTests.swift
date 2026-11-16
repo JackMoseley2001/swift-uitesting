@@ -1,7 +1,8 @@
 import UITesting
 import XCTest
 
-final class PromoBannerTests: XCTestCase, UITestSuite {
+@UITestSuite
+final class PromoBannerTests: XCTestCase {
     @MainActor
     func testBannerIsHiddenByDefault() async throws {
         try await UITestRunner.run(self) { context in

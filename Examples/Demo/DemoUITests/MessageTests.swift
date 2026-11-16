@@ -1,7 +1,8 @@
 import UITesting
 import XCTest
 
-final class MessageTests: XCTestCase, UITestSuite {
+@UITestSuite
+final class MessageTests: XCTestCase {
     @MainActor
     func testLoadingShowsTheMessageAfterADelay() async throws {
         try await UITestRunner.run(self) { context in
