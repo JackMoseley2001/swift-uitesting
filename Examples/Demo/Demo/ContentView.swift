@@ -13,6 +13,9 @@ struct ContentView: View {
         ScrollView {
             content
         }
+        // Lets a drag put the keyboard away, which is how UI tests dismiss it after
+        // typing into the multi-line editor.
+        .scrollDismissesKeyboard(.immediately)
     }
 
     private var content: some View {
@@ -49,6 +52,10 @@ struct ContentView: View {
                 Text(message)
                     .accessibilityIdentifier(AccessibilityID.message)
             }
+
+            Divider()
+
+            ProfileForm()
 
             Divider()
 
