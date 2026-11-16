@@ -46,8 +46,8 @@ final class UITestRunnerTests {
             events.append("body")
         }
 
-        #expect(events == ["setUp a", "setUp b", "body", "tearDown b", "tearDown a"])
-        #expect(additionalErrors.isEmpty)
+        #Testing::expect(events == ["setUp a", "setUp b", "body", "tearDown b", "tearDown a"])
+        #Testing::expect(additionalErrors.isEmpty)
     }
 
     @Test
@@ -56,7 +56,7 @@ final class UITestRunnerTests {
             events.append("body")
         }
 
-        #expect(events == ["body"])
+        #Testing::expect(events == ["body"])
     }
 
     @Test
@@ -67,9 +67,9 @@ final class UITestRunnerTests {
             }
         }
 
-        #expect(error == TestError(message: "body"))
-        #expect(events == ["setUp a", "setUp b", "tearDown b", "tearDown a"])
-        #expect(additionalErrors.isEmpty)
+        #Testing::expect(error == TestError(message: "body"))
+        #Testing::expect(events == ["setUp a", "setUp b", "tearDown b", "tearDown a"])
+        #Testing::expect(additionalErrors.isEmpty)
     }
 
     @Test
@@ -80,8 +80,8 @@ final class UITestRunnerTests {
             }
         }
 
-        #expect(error == TestError(message: "setUp b"))
-        #expect(events == ["setUp a", "setUp b", "tearDown b", "tearDown a"])
+        #Testing::expect(error == TestError(message: "setUp b"))
+        #Testing::expect(events == ["setUp a", "setUp b", "tearDown b", "tearDown a"])
     }
 
     @Test
@@ -90,9 +90,9 @@ final class UITestRunnerTests {
             try await run(steps: ["a", "b"], failingTearDown: "b")
         }
 
-        #expect(error == TestError(message: "tearDown b"))
-        #expect(events == ["setUp a", "setUp b", "tearDown b", "tearDown a"])
-        #expect(additionalErrors.isEmpty)
+        #Testing::expect(error == TestError(message: "tearDown b"))
+        #Testing::expect(events == ["setUp a", "setUp b", "tearDown b", "tearDown a"])
+        #Testing::expect(additionalErrors.isEmpty)
     }
 
     @Test
@@ -103,7 +103,7 @@ final class UITestRunnerTests {
             }
         }
 
-        #expect(error == TestError(message: "body"))
-        #expect(additionalErrors == [TestError(message: "tearDown a")])
+        #Testing::expect(error == TestError(message: "body"))
+        #Testing::expect(additionalErrors == [TestError(message: "tearDown a")])
     }
 }

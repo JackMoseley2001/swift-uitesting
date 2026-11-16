@@ -11,7 +11,7 @@ struct LaunchTraitTests {
             .launchArguments(["-AppleLanguages", "(fr)"]),
         ])
 
-        #expect(launch.arguments == ["--skip-onboarding", "-AppleLanguages", "(fr)"])
+        #Testing::expect(launch.arguments == ["--skip-onboarding", "-AppleLanguages", "(fr)"])
     }
 
     @Test
@@ -20,7 +20,7 @@ struct LaunchTraitTests {
             .environment("API_BASE_URL", "http://localhost:8080")
         ])
 
-        #expect(launch.environment["API_BASE_URL"] == "http://localhost:8080")
+        #Testing::expect(launch.environment["API_BASE_URL"] == "http://localhost:8080")
     }
 
     @Test
@@ -30,7 +30,7 @@ struct LaunchTraitTests {
             .environment("THEME", "dark"),
         ])
 
-        #expect(launch.environment["THEME"] == "dark")
+        #Testing::expect(launch.environment["THEME"] == "dark")
     }
 
     @Test
@@ -40,7 +40,7 @@ struct LaunchTraitTests {
         ])
 
         let traits = LaunchTraits(arguments: launch.arguments, environment: launch.environment)
-        #expect(traits[AuthState.self] == AuthState(isLoggedIn: true))
+        #Testing::expect(traits[AuthState.self] == AuthState(isLoggedIn: true))
     }
 
     @Test
@@ -51,7 +51,7 @@ struct LaunchTraitTests {
         ])
 
         let traits = LaunchTraits(arguments: launch.arguments, environment: launch.environment)
-        #expect(traits[AuthState.self] == AuthState(isLoggedIn: true))
+        #Testing::expect(traits[AuthState.self] == AuthState(isLoggedIn: true))
     }
 
     @Test
@@ -59,7 +59,7 @@ struct LaunchTraitTests {
         let launch = try LaunchConfiguration(applying: [.loggedOut])
 
         let traits = LaunchTraits(arguments: launch.arguments, environment: launch.environment)
-        #expect(traits[AuthState.self] == AuthState(isLoggedIn: false))
+        #Testing::expect(traits[AuthState.self] == AuthState(isLoggedIn: false))
     }
 }
 

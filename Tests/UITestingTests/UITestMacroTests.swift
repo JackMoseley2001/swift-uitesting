@@ -34,7 +34,7 @@ struct UITestMacroTests {
         // A test is named "-[Module.Class method]".
         let methods = tests.compactMap { $0.name.split(separator: " ").last?.dropLast() }.map(String.init)
 
-        #expect(
+        #Testing::expect(
             methods.sorted() == [
                 "test_takingBoth",
                 "test_takingTheApp",
