@@ -42,3 +42,34 @@ extension DeclModifierListSyntax {
         contains { $0.name.tokenKind == .keyword(keyword) }
     }
 }
+
+extension AttributeListSyntax {
+    /// Whether one of the attributes looks like a global actor, such as `@MainActor`.
+    ///
+    /// A macro cannot look a type up, so this goes by the convention that the names of
+    /// global actors end in "Actor".
+    var containsGlobalActor: Bool {
+        contains { element in
+            element.as(AttributeSyntax.self)?.attributeName.lastComponentName?.hasSuffix("Actor") == true
+        }
+    }
+}
+
+extension VariableDeclSyntax {
+    /// Whether this declares a computed property, which has accessors and no storage.
+    var isComputed: Bool {
+        guard bindings.count == 1, let accessors = bindings.first?.accessorBlock else { return false }
+        switch accessors.accessors {
+        case .getter:
+            return true
+        case .accessors(let list):
+            // `willSet` and `didSet` are observers on a stored property.
+            return list.contains { accessor in
+                switch accessor.accessorSpecifier.tokenKind {
+                case .keyword(.get), .keyword(.set), .keyword(._read), .keyword(._modify): true
+                default: false
+                }
+            }
+        }
+    }
+}

@@ -699,6 +699,7 @@ struct UITestMacroTests {
                         self.showsSignInButton(app: context.app)
                     }
                 }
+                @MainActor
 
                 func helper() {
                 }

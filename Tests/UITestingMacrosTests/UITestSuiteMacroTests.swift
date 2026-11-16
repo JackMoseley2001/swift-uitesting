@@ -18,6 +18,7 @@ struct UITestSuiteMacroTests {
         } expansion: {
             """
             final class LoginTests: XCTestCase {
+                @MainActor
                 func testShowsSignInButton() {}
             }
 
@@ -187,8 +188,10 @@ struct UITestSuiteMacroTests {
         }
     }
 
+    // The expansion shows an added attribute above the blank line that came before the
+    // member. That is how the test support prints it, and it makes no difference to the compiler.
     @Test
-    func isolatesUITestFunctionsToTheMainActor() {
+    func isolatesFunctionsAndComputedPropertiesToTheMainActor() {
         assertMacro {
             """
             @UITestSuite
@@ -204,7 +207,19 @@ struct UITestSuiteMacroTests {
                 func helper() {
                 }
 
+                static func sharedHelper() {
+                }
+
+                var signInButton: XCUIElement {
+                    XCUIApplication().buttons["signIn"]
+                }
+
                 var isReady = false
+
+                var launches = 0 {
+                    didSet {
+                    }
+                }
             }
             """
         } expansion: {
@@ -219,11 +234,26 @@ struct UITestSuiteMacroTests {
                 @MainActor
                 func showsHome() async throws {
                 }
+                @MainActor
 
                 func helper() {
                 }
+                @MainActor
+
+                static func sharedHelper() {
+                }
+                @MainActor
+
+                var signInButton: XCUIElement {
+                    XCUIApplication().buttons["signIn"]
+                }
 
                 var isReady = false
+
+                var launches = 0 {
+                    didSet {
+                    }
+                }
             }
 
             extension LoginTests: UITesting.UITestSuite {
@@ -249,6 +279,25 @@ struct UITestSuiteMacroTests {
                 @UITest
                 nonisolated func showsHome() {
                 }
+
+                nonisolated func helper() {
+                }
+
+                @DatabaseActor
+                func otherHelper() {
+                }
+
+                @Swift.MainActor
+                var title: String {
+                    "Login"
+                }
+
+                override func setUp() {
+                }
+
+                override var description: String {
+                    "LoginTests"
+                }
             }
             """
         } expansion: {
@@ -261,6 +310,25 @@ struct UITestSuiteMacroTests {
 
                 @UITest
                 nonisolated func showsHome() {
+                }
+
+                nonisolated func helper() {
+                }
+
+                @DatabaseActor
+                func otherHelper() {
+                }
+
+                @Swift.MainActor
+                var title: String {
+                    "Login"
+                }
+
+                override func setUp() {
+                }
+
+                override var description: String {
+                    "LoginTests"
                 }
             }
 
