@@ -99,8 +99,7 @@ extension UITestElement where Kind: TextEntryKind {
 extension UITestElement where Kind: SingleLineTextEntryKind {
     /// Presses the Return key in the field, once the field exists and is enabled.
     ///
-    /// This is what a person does to finish with a field: it runs the field's submit
-    /// action, and in most apps it puts the keyboard away.
+    /// This runs the field's submit action, as it does for a person.
     ///
     /// ```swift
     /// try app[SearchID.field].enter("swift")
@@ -108,7 +107,6 @@ extension UITestElement where Kind: SingleLineTextEntryKind {
     /// ```
     ///
     /// Multi-line fields do not have this, because Return starts a new line in them.
-    /// To put the keyboard away there, see ``XCTest/XCUIApplication/dismissKeyboard(within:filePath:line:)``.
     ///
     /// - Parameter timeout: How long to wait for the field. The default is the test's
     ///   ``UITestTrait/actionTimeout(_:)``.
