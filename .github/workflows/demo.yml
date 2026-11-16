@@ -36,9 +36,28 @@ jobs:
       - name: Run UI tests
         run: |
           set -o pipefail
-          xcodebuild test-without-building \
-            -project Examples/Demo/Demo.xcodeproj \
-            -scheme Demo \
-            -destination "platform=iOS Simulator,name=iPhone 17" \
-            -skipMacroValidation \
-            | xcbeautify --renderer github-actions
+          # A simulator on a freshly started runner is sometimes not ready when the tests
+          # begin. Try again in that case only; a failing test is never retried.
+          for attempt in 1 2 3; do
+            if xcodebuild test-without-building \
+              -project Examples/Demo/Demo.xcodeproj \
+              -scheme Demo \
+              -destination "platform=iOS Simulator,name=iPhone 17" \
+              -skipMacroValidation \
+              2>&1 | tee xcodebuild.log | xcbeautify --renderer github-actions; then
+              exit 0
+            fi
+            if ! grep -qE "simulator runtime is not available|Failed to establish communication with the test runner" xcodebuild.log; then
+              exit 1
+            fi
+            echo "::warning::The simulator was not ready on attempt $attempt."
+            sleep 45
+          done
+          exit 1
+
+      - name: Show simulator state
+        if: failure()
+        run: |
+          xcrun simctl runtime list || true
+          xcrun simctl list devices available || true
+          ls -lt ~/Library/Logs/DiagnosticReports 2>/dev/null | head -n 10 || true
