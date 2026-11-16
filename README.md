@@ -479,6 +479,29 @@ func deletesAMessage(app: XCUIApplication) throws {
 
 Fields have more. See [Entering text](#entering-text).
 
+### Scrolling to an element
+
+A list only creates the rows near the ones on screen. A row further down does not
+exist until the list is scrolled to it, so waiting for it does not help.
+`scrollIntoView()` scrolls until the element is on screen and can be tapped, and
+returns the element so that an action can follow:
+
+```swift
+try app[InboxID.row(1234)].scrollIntoView().tap()
+```
+
+- **Direction.** It looks down first, and when the content stops moving it goes back
+  up, so it finds the element whichever side it is on. Pass a direction to start the
+  other way, or sideways: `scrollIntoView(.up)`, `scrollIntoView(.right)`.
+- **Where it scrolls.** In whatever the element was looked up in. `app[id]` drags the
+  middle of the app, which scrolls the view under it. To scroll one particular view,
+  look the element up in it: `app[InboxID.list][InboxID.row(1234)].scrollIntoView()`.
+- **How far.** Each swipe moves the content by about half the height of the view, and
+  takes about a second. It makes up to 20 before turning back. For a longer list, pass
+  `maximumSwipes:`.
+- **Failure.** If the element never comes into view, the failure is recorded at the
+  line of the call and the test ends.
+
 If the element is not ready in time, the failure is recorded at the line of the call
 and the test ends, so actions are written with `try`. The message says what went wrong:
 

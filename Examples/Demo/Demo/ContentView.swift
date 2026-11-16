@@ -64,6 +64,10 @@ struct ContentView: View {
             Divider()
 
             LaunchSettingsView()
+
+            Divider()
+
+            NumberList()
         }
         .padding()
     }

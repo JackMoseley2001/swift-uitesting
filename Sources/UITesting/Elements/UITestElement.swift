@@ -44,6 +44,9 @@ public struct UITestElement<Kind: ElementKind> {
     /// The element with the same identifier whatever its kind, used to explain why a lookup found nothing.
     let elementOfAnyKind: XCUIElement?
 
+    /// The element this one was looked up in, which is where scrolling to it happens.
+    let scope: XCUIElement?
+
     /// Reads a property of the underlying `XCUIElement`, without waiting.
     public subscript<Value>(dynamicMember keyPath: KeyPath<XCUIElement, Value>) -> Value {
         element[keyPath: keyPath]

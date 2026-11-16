@@ -27,7 +27,8 @@ extension XCUIElement {
         return UITestElement(
             element: descendants(matching: XCUIElement.ElementType(Kind.elementType))[identifier],
             accessibilityIdentifier: identifier,
-            elementOfAnyKind: Kind.elementType == .any ? nil : descendants(matching: .any)[identifier]
+            elementOfAnyKind: Kind.elementType == .any ? nil : descendants(matching: .any)[identifier],
+            scope: self
         )
     }
 }
@@ -47,7 +48,8 @@ extension XCUIElementQuery {
         UITestElement(
             element: self[id.accessibilityIdentifier],
             accessibilityIdentifier: id.accessibilityIdentifier,
-            elementOfAnyKind: nil
+            elementOfAnyKind: nil,
+            scope: nil
         )
     }
 }
