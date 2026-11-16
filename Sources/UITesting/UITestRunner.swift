@@ -23,7 +23,7 @@ public enum UITestRunner {
     ///    suite's traits first.
     /// 2. The app is launched.
     /// 3. Each trait's `setUp(_:)` runs, in the same order.
-    /// 4. The test body runs.
+    /// 4. The test body runs, inside any trait that wraps it, such as a time limit.
     /// 5. Each trait's `tearDown(_:)` runs, in reverse order,
     ///    whether or not the earlier steps succeeded.
     ///
@@ -38,7 +38,7 @@ public enum UITestRunner {
     public static func run<Suite: UITestSuite>(
         _ suite: Suite,
         traits: [any UITestTrait] = [],
-        body: @MainActor (UITestContext) async throws -> Void
+        body: @escaping @MainActor (UITestContext) async throws -> Void
     ) async throws {
         let traits = Suite.suiteTraits + traits
         let launch = try LaunchConfiguration(applying: traits)
@@ -49,6 +49,9 @@ public enum UITestRunner {
         app.launch()
 
         let context = UITestContext(app: app, testCase: suite, launch: launch)
+        let wrappedBody = wrapping({ try await body(context) }, with: traits) { message in
+            suite.record(XCTIssue(type: .assertionFailure, compactDescription: message))
+        }
         try await endingOnFailedRequirement {
             try await withSteps(
                 traits,
@@ -59,8 +62,22 @@ public enum UITestRunner {
                         XCTIssue(type: .thrownError, compactDescription: "\(error)", associatedError: error)
                     )
                 },
-                body: { try await body(context) }
+                body: wrappedBody
             )
+        }
+    }
+
+    /// Returns a test body that runs inside every trait that takes over running the body,
+    /// with the first trait outermost.
+    @MainActor
+    static func wrapping(
+        _ body: @escaping @MainActor () async throws -> Void,
+        with traits: [any UITestTrait],
+        recordFailure: @escaping @MainActor (String) -> Void
+    ) -> @MainActor () async throws -> Void {
+        traits.reversed().reduce(body) { inner, trait in
+            guard let wrapper = trait as? any TestBodyWrapping else { return inner }
+            return { try await wrapper.run(inner, recordFailure: recordFailure) }
         }
     }
 
