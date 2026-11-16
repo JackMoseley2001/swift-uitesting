@@ -7,5 +7,7 @@ struct UITestingPlugin: CompilerPlugin {
         UITestSuiteMacro.self,
         UITestMacro.self,
         ExpectMacro.self,
+        RequireMacro.self,
+        RequireValueMacro.self,
     ]
 }

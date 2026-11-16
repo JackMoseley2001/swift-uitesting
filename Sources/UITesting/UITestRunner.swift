@@ -32,7 +32,8 @@ public enum UITestRunner {
     ///   - traits: The traits for this test, applied after the suite's traits.
     ///   - body: The test. It receives the launched app in a ``UITestContext``.
     /// - Throws: The first error thrown by a trait or by the test body. Later errors
-    ///   are recorded as failures of the test.
+    ///   are recorded as failures of the test. A requirement that was not met ends the
+    ///   test without an error being thrown, because `#require` has already recorded it.
     @MainActor
     public static func run<Suite: UITestSuite>(
         _ suite: Suite,
@@ -48,17 +49,31 @@ public enum UITestRunner {
         app.launch()
 
         let context = UITestContext(app: app, testCase: suite, launch: launch)
-        try await withSteps(
-            traits,
-            setUp: { try await $0.setUp(context) },
-            tearDown: { try await $0.tearDown(context) },
-            recordAdditionalError: { error in
-                suite.record(
-                    XCTIssue(type: .thrownError, compactDescription: "\(error)", associatedError: error)
-                )
-            },
-            body: { try await body(context) }
-        )
+        try await endingOnFailedRequirement {
+            try await withSteps(
+                traits,
+                setUp: { try await $0.setUp(context) },
+                tearDown: { try await $0.tearDown(context) },
+                recordAdditionalError: { error in
+                    suite.record(
+                        XCTIssue(type: .thrownError, compactDescription: "\(error)", associatedError: error)
+                    )
+                },
+                body: { try await body(context) }
+            )
+        }
+    }
+
+    /// Runs an operation, and returns normally if it ends because a requirement was not met.
+    ///
+    /// `#require` records the failure where it is written before it throws, so passing the
+    /// error on to XCTest would report the same failure a second time.
+    @MainActor
+    static func endingOnFailedRequirement(_ operation: @MainActor () async throws -> Void) async throws {
+        do {
+            try await operation()
+        } catch is RequirementFailedError {
+        }
     }
 
     /// Sets up each step in order, runs the body, then tears the steps down in reverse order.

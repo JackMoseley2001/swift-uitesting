@@ -9,11 +9,13 @@ struct ExpectationFailure: Equatable, Sendable {
     /// Describes a failed expectation.
     ///
     /// - Parameters:
-    ///   - expression: The source code of the condition.
+    ///   - summary: What went wrong, such as "Expectation failed".
+    ///   - expression: The source code that was checked.
     ///   - comment: The comment passed with the expectation, if any.
-    ///   - timeout: How long the expectation waited for the condition, if it waited.
+    ///   - timeout: How long the expectation waited, if it waited.
     ///   - difference: A description of how the two sides of a comparison differ, if known.
     static func message(
+        summary: String,
         expression: String,
         comment: String?,
         timeout: Duration?,
@@ -23,9 +25,9 @@ struct ExpectationFailure: Equatable, Sendable {
         if let timeout {
             let seconds = timeout.timeInterval
             let unit = seconds == 1 ? "second" : "seconds"
-            lines = ["Expectation failed after \(String(format: "%g", seconds)) \(unit): \(expression)"]
+            lines = ["\(summary) after \(String(format: "%g", seconds)) \(unit): \(expression)"]
         } else {
-            lines = ["Expectation failed: \(expression)"]
+            lines = ["\(summary): \(expression)"]
         }
         if let comment {
             lines.append(comment)
