@@ -152,6 +152,11 @@ enum ExpectationCheck {
     }
 }
 
+// A comparison is written with the value being checked on the left and the value it should
+// have on the right. A difference is shown from the expected value to the actual one, so
+// lines starting with "-" are what was expected and lines starting with "+" are what was
+// found. That is why `diff` is given the right-hand side first.
+//
 // The functions below are what `#expect` and `#require` expand into. They are public so
 // that the expanded code can call them, and are not meant to be called directly.
 //
@@ -220,7 +225,7 @@ public func __expectEqual<Value>(
         lhs,
         rhs,
         isEqual,
-        difference: { diff($0, $1) },
+        difference: { diff($1, $0) },
         summary: "Expectation failed",
         expression: expression,
         comment: comment,
@@ -248,7 +253,7 @@ public func __expectEqual<Value>(
         lhs,
         rhs,
         isEqual,
-        difference: { diff($0, $1) },
+        difference: { diff($1, $0) },
         summary: "Expectation failed",
         expression: expression,
         comment: comment,
@@ -276,7 +281,7 @@ public func __expectEqual<LHS, RHS>(
         lhs,
         rhs,
         isEqual,
-        difference: { diff($0 as Any, $1 as Any) },
+        difference: { diff($1 as Any, $0 as Any) },
         summary: "Expectation failed",
         expression: expression,
         comment: comment,
@@ -305,7 +310,7 @@ public func __expectEqual<LHS, RHS>(
         lhs,
         rhs,
         isEqual,
-        difference: { diff($0 as Any, $1 as Any) },
+        difference: { diff($1 as Any, $0 as Any) },
         summary: "Expectation failed",
         expression: expression,
         comment: comment,
@@ -380,7 +385,7 @@ public func __requireEqual<Value>(
         lhs,
         rhs,
         isEqual,
-        difference: { diff($0, $1) },
+        difference: { diff($1, $0) },
         summary: "Requirement failed",
         expression: expression,
         comment: comment,
@@ -410,7 +415,7 @@ public func __requireEqual<Value>(
         lhs,
         rhs,
         isEqual,
-        difference: { diff($0, $1) },
+        difference: { diff($1, $0) },
         summary: "Requirement failed",
         expression: expression,
         comment: comment,
@@ -439,7 +444,7 @@ public func __requireEqual<LHS, RHS>(
         lhs,
         rhs,
         isEqual,
-        difference: { diff($0 as Any, $1 as Any) },
+        difference: { diff($1 as Any, $0 as Any) },
         summary: "Requirement failed",
         expression: expression,
         comment: comment,
@@ -469,7 +474,7 @@ public func __requireEqual<LHS, RHS>(
         lhs,
         rhs,
         isEqual,
-        difference: { diff($0 as Any, $1 as Any) },
+        difference: { diff($1 as Any, $0 as Any) },
         summary: "Requirement failed",
         expression: expression,
         comment: comment,

@@ -258,12 +258,15 @@ app.buttons["load-message-button"].tap()
 #expect(app.staticTexts["message"].exists, within: .seconds(5))
 ```
 
-When a comparison with `==` fails, the message shows how the two values differ:
+When a comparison with `==` fails, the message shows how the two values differ. Lines
+starting with `-` are what was expected, the value on the right of `==`. Lines starting
+with `+` are what was found, the value on the left. The message says so itself.
 
 ```
 Expectation failed: app.staticTexts["auth-status"].label == "Signed in"
-- "Signed out"
-+ "Signed in"
+(- expected, + actual)
+- "Signed in"
++ "Signed out"
 ```
 
 `#require` is for when the rest of the test depends on the result. It records the

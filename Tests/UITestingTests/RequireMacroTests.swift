@@ -77,8 +77,9 @@ struct RequireMacroTests {
             (thrown as? RequirementFailedError)?.message == """
                 Requirement failed: label == "Signed in"
                 after signing in
-                - "Signed out"
-                + "Signed in"
+                (- expected, + actual)
+                - "Signed in"
+                + "Signed out"
                 """
         )
     }
