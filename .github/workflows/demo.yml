@@ -1,0 +1,53 @@
+name: Demo UI Tests
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: demo-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  ui-test:
+    name: Demo UI tests (Xcode 27)
+    runs-on: xcode-27
+    timeout-minutes: 15
+    steps:
+      - name: Check out
+        uses: actions/checkout@v7
+
+      - name: Show toolchain
+        run: xcodebuild -version
+
+      - name: Boot simulator
+        run: |
+          udid=$(xcodebuild -showdestinations -project Examples/Demo/Demo.xcodeproj -scheme Demo \
+            | sed -n 's/.*platform:iOS Simulator.*id:\([0-9A-Fa-f-]*\),.*name:iPhone 17 }.*/\1/p' \
+            | head -n 1)
+          test -n "$udid"
+          xcrun simctl boot "$udid"
+          echo "SIMULATOR_UDID=$udid" >> "$GITHUB_ENV"
+
+      - name: Build
+        run: |
+          set -o pipefail
+          xcodebuild build-for-testing \
+            -project Examples/Demo/Demo.xcodeproj \
+            -scheme Demo \
+            -destination "id=$SIMULATOR_UDID" \
+            -skipMacroValidation \
+            | xcbeautify --renderer github-actions
+
+      - name: Run UI tests
+        run: |
+          set -o pipefail
+          xcodebuild test-without-building \
+            -project Examples/Demo/Demo.xcodeproj \
+            -scheme Demo \
+            -destination "id=$SIMULATOR_UDID" \
+            -skipMacroValidation \
+            | xcbeautify --renderer github-actions
