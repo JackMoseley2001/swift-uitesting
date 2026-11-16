@@ -1,6 +1,7 @@
 # ``UITestingCore``
 
-Read the launch arguments, environment and typed payloads that a UI test passes to your app.
+Read the launch arguments, environment and typed payloads that a UI test passes to your app,
+and give its elements typed identifiers that the test can find them by.
 
 ## Overview
 
@@ -83,6 +84,28 @@ struct AuthState: LaunchPayload {
 }
 ```
 
+### Identify elements for UI tests
+
+An ``ElementID`` is a typed accessibility identifier that the app and its UI tests
+share, so neither writes the identifier as a string. Declare the type in code that both
+targets compile.
+
+```swift
+enum InboxID: ElementID {
+    case list
+    case row(Int)
+}
+
+ForEach(messages) { message in
+    MessageRow(message)
+        .accessibilityIdentifier(InboxID.row(message.id))
+}
+```
+
+Each identifier is prefixed with the name of its type, so two types can use the same
+case name without their identifiers clashing. An associated value identifies one
+element out of many, such as the row for a particular item.
+
 ### Release builds
 
 ``LaunchTraits/current`` is always empty in release builds, so a shipped app cannot be
@@ -99,6 +122,10 @@ release build, create the traits with ``LaunchTraits/init(processInfo:)`` instea
 
 - ``LaunchPayload``
 - ``LaunchPayloadDecodingError``
+
+### Identifying elements
+
+- ``ElementID``
 
 ### Describing a launch in a UI test
 

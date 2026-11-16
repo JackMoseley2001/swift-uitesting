@@ -26,6 +26,7 @@ This package sits on top of XCTest's UI testing support and gives you:
 - **`@UITestSuite` and `@UITest`**, which generate the code that launches the app for each test.
 - **Traits** that configure a suite or a single test, including ones you write yourself.
 - **Typed data sent to the app at launch**, with a small library the app uses to read it.
+- **Typed element identifiers** that the app and its tests share, so neither writes them as strings.
 - **`#expect` and `#require`**, with optional waiting and a diff when a comparison fails.
 
 ## Status
@@ -52,7 +53,7 @@ It has two libraries:
 
 | Library | Add it to | Contains |
 |---|---|---|
-| `UITestingCore` | Your app target | What the app needs to read the data a test sends it. It does not depend on XCTest. |
+| `UITestingCore` | Your app target | What the app needs to read the data a test sends it and to identify its elements. It does not depend on XCTest. |
 | `UITesting` | Your UI test target | The macros, traits and runner. It includes `UITestingCore`. |
 
 The package contains macros, so Xcode asks you to trust them the first time you build.
@@ -328,6 +329,86 @@ Things to know:
   a reference to large data, such as the name of a bundled fixture, not the data itself.
 - **Mismatches.** If a payload is present but cannot be decoded, the app stops with an
   assertion failure in a debug build. Use `payload(_:)` to handle the error yourself.
+
+## Element identifiers
+
+A UI test finds an element by its accessibility identifier. Written as strings, the
+identifiers have to be kept the same in the app and in the tests by hand, and two
+screens can use the same string without anyone noticing.
+
+An `ElementID` is a typed identifier. Declare it in code that both the app and the UI
+test target compile, as you do for a payload:
+
+```swift
+import UITestingCore
+
+enum LoginID: ElementID {
+    case emailField
+    case signInButton
+}
+```
+
+The app tags a view with a case, and a test finds the element with the same case:
+
+```swift
+// In the app
+Button("Sign in") { signIn() }
+    .accessibilityIdentifier(LoginID.signInButton)
+
+// In a UI test
+app.buttons[LoginID.signInButton].tap()
+```
+
+In a test, `app.buttons[id]` and the other typed queries look for that type of element.
+`app[id]` finds the element whatever its type, and `element[id]` looks only inside
+another element.
+
+### Clashes
+
+The string an element gets is the name of the identifier's type, a full stop, and the
+name of the case: `LoginID.signInButton` is `"LoginID.signInButton"`. So a `title` case
+in `LoginID` and a `title` case in `SettingsID` are different identifiers, and within
+one enumeration the compiler stops two cases from sharing a name. A nested type
+includes the types it is nested in, so `LoginScreen.ID` and `SettingsScreen.ID` are
+kept apart too.
+
+### Lists
+
+Give a case an associated value to identify one element out of many:
+
+```swift
+enum InboxID: ElementID {
+    case list
+    case row(Int)
+    case deleteButton(row: Int)
+}
+
+// In the app
+ForEach(messages) { message in
+    MessageRow(message)
+        .accessibilityIdentifier(InboxID.row(message.id))
+}
+
+// In a UI test
+app.buttons[InboxID.row(1234)].tap()
+```
+
+Things to know:
+
+- **Associated values.** Use simple ones, such as integers, strings and UUIDs. A value
+  of one of your own types is described with the name of its module, which is
+  different in the app and in the UI test target.
+- **Identifiers the app already has.** Give the cases raw string values to choose each
+  name, and add `static var namespace: String? { nil }` to drop the prefix. The
+  identifier is then exactly the raw value, and avoiding clashes is up to you.
+- **Renaming.** The default identifiers follow the names in your code. To keep them
+  stable when a type is renamed, give the type its own `namespace`.
+- **UIKit and AppKit.** Set the element's identifier to the value's
+  `accessibilityIdentifier` string:
+  `button.accessibilityIdentifier = LoginID.signInButton.accessibilityIdentifier`.
+- **Where the names come from.** A case's name is read at run time, as `print` reads it.
+  If the app is built without reflection metadata, or the type is
+  `CustomStringConvertible`, give the type its own `name`.
 
 ## Expectations
 
