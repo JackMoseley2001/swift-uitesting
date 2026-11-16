@@ -41,20 +41,22 @@ To run a test without the macros, conform the test case to ``UITestSuite`` and c
 
 ### Find elements
 
-Give elements typed identifiers with `ElementID` from UITestingCore, and a test finds
-them with the same values that the app tagged them with.
+Give elements typed identifiers with an `ElementIDs` group from UITestingCore, and a
+test finds them with the same members that the app tagged them with. Each identifier
+says what kind of element it is for, so the test does not have to.
 
 ```swift
 @UITest
 func deletesAMessage(app: XCUIApplication) {
-    app.buttons[InboxID.deleteButton(row: 1234)].tap()
+    app[InboxID.deleteButton(row: 1234)].tap()
 
     #expect(!app[InboxID.row(1234)].exists)
 }
 ```
 
-A typed query such as `app.buttons[id]` looks for that type of element. `app[id]` finds
-the element whatever its type, and `element[id]` looks only inside another element.
+`app[id]` looks for the kind of element the identifier declares, and `element[id]`
+looks only inside another element. To choose the query yourself, pass the identifier
+to it: `app.cells[InboxID.row(1234)]`.
 
 ### Check the app
 
