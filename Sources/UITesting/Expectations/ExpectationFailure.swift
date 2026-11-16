@@ -24,11 +24,16 @@ struct ExpectationFailure: Equatable, Sendable {
         var lines: [String]
         switch outcome {
         case .timedOut(let timeout):
-            lines = ["\(summary) after \(describe(timeout)): \(expression)"]
+            lines = ["\(summary) after \(timeout.describedInSeconds): \(expression)"]
         case .cancelled(let timeout):
             lines = [
                 "\(summary): \(expression)",
-                "The wait was cancelled before its timeout of \(describe(timeout)) had passed.",
+                "The wait was cancelled before its timeout of \(timeout.describedInSeconds) had passed.",
+            ]
+        case .timeLimitReached(let limit):
+            lines = [
+                "\(summary): \(expression)",
+                "The wait ended when the test reached its time limit of \(limit.describedInSeconds).",
             ]
         case .met, .notMet:
             lines = ["\(summary): \(expression)"]
@@ -40,11 +45,6 @@ struct ExpectationFailure: Equatable, Sendable {
             lines.append(difference)
         }
         return lines.joined(separator: "\n")
-    }
-
-    private static func describe(_ duration: Duration) -> String {
-        let seconds = duration.timeInterval
-        return "\(String(format: "%g", seconds)) \(seconds == 1 ? "second" : "seconds")"
     }
 }
 
