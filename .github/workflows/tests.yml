@@ -25,4 +25,4 @@ jobs:
           swift --version
 
       - name: Run tests
-        run: swift test
+        run: swift test --disable-experimental-prebuilts
