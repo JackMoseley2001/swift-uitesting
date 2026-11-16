@@ -153,7 +153,6 @@ A trait is a reusable piece of configuration or behaviour. These are built in:
 | `.launchArguments(["-key", "value"])` | Adds several launch arguments. |
 | `.environment("NAME", "value")` | Sets a launch environment variable. |
 | `.launch(payload)` | Sends a `LaunchPayload` to the app. |
-| `.timeLimit(.seconds(15))` | Fails the test if its body takes longer than the limit. |
 | `.language("fr")` | Launches the app in a language. |
 | `.locale("fr_FR")` | Launches the app in a locale. |
 | `.userDefault("key", true)` | Overrides a `UserDefaults` value for the launch. Takes a `Bool`, `Int`, `Double` or `String`. |
@@ -164,25 +163,6 @@ A trait is a reusable piece of configuration or behaviour. These are built in:
 
 Traits are applied in the order they are written, the suite's before the test's, so a
 test can override its suite.
-
-### Time limits
-
-`.timeLimit` fails a test whose body takes too long. The limit covers the body of the
-test, not launching the app.
-
-```swift
-@UITest(traits: .timeLimit(.seconds(15)))
-func loadsTheFeed(app: XCUIApplication) async throws {
-    try await #require(app.cells.firstMatch.exists, within: .seconds(30))
-}
-```
-
-When the time is up, a failure is recorded, any wait in `#expect` or `#require` ends,
-and the test's task is cancelled. A call that is blocking the test cannot be
-interrupted: tapping an element, reading one, and `waitForExistence(timeout:)` all run
-to completion, so such a test is reported as over its limit once that call returns.
-
-If a suite and a test both have a limit, the shorter one applies.
 
 ### Writing your own
 
