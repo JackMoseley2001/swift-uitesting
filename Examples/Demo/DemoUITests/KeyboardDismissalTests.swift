@@ -41,6 +41,16 @@ final class KeyboardDismissalTests: XCTestCase {
         #expect(app.isKeyboardShowing)
     }
 
+    @UITest(traits: .keyboardDismissal(.never))
+    func theAppsOwnButtonDismissesTheKeyboardWhereADragDoesNot(app: XCUIApplication) throws {
+        try typeANote(in: app)
+
+        try app[ProfileID.keyboardDoneButton].tap()
+
+        #expect(!app.isKeyboardShowing, within: .seconds(2))
+        #expect(app[ProfileID.notesField].text == "A note")
+    }
+
     @UITest(traits: .keyboardDismissal(.automatic))
     func failsWhereTheScrollViewDoesNotSetAMode(app: XCUIApplication) throws {
         try typeANote(in: app)

@@ -8,6 +8,7 @@ struct ProfileForm: View {
     @State private var password = ""
     @State private var notes = "First line\nSecond line"
 
+    @FocusState private var isEditing: Bool
     private let keyboardDismissal: KeyboardDismissal
 
     init(traits: LaunchTraits) {
@@ -39,5 +40,17 @@ struct ProfileForm: View {
             .padding()
         }
         .scrollDismissesKeyboard(keyboardDismissal.mode)
+        .focused($isEditing)
+        // A button above the keyboard that puts it away, for when the scroll view is
+        // not set up to. UI tests tap it by its identifier.
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Done") {
+                    isEditing = false
+                }
+                .accessibilityIdentifier(ProfileID.keyboardDoneButton)
+            }
+        }
     }
 }
