@@ -89,6 +89,21 @@ func loadsTheMessage(app: XCUIApplication) throws {
 The built-in traits add launch arguments, environment variables and typed payloads.
 The app reads them back with `LaunchTraits` from UITestingCore.
 
+### Limit how long a test takes
+
+Give a test, or a whole suite, a time limit. A test whose body runs past the limit
+fails, and a wait in `#expect` or `#require` ends when the limit is reached.
+
+```swift
+@UITest(traits: .timeLimit(.seconds(15)))
+func loadsTheFeed(app: XCUIApplication) async throws {
+    try await #require(app.cells.firstMatch.exists, within: .seconds(30))
+}
+```
+
+A call that is blocking the test, such as tapping or reading an element, cannot be
+interrupted, so the failure is reported once that call returns.
+
 ### Write your own traits
 
 A ``UITestTrait`` can configure the launch, run code after the app has launched, and
@@ -134,3 +149,7 @@ extension UITestTrait where Self == DismissSystemAlerts {
 - ``LaunchArgumentsTrait``
 - ``LaunchEnvironmentTrait``
 - ``LaunchPayloadTrait``
+
+### Limiting how long a test takes
+
+- ``TimeLimitTrait``
