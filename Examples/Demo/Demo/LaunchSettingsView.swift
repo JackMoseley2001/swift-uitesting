@@ -20,7 +20,7 @@ struct LaunchSettingsView: View {
         .font(.footnote)
     }
 
-    private func row(_ title: String, _ value: String, _ identifier: AccessibilityID) -> some View {
+    private func row(_ title: String, _ value: String, _ identifier: AccessibilityID.StaticText) -> some View {
         HStack {
             Text(title)
             Spacer()

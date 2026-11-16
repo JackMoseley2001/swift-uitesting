@@ -5,13 +5,13 @@ import XCTest
 final class PreLaunchTests: XCTestCase {
     @UITest(traits: .resetAuthorization(for: .photos))
     func theAppLaunchesAfterAPermissionIsReset(app: XCUIApplication) {
-        #expect(app.staticTexts[AccessibilityID.userName].label == "Ada")
+        #expect(app[AccessibilityID.userName].label == "Ada")
     }
 
     @UITest(traits: .endedBeforeLaunch)
     func aTraitCanActBeforeTheAppLaunches(app: XCUIApplication) {
         #expect(app.state == .runningForeground)
-        #expect(app.staticTexts[AccessibilityID.userName].label == "Ada")
+        #expect(app[AccessibilityID.userName].label == "Ada")
     }
 }
 

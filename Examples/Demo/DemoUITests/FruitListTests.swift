@@ -5,27 +5,27 @@ import XCTest
 final class FruitListTests: XCTestCase {
     @UITest
     func nothingIsSelectedAtFirst(app: XCUIApplication) {
-        #expect(app.staticTexts[FruitID.selection].label == "Nothing selected")
+        #expect(app[FruitID.selection].label == "Nothing selected")
     }
 
     @UITest
     func eachRowIsFoundByTheItemItShows(app: XCUIApplication) {
-        #expect(app.buttons[FruitID.row(Fruit.apple.id)].label == "Apple")
-        #expect(app.buttons[FruitID.row(Fruit.cherry.id)].label == "Cherry")
-        #expect(!app.buttons[FruitID.row(999)].exists)
+        #expect(app[FruitID.row(Fruit.apple.id)].label == "Apple")
+        #expect(app[FruitID.row(Fruit.cherry.id)].label == "Cherry")
+        #expect(!app[FruitID.row(999)].exists)
     }
 
     @UITest
     func tappingARowSelectsItsItem(app: XCUIApplication) {
-        app.buttons[FruitID.row(Fruit.pear.id)].tap()
+        app[FruitID.row(Fruit.pear.id)].tap()
 
-        #expect(app.staticTexts[FruitID.selection].label == "Selected Pear")
+        #expect(app[FruitID.selection].label == "Selected Pear")
     }
 
     @UITest
-    func anElementCanBeFoundWithoutSayingItsType(app: XCUIApplication) {
-        app[FruitID.row(Fruit.cherry.id)].tap()
+    func aQueryCanStillBeChosenByHand(app: XCUIApplication) {
+        app.buttons[FruitID.row(Fruit.cherry.id)].tap()
 
-        #expect(app[FruitID.selection].label == "Selected Cherry")
+        #expect(app.staticTexts[FruitID.selection].label == "Selected Cherry")
     }
 }

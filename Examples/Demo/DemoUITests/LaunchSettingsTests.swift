@@ -5,28 +5,28 @@ import XCTest
 final class LaunchSettingsTests: XCTestCase {
     @UITest
     func defaultsApplyWithoutAnyTraits(app: XCUIApplication) {
-        #expect(app.staticTexts[AccessibilityID.betaFeatures].label == "off")
-        #expect(app.staticTexts[AccessibilityID.orientation].label == "portrait")
+        #expect(app[AccessibilityID.betaFeatures].label == "off")
+        #expect(app[AccessibilityID.orientation].label == "portrait")
     }
 
     @UITest(traits: .language("fr"))
     func languageIsPassedToTheApp(app: XCUIApplication) {
-        #expect(app.staticTexts[AccessibilityID.preferredLanguage].label.hasPrefix("fr"))
+        #expect(app[AccessibilityID.preferredLanguage].label.hasPrefix("fr"))
     }
 
     @UITest(traits: .locale("fr_FR"))
     func localeIsPassedToTheApp(app: XCUIApplication) {
-        #expect(app.staticTexts[AccessibilityID.region].label == "FR")
+        #expect(app[AccessibilityID.region].label == "FR")
     }
 
     @UITest(traits: .userDefault(DefaultsKey.showsBetaFeatures, true))
     func userDefaultIsOverridden(app: XCUIApplication) {
-        #expect(app.staticTexts[AccessibilityID.betaFeatures].label == "on")
+        #expect(app[AccessibilityID.betaFeatures].label == "on")
     }
 
     @UITest(traits: .orientation(.landscapeLeft))
     func deviceIsRotated(app: XCUIApplication) {
-        #expect(app.staticTexts[AccessibilityID.orientation].label == "landscape", within: .seconds(5))
+        #expect(app[AccessibilityID.orientation].label == "landscape", within: .seconds(5))
     }
 
     @UITest(traits: .disabled("Shows that a disabled test is skipped"))
