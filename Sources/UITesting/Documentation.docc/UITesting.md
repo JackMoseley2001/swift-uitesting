@@ -4,16 +4,16 @@ Launch your app for a UI test with reusable traits that configure the launch and
 
 ## Overview
 
-UITesting runs on top of XCTest's UI testing support. A test hands its body to
-``UITestRunner``, which launches the app and applies the test's traits around it.
+UITesting runs on top of XCTest's UI testing support. You mark a test case and its
+tests with macros, and each test is launched with the traits you give it.
 
 Link UITesting to your UI test target only. The app itself links UITestingCore, which
 UITesting re-exports.
 
-### Run a test
+### Write a test
 
-Mark the test case with ``UITestSuite(traits:)`` and call
-``UITestRunner/run(_:traits:body:)`` from a test method.
+Mark the test case with ``UITestSuite(traits:)`` and each test with ``UITest(traits:)``.
+A test can take the launched app as a parameter.
 
 ```swift
 import UITesting
@@ -21,17 +21,23 @@ import XCTest
 
 @UITestSuite(traits: .launch(AuthState(isLoggedIn: false)))
 final class LoginTests: XCTestCase {
-    @MainActor
-    func testShowsSignInButton() async throws {
-        try await UITestRunner.run(self, traits: [.launchArgument("--skip-onboarding")]) { context in
-            XCTAssertTrue(context.app.buttons["Sign in"].exists)
-        }
+    @UITest
+    func showsSignInButton(app: XCUIApplication) {
+        XCTAssertTrue(app.buttons["Sign in"].exists)
+    }
+
+    @UITest(traits: .launch(AuthState(isLoggedIn: true)))
+    func skipsSignInWhenAuthenticated(app: XCUIApplication) {
+        XCTAssertTrue(app.staticTexts["Home"].exists)
     }
 }
 ```
 
 The suite's traits apply to every test in the suite, and a test's own traits are
 applied after them, so a test can override its suite.
+
+To run a test without the macros, conform the test case to ``UITestSuite`` and call
+``UITestRunner/run(_:traits:body:)`` from a test method.
 
 ### Configure the launch
 
@@ -63,6 +69,7 @@ extension UITestTrait where Self == DismissSystemAlerts {
 ### Running tests
 
 - ``UITestSuite(traits:)``
+- ``UITest(traits:)``
 - ``UITestRunner``
 - ``UITestSuite``
 - ``UITestContext``
