@@ -89,4 +89,23 @@ struct BuiltInTraitTests {
     private static func failingCondition() throws -> Bool {
         throw TestError(message: "condition")
     }
+
+    @Test
+    func theAppIsLaunchedAutomaticallyByDefault() {
+        #Testing::expect(UITestRunner.launchesAutomatically(with: []))
+        #Testing::expect(UITestRunner.launchesAutomatically(with: [.launchArgument("--flag"), EmptyTrait()]))
+    }
+
+    @Test
+    func manualLaunchLeavesLaunchingToTheTest() {
+        #Testing::expect(!UITestRunner.launchesAutomatically(with: [.manualLaunch]))
+        #Testing::expect(!UITestRunner.launchesAutomatically(with: [.launchArgument("--flag"), .manualLaunch]))
+    }
+
+    @Test
+    func manualLaunchDoesNotChangeTheLaunchConfiguration() throws {
+        let launch = try LaunchConfiguration(applying: [.manualLaunch, .launchArgument("--flag")])
+
+        #Testing::expect(launch == (try LaunchConfiguration(applying: [.launchArgument("--flag")])))
+    }
 }

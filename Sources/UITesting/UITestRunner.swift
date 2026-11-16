@@ -21,7 +21,8 @@ public enum UITestRunner {
     ///
     /// 1. Each trait's `prepare(_:)` configures the launch, the
     ///    suite's traits first.
-    /// 2. The app is launched.
+    /// 2. The app is launched, unless one of the traits is
+    ///    ``UITestTrait/manualLaunch``.
     /// 3. Each trait's `setUp(_:)` runs, in the same order.
     /// 4. The test body runs.
     /// 5. Each trait's `tearDown(_:)` runs, in reverse order,
@@ -30,7 +31,7 @@ public enum UITestRunner {
     /// - Parameters:
     ///   - suite: The test case that is running.
     ///   - traits: The traits for this test, applied after the suite's traits.
-    ///   - body: The test. It receives the launched app in a ``UITestContext``.
+    ///   - body: The test. It receives the app in a ``UITestContext``.
     /// - Throws: The first error thrown by a trait or by the test body. Later errors
     ///   are recorded as failures of the test. A requirement that was not met ends the
     ///   test without an error being thrown, because `#require` has already recorded it.
@@ -44,9 +45,10 @@ public enum UITestRunner {
         let launch = try LaunchConfiguration(applying: traits)
 
         let app = XCUIApplication()
-        app.launchArguments = launch.arguments
-        app.launchEnvironment = launch.environment
-        app.launch()
+        app.configure(with: launch)
+        if launchesAutomatically(with: traits) {
+            app.launch()
+        }
 
         let context = UITestContext(app: app, testCase: suite, launch: launch)
         try await endingOnFailedRequirement {
@@ -62,6 +64,11 @@ public enum UITestRunner {
                 body: { try await body(context) }
             )
         }
+    }
+
+    /// Returns whether the runner launches the app itself, which it does unless a trait leaves that to the test.
+    static func launchesAutomatically(with traits: [any UITestTrait]) -> Bool {
+        !traits.contains { $0 is ManualLaunchTrait }
     }
 
     /// Runs an operation, and returns normally if it ends because a requirement was not met.
