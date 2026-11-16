@@ -580,11 +580,19 @@ try app.dismissKeyboard()
 #expect(!app.isKeyboardShowing)
 ```
 
-iOS has no gesture that hides the keyboard in every app. `dismissKeyboard()` makes a
-short drag on the content above the keyboard, which hides it in a scroll view that
-allows that, such as one with SwiftUI's `scrollDismissesKeyboard(_:)`. It does nothing
-if the keyboard is not showing, and if the keyboard is still there afterwards the test
-ends with a failure.
+iOS has no gesture that hides the keyboard in every app. `dismissKeyboard()` drags
+from the content above the keyboard down over it, which hides the keyboard in a scroll
+view that is set up for that:
+
+| `scrollDismissesKeyboard` | `dismissKeyboard()` |
+|---|---|
+| `.immediately` | Works. |
+| `.interactively` | Works. |
+| `.never` | Fails. The app does not allow it. |
+| `.automatic`, or not set, on a `ScrollView` | Fails. It behaved like `.never` when tested. |
+
+It does nothing if the keyboard is not showing. If the keyboard is still there
+afterwards, the test ends with a failure.
 
 It does not look for a button such as "Done". A button's label changes with the
 language, and a button with the same label may do something else, such as close a
