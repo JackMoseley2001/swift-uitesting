@@ -8,14 +8,14 @@ final class ProfileFormTests: XCTestCase {
         app[ProfileID.summary].label
     }
 
-    private var nameField: UITestElement<ElementKinds.TextField> {
-        XCUIApplication()[ProfileID.nameField]
+    private func nameField(in app: XCUIApplication) -> UITestElement<ElementKinds.TextField> {
+        app[ProfileID.nameField]
     }
 
     @UITest
     func helpersCanReadElements(app: XCUIApplication) {
         #expect(summary(in: app) == "Ada Lovelace||First line\nSecond line")
-        #expect(nameField.text == "Ada Lovelace")
+        #expect(nameField(in: app).text == "Ada Lovelace")
     }
 
     @UITest
