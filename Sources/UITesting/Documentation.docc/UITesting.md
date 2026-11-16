@@ -71,6 +71,18 @@ for the time set with `.actionTimeout(_:)` on the suite or the test.
 
 The element's properties, such as `label` and `exists`, are read without waiting.
 
+### Enter text
+
+Elements whose identifier is declared as a text field, secure text field, search field
+or text view can be typed into, with ``UITestElement/enter(_:within:filePath:line:)``,
+``UITestElement/replaceText(with:within:filePath:line:)`` and
+``UITestElement/clear(within:filePath:line:)``. ``UITestElement/text`` reads what a
+field holds.
+
+To finish with a single-line field, press Return with
+``UITestElement/submit(within:filePath:line:)``. Anywhere else, put the keyboard away
+with `dismissKeyboard()` on the app.
+
 ### Check the app
 
 Use ``expect(_:_:within:)`` to check a condition. A failed expectation is recorded

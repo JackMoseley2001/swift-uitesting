@@ -56,7 +56,7 @@ extension UITestElement {
         try wait(toBe: .absent, inOrderTo: "see the end of", within: timeout, filePath: filePath, line: line)
     }
 
-    private func wait(
+    func wait(
         toBe requirement: ElementRequirement,
         inOrderTo intent: String,
         within timeout: Duration?,
