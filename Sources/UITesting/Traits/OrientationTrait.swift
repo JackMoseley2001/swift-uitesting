@@ -6,7 +6,6 @@ import XCTest
 @MainActor
 private enum PreviousDeviceState {
     static var orientations: [UIDeviceOrientation] = []
-    static var appearances: [XCUIDevice.Appearance] = []
 }
 
 /// A trait that rotates the device for a test.
@@ -39,38 +38,6 @@ extension UITestTrait where Self == OrientationTrait {
     /// - Parameter orientation: The orientation of the device during the test.
     public static func orientation(_ orientation: UIDeviceOrientation) -> Self {
         OrientationTrait(orientation: orientation)
-    }
-}
-
-/// A trait that runs a test in light or dark mode.
-///
-/// Create one with ``UITestTrait/appearance(_:)``.
-public struct AppearanceTrait: UITestTrait {
-    /// The appearance of the device during the test.
-    public let appearance: XCUIDevice.Appearance
-
-    @MainActor
-    public func setUp(_ context: UITestContext) async throws {
-        PreviousDeviceState.appearances.append(XCUIDevice.shared.appearance)
-        XCUIDevice.shared.appearance = appearance
-    }
-
-    @MainActor
-    public func tearDown(_ context: UITestContext) async throws {
-        if let previous = PreviousDeviceState.appearances.popLast() {
-            XCUIDevice.shared.appearance = previous
-        }
-    }
-}
-
-extension UITestTrait where Self == AppearanceTrait {
-    /// Runs the test with the device in light or dark mode, and puts it back afterwards.
-    ///
-    /// The appearance is changed after the app has launched.
-    ///
-    /// - Parameter appearance: The appearance of the device during the test.
-    public static func appearance(_ appearance: XCUIDevice.Appearance) -> Self {
-        AppearanceTrait(appearance: appearance)
     }
 }
 #endif

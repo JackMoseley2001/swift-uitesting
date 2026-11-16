@@ -11,5 +11,4 @@ enum AccessibilityID {
     static let region = "region"
     static let betaFeatures = "beta-features"
     static let orientation = "orientation"
-    static let appearance = "appearance"
 }

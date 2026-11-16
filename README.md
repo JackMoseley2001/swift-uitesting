@@ -157,7 +157,6 @@ A trait is a reusable piece of configuration or behaviour. These are built in:
 | `.locale("fr_FR")` | Launches the app in a locale. |
 | `.userDefault("key", true)` | Overrides a `UserDefaults` value for the launch. Takes a `Bool`, `Int`, `Double` or `String`. |
 | `.orientation(.landscapeLeft)` | Rotates the device for the test, and puts it back afterwards. iOS only. |
-| `.appearance(.dark)` | Runs the test in light or dark mode, and puts it back afterwards. iOS only. |
 | `.enabled(if: condition)` | Skips the test unless the condition is true. |
 | `.disabled("reason")` | Skips the test. `.disabled(if:)` skips it when a condition is true. |
 

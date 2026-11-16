@@ -3,7 +3,6 @@ import SwiftUI
 /// Shows the settings the app was launched with, so that UI tests can check the traits
 /// that change them.
 struct LaunchSettingsView: View {
-    @Environment(\.colorScheme) private var colorScheme
     @Environment(\.verticalSizeClass) private var verticalSizeClass
 
     var body: some View {
@@ -16,7 +15,6 @@ struct LaunchSettingsView: View {
                 AccessibilityID.betaFeatures
             )
             row("Orientation", verticalSizeClass == .compact ? "landscape" : "portrait", AccessibilityID.orientation)
-            row("Appearance", colorScheme == .dark ? "dark" : "light", AccessibilityID.appearance)
         }
         .font(.footnote)
     }

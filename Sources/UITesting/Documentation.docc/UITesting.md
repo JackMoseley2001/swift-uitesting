@@ -93,8 +93,8 @@ Others set things the system reads for you: `.language(_:)` and `.locale(_:)` ch
 the language and region the app launches in, and `.userDefault(_:_:)` overrides a
 value in the app's `UserDefaults` for that launch.
 
-On iOS, `.orientation(_:)` rotates the device and `.appearance(_:)` switches between
-light and dark mode. Both put the device back when the test finishes.
+On iOS, `.orientation(_:)` rotates the device for the test, and puts it back when the
+test finishes.
 
 ### Skip a test
 

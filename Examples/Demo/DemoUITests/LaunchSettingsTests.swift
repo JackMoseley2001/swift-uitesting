@@ -7,7 +7,6 @@ final class LaunchSettingsTests: XCTestCase {
     func defaultsApplyWithoutAnyTraits(app: XCUIApplication) {
         #expect(app.staticTexts[AccessibilityID.betaFeatures].label == "off")
         #expect(app.staticTexts[AccessibilityID.orientation].label == "portrait")
-        #expect(app.staticTexts[AccessibilityID.appearance].label == "light")
     }
 
     @UITest(traits: .language("fr"))
@@ -28,16 +27,6 @@ final class LaunchSettingsTests: XCTestCase {
     @UITest(traits: .orientation(.landscapeLeft))
     func deviceIsRotated(app: XCUIApplication) {
         #expect(app.staticTexts[AccessibilityID.orientation].label == "landscape", within: .seconds(5))
-    }
-
-    @UITest(traits: .appearance(.dark))
-    func deviceIsInDarkMode(app: XCUIApplication) {
-        #expect(XCUIDevice.shared.appearance == .dark)
-        #expect(app.staticTexts[AccessibilityID.appearance].label == "dark", within: .seconds(3))
-
-        app.terminate()
-        app.launch()
-        #expect(app.staticTexts[AccessibilityID.appearance].label == "dark", "after launching again", within: .seconds(5))
     }
 
     @UITest(traits: .disabled("Shows that a disabled test is skipped"))
