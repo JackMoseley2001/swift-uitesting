@@ -18,3 +18,10 @@ extension UITestTrait where Self == LaunchArgumentsTrait {
         .launchArgument(LaunchArgument.showPromoBanner)
     }
 }
+
+extension UITestTrait where Self == LaunchPayloadTrait<Example> {
+    /// Launches the app on the screen of the given example, instead of the list of examples.
+    static func example(_ example: Example) -> Self {
+        .launch(example)
+    }
+}

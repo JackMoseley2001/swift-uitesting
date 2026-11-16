@@ -1,27 +1,27 @@
 import UITesting
 import XCTest
 
-@UITestSuite(traits: .loggedIn(as: "Ada"))
+@UITestSuite(traits: .example(.account), .loggedIn(as: "Ada"))
 final class AuthenticationTests: XCTestCase {
     @UITest
     func showsTheNamePassedByTheTest(app: XCUIApplication) {
-        #expect(app[AccessibilityID.authStatus].label == "Signed in")
-        #expect(app[AccessibilityID.userName].label == "Ada")
+        #expect(app[AccountID.authStatus].label == "Signed in")
+        #expect(app[AccountID.userName].label == "Ada")
     }
 
     @UITest(traits: .loggedOut)
     func aTestCanOverrideItsSuite(app: XCUIApplication) {
-        #expect(app[AccessibilityID.authStatus].label == "Signed out")
-        #expect(!app[AccessibilityID.userName].exists)
-        #expect(!app[AccessibilityID.signOutButton].exists)
+        #expect(app[AccountID.authStatus].label == "Signed out")
+        #expect(!app[AccountID.userName].exists)
+        #expect(!app[AccountID.signOutButton].exists)
     }
 
     @UITest
     func signingOutUpdatesTheStatus(app: XCUIApplication) throws {
-        try app[AccessibilityID.signOutButton].tap()
-        try app[AccessibilityID.signOutButton].waitToDisappear()
+        try app[AccountID.signOutButton].tap()
+        try app[AccountID.signOutButton].waitToDisappear()
 
-        #expect(app[AccessibilityID.authStatus].label == "Signed out")
-        #expect(!app[AccessibilityID.userName].exists)
+        #expect(app[AccountID.authStatus].label == "Signed out")
+        #expect(!app[AccountID.userName].exists)
     }
 }

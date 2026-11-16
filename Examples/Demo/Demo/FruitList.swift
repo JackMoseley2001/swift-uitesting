@@ -8,30 +8,33 @@ struct FruitList: View {
     @State private var canClear = false
 
     var body: some View {
-        VStack(spacing: 8) {
-            Text(selection.map { "Selected \($0.name)" } ?? "Nothing selected")
-                .accessibilityIdentifier(FruitID.selection)
+        ScrollView {
+            VStack(spacing: 8) {
+                Text(selection.map { "Selected \($0.name)" } ?? "Nothing selected")
+                    .accessibilityIdentifier(FruitID.selection)
 
-            ForEach(Fruit.all) { fruit in
-                Button(fruit.name) {
-                    selection = fruit
+                ForEach(Fruit.all) { fruit in
+                    Button(fruit.name) {
+                        selection = fruit
+                    }
+                    .accessibilityIdentifier(FruitID.row(fruit.id))
                 }
-                .accessibilityIdentifier(FruitID.row(fruit.id))
-            }
 
-            // Stays disabled for a moment after a selection, so that UI tests have to
-            // wait for it before they can tap it.
-            Button("Clear selection") {
-                selection = nil
+                // Stays disabled for a moment after a selection, so that UI tests have to
+                // wait for it before they can tap it.
+                Button("Clear selection") {
+                    selection = nil
+                }
+                .disabled(!canClear)
+                .accessibilityIdentifier(FruitID.clearButton)
             }
-            .disabled(!canClear)
-            .accessibilityIdentifier(FruitID.clearButton)
-        }
-        .task(id: selection) {
-            canClear = false
-            guard selection != nil else { return }
-            try? await Task.sleep(for: .seconds(1))
-            canClear = !Task.isCancelled
+            .task(id: selection) {
+                canClear = false
+                guard selection != nil else { return }
+                try? await Task.sleep(for: .seconds(1))
+                canClear = !Task.isCancelled
+            }
+            .padding()
         }
     }
 }

@@ -8,7 +8,7 @@ struct PromoBanner: View {
     var body: some View {
         if launchTraits.hasArgument(LaunchArgument.showPromoBanner) {
             Text("Free delivery this week")
-                .accessibilityIdentifier(AccessibilityID.promoBanner)
+                .accessibilityIdentifier(AccountID.promoBanner)
         }
     }
 }

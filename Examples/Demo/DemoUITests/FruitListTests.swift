@@ -1,7 +1,7 @@
 import UITesting
 import XCTest
 
-@UITestSuite
+@UITestSuite(traits: .example(.fruitList))
 final class FruitListTests: XCTestCase {
     @UITest
     func nothingIsSelectedAtFirst(app: XCUIApplication) {
