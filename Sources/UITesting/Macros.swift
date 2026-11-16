@@ -14,7 +14,11 @@
 /// ```
 ///
 /// The macro conforms the class to the ``UITestSuite`` protocol, uses its arguments as the
-/// suite's traits, and isolates each `@UITest` function to the main actor.
+/// suite's traits, and isolates the functions and computed properties of the class to
+/// the main actor, so that tests and their helpers can use the UI testing APIs.
+///
+/// Members that are marked `nonisolated` or with a global actor are left as they are.
+/// So are overrides, such as `setUp()`, which keep the isolation of what they override.
 ///
 /// The suite's traits are applied before the traits of an individual test, so a test can
 /// override them. Written as `@UITestSuite` with no arguments, the suite has no traits.
