@@ -9,9 +9,12 @@ extension UITestElement where Kind: TextEntryKind {
         TextEntry.text(value: element.value, placeholder: element.placeholderValue)
     }
 
-    /// Types text at the end of the field, once the field exists and is enabled.
+    /// Types text into the field, once the field exists and is enabled.
     ///
-    /// The field is tapped first, to give it the keyboard.
+    /// The field is tapped first, to give it the keyboard. In a field that already
+    /// holds text, the new text goes in wherever that tap puts the cursor, which is
+    /// usually the end but is not certain. Use ``replaceText(with:within:filePath:line:)``
+    /// to be sure of what the field holds afterwards.
     ///
     /// ```swift
     /// try app[LoginID.emailField].enter("ada@example.com")
@@ -30,7 +33,7 @@ extension UITestElement where Kind: TextEntryKind {
         line: UInt = #line
     ) throws {
         try wait(toBe: .enabled, inOrderTo: "type into", within: timeout, filePath: filePath, line: line)
-        focusAtEnd()
+        element.tap()
         element.typeText(text)
     }
 
@@ -68,22 +71,27 @@ extension UITestElement where Kind: TextEntryKind {
         line: UInt = #line
     ) throws {
         try wait(toBe: .enabled, inOrderTo: "clear", within: timeout, filePath: filePath, line: line)
-        focusAtEnd()
+        element.tap()
 
-        // Deleting from the cursor can leave text behind if the cursor was not at the
-        // end, so check and go again.
-        for _ in 0..<3 where !text.isEmpty {
-            element.typeText(TextEntry.deletion(of: text))
-        }
-        guard text.isEmpty else {
+        // The result is checked, so this does not depend on where the tap put the cursor.
+        let isEmpty = TextEntry.clear(
+            text: { text },
+            moveToEnd: { tapAfterLastCharacter() },
+            type: { element.typeText($0) }
+        )
+        guard isEmpty else {
             let failure = "Could not clear \(accessibilityIdentifier): it still held \"\(text)\" after deleting"
             ExpectationReporter.report(message: failure, filePath: filePath, line: line)
             throw RequirementFailedError(message: failure)
         }
     }
 
-    /// Gives the field the keyboard, with the cursor after its last character.
-    func focusAtEnd() {
+    /// Taps the trailing corner of the field, which puts the cursor after the last
+    /// character in most fields.
+    ///
+    /// This is a guess about the field's layout, so it is only used by
+    /// ``clear(within:filePath:line:)``, which checks what the field holds afterwards.
+    private func tapAfterLastCharacter() {
         element.coordinate(withNormalizedOffset: CGVector(dx: 0.98, dy: 0.9)).tap()
     }
 }
@@ -112,7 +120,7 @@ extension UITestElement where Kind: SingleLineTextEntryKind {
         line: UInt = #line
     ) throws {
         try wait(toBe: .enabled, inOrderTo: "submit", within: timeout, filePath: filePath, line: line)
-        focusAtEnd()
+        element.tap()
         element.typeText(XCUIKeyboardKey.return.rawValue)
     }
 }

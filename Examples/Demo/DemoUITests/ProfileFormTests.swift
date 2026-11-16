@@ -11,10 +11,11 @@ final class ProfileFormTests: XCTestCase {
     }
 
     @UITest
-    func enteringAddsToTheEndOfTheText(app: XCUIApplication) throws {
-        try app[ProfileID.nameField].enter(" King")
+    func typesIntoAnEmptyField(app: XCUIApplication) throws {
+        try app[ProfileID.nameField].clear()
+        try app[ProfileID.nameField].enter("Grace")
 
-        #expect(app[ProfileID.nameField].text == "Ada Lovelace King")
+        #expect(app[ProfileID.nameField].text == "Grace")
     }
 
     @UITest
@@ -59,24 +60,24 @@ final class ProfileFormTests: XCTestCase {
 
     @UITest
     func submittingPressesReturnAndPutsTheKeyboardAway(app: XCUIApplication) throws {
-        try app[ProfileID.nameField].enter(" King")
+        try app[ProfileID.nameField].replaceText(with: "Ada King")
         #expect(app.isKeyboardShowing)
 
         try app[ProfileID.nameField].submit()
 
         #expect(!app.isKeyboardShowing, within: .seconds(2))
-        #expect(app[ProfileID.nameField].text == "Ada Lovelace King")
+        #expect(app[ProfileID.nameField].text == "Ada King")
     }
 
     @UITest
     func theKeyboardCanBeDismissedAfterTypingInAnEditor(app: XCUIApplication) throws {
-        try app[ProfileID.notesField].enter("\nThird line")
+        try app[ProfileID.notesField].replaceText(with: "A note")
         #expect(app.isKeyboardShowing)
 
         try app.dismissKeyboard()
 
         #expect(!app.isKeyboardShowing)
-        #expect(app[ProfileID.notesField].text == "First line\nSecond line\nThird line")
+        #expect(app[ProfileID.notesField].text == "A note")
     }
 
     @UITest
@@ -90,8 +91,8 @@ final class ProfileFormTests: XCTestCase {
     func movesFromOneFieldToTheNext(app: XCUIApplication) throws {
         try app[ProfileID.nameField].replaceText(with: "Grace")
         try app[ProfileID.passwordField].enter("cobol")
-        try app[ProfileID.notesField].enter("\nThird line")
+        try app[ProfileID.notesField].replaceText(with: "A note")
 
-        #expect(app[ProfileID.summary].label == "Grace|cobol|First line\nSecond line\nThird line")
+        #expect(app[ProfileID.summary].label == "Grace|cobol|A note")
     }
 }

@@ -19,4 +19,33 @@ enum TextEntry {
     static func deletion(of text: String) -> String {
         String(repeating: deleteKey, count: text.count)
     }
+
+    /// Empties a field without relying on where its cursor is.
+    ///
+    /// Deleting removes what is before the cursor. The first round deletes from
+    /// wherever the cursor is. If text is left, it was after the cursor, so each later
+    /// round moves the cursor towards the end first. It stops when the field is
+    /// empty, or when a round that moved the cursor removed nothing.
+    ///
+    /// - Parameters:
+    ///   - text: Reads the text in the field.
+    ///   - moveToEnd: Moves the cursor towards the end of the text.
+    ///   - type: Types keys into the field.
+    /// - Returns: Whether the field ended up empty.
+    static func clear(text: () -> String, moveToEnd: () -> Void, type: (String) -> Void) -> Bool {
+        var remaining = text()
+        var hasMoved = false
+        while !remaining.isEmpty {
+            type(deletion(of: remaining))
+
+            let now = text()
+            if now.count >= remaining.count, hasMoved { return false }
+            remaining = now
+            if !remaining.isEmpty {
+                moveToEnd()
+                hasMoved = true
+            }
+        }
+        return true
+    }
 }

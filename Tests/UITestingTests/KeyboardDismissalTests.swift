@@ -6,77 +6,36 @@ import Testing
 struct KeyboardDismissalTests {
     private let polling = ExpectationPolling(interval: .seconds(1), now: { ContinuousClock.now }, sleep: { _ in })
 
-    /// A keyboard that goes away when the attempt with the given name is made.
-    private final class Keyboard {
+    private func failure(isShowing: @escaping () -> Bool, dismiss: @escaping () -> Void) -> String? {
+        KeyboardDismissal.failure(isShowing: isShowing, dismiss: dismiss, timeout: .zero, polling: polling)
+    }
+
+    @Test
+    func nothingIsDoneWhenTheKeyboardIsNotShowing() {
+        var gestures = 0
+
+        #Testing::expect(failure(isShowing: { false }, dismiss: { gestures += 1 }) == nil)
+        #Testing::expect(gestures == 0)
+    }
+
+    @Test
+    func passesWhenTheGestureDismissesTheKeyboard() {
         var isShowing = true
-        var tried: [String] = []
-        let dismissedBy: String?
+        var gestures = 0
 
-        init(dismissedBy: String?) {
-            self.dismissedBy = dismissedBy
-        }
-
-        func attempt(_ name: String, isAvailable: Bool = true) -> () -> Bool {
-            {
-                guard isAvailable else { return false }
-                self.tried.append(name)
-                if name == self.dismissedBy { self.isShowing = false }
-                return true
-            }
-        }
-    }
-
-    private func failure(_ keyboard: Keyboard, attempts: [() -> Bool]) -> String? {
-        KeyboardDismissal.failure(
-            isShowing: { keyboard.isShowing },
-            attempts: attempts,
-            timeout: .zero,
-            polling: polling
-        )
-    }
-
-    @Test
-    func nothingIsTriedWhenTheKeyboardIsNotShowing() {
-        let keyboard = Keyboard(dismissedBy: nil)
-        keyboard.isShowing = false
-
-        #Testing::expect(failure(keyboard, attempts: [keyboard.attempt("key")]) == nil)
-        #Testing::expect(keyboard.tried.isEmpty)
-    }
-
-    @Test
-    func stopsAtTheFirstWayThatWorks() {
-        let keyboard = Keyboard(dismissedBy: "done")
-
-        let failure = failure(keyboard, attempts: [
-            keyboard.attempt("key"), keyboard.attempt("done"), keyboard.attempt("drag"),
-        ])
+        let failure = failure(isShowing: { isShowing }, dismiss: {
+            gestures += 1
+            isShowing = false
+        })
 
         #Testing::expect(failure == nil)
-        #Testing::expect(keyboard.tried == ["key", "done"])
+        #Testing::expect(gestures == 1)
     }
 
     @Test
-    func skipsWaysTheAppDoesNotOffer() {
-        let keyboard = Keyboard(dismissedBy: "drag")
+    func failsWhenTheKeyboardStays() throws {
+        let failure = try #Testing::require(failure(isShowing: { true }, dismiss: {}))
 
-        let failure = failure(keyboard, attempts: [
-            keyboard.attempt("key", isAvailable: false), keyboard.attempt("drag"),
-        ])
-
-        #Testing::expect(failure == nil)
-        #Testing::expect(keyboard.tried == ["drag"])
-    }
-
-    @Test
-    func failsWhenNoWayWorks() throws {
-        let keyboard = Keyboard(dismissedBy: nil)
-
-        let failure = try #Testing::require(
-            failure(keyboard, attempts: [keyboard.attempt("key"), keyboard.attempt("drag")])
-        )
-
-        #Testing::expect(failure.hasPrefix("Could not dismiss the keyboard"))
-        #Testing::expect(keyboard.tried == ["key", "drag"])
+        #Testing::expect(failure.hasPrefix("Could not dismiss the keyboard: it was still showing"))
     }
 }

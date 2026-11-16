@@ -520,10 +520,10 @@ func updatesTheProfile(app: XCUIApplication) throws {
 
 | Member | What it does |
 |---|---|
-| `enter(_:)` | Types at the end of whatever the field holds. |
-| `replaceText(with:)` | Deletes what the field holds, then types. |
-| `clear()` | Deletes what the field holds. |
-| `submit()` | Presses Return. Not on `TextView`, where Return starts a new line. |
+| `enter(_:)` | Taps the field and types. In a field that already holds text, use `replaceText(with:)` to be sure where the text goes. |
+| `replaceText(with:)` | Deletes what the field holds, checks it is empty, then types. |
+| `clear()` | Deletes what the field holds, and fails if anything is left. |
+| `submit()` | Presses the Return key, whatever the keyboard's language. Not on `TextView`, where Return starts a new line. |
 | `text` | The text in the field, read without waiting. Empty for an empty field, where `XCUIElement` reports the placeholder. |
 
 ### Putting the keyboard away
@@ -540,16 +540,16 @@ try app.dismissKeyboard()
 #expect(!app.isKeyboardShowing)
 ```
 
-iOS has no gesture that hides the keyboard in every app, so `dismissKeyboard()` tries
-the ways an app can offer, in order, and stops at the first that works:
+iOS has no gesture that hides the keyboard in every app. `dismissKeyboard()` makes a
+short drag on the content above the keyboard, which hides it in a scroll view that
+allows that, such as one with SwiftUI's `scrollDismissesKeyboard(_:)`. It does nothing
+if the keyboard is not showing, and if the keyboard is still there afterwards the test
+ends with a failure.
 
-1. A key on the keyboard that hides it, which iPad keyboards have.
-2. A "Done" button in a toolbar.
-3. A short drag on the content above the keyboard, which works in a scroll view that
-   allows it, such as one with SwiftUI's `scrollDismissesKeyboard(_:)`.
-
-It does nothing if the keyboard is not showing. If the keyboard is still there after
-all three, the test ends with a failure that says the app has to offer one of them.
+It does not look for a button such as "Done". A button's label changes with the
+language, and a button with the same label may do something else, such as close a
+sheet. If the app has its own button for hiding the keyboard, give it an identifier
+and tap it: `try app[NotesID.keyboardDoneButton].tap()`.
 
 Things to know:
 

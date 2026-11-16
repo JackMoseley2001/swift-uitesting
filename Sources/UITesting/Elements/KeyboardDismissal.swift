@@ -1,50 +1,47 @@
 import XCTest
 
 extension XCUIApplication {
-    /// Whether the software keyboard is showing.
+    /// Whether the software keyboard is on screen.
+    ///
+    /// This is `false` when the keyboard is off screen as well as when there is none,
+    /// which is where iOS keeps it while a hardware keyboard is in use.
     public var isKeyboardShowing: Bool {
-        keyboards.firstMatch.exists
+        let keyboard = keyboards.firstMatch
+        return keyboard.exists && keyboard.frame.intersects(frame)
     }
 
     /// Puts the software keyboard away, if it is showing.
     ///
-    /// There is no single gesture that dismisses the keyboard in every app, so this
-    /// tries the ways an app can offer, in order, and stops at the first that works:
+    /// There is no gesture that dismisses the keyboard in every app. This makes a
+    /// short drag on the content above the keyboard, which dismisses it in a scroll
+    /// view that allows that, such as one with SwiftUI's
+    /// `scrollDismissesKeyboard(_:)`. The drag can scroll the content a little.
     ///
-    /// 1. A key on the keyboard that hides it, which iPad keyboards have.
-    /// 2. A "Done" button in a toolbar, the usual place for one above the keyboard.
-    /// 3. A short drag on the content above the keyboard, which dismisses the keyboard
-    ///    in a scroll view that allows it, such as one with SwiftUI's
-    ///    `scrollDismissesKeyboard(_:)`. This can scroll the content a little.
+    /// It does not look for a button to tap, such as "Done". A button's label changes
+    /// with the language, and a button with the same label may do something else,
+    /// such as close a sheet. If the app has a button that dismisses the keyboard,
+    /// give it an identifier and tap it:
+    ///
+    /// ```swift
+    /// try app[NotesID.keyboardDoneButton].tap()
+    /// ```
     ///
     /// For a single-line field, pressing Return with
     /// ``UITestElement/submit(within:filePath:line:)`` is more direct.
     ///
-    /// - Parameter timeout: How long to wait for the keyboard to go after each
-    ///   attempt. The default is the test's ``UITestTrait/actionTimeout(_:)``.
-    /// - Throws: ``RequirementFailedError`` if the keyboard is still showing after
-    ///   every attempt, which means the app offers none of these ways. The failure is
-    ///   recorded at the line of the call, and the test ends.
+    /// - Parameter timeout: How long to wait for the keyboard to go. The default is
+    ///   the test's ``UITestTrait/actionTimeout(_:)``.
+    /// - Throws: ``RequirementFailedError`` if the keyboard is still showing
+    ///   afterwards. The failure is recorded at the line of the call, and the test ends.
     public func dismissKeyboard(
         within timeout: Duration? = nil,
         filePath: StaticString = #filePath,
         line: UInt = #line
     ) throws {
-        let timeout = timeout ?? ActionTimeout.current
-        let attempts: [() -> Bool] = [
-            { self.tapIfPresent(self.keyboards.buttons["Hide keyboard"]) },
-            { self.tapIfPresent(self.keyboards.buttons["Dismiss"]) },
-            { self.tapIfPresent(self.toolbars.buttons["Done"]) },
-            {
-                self.dragAboveKeyboard()
-                return true
-            },
-        ]
-
         let failure = KeyboardDismissal.failure(
             isShowing: { self.isKeyboardShowing },
-            attempts: attempts,
-            timeout: timeout
+            dismiss: { self.dragAboveKeyboard() },
+            timeout: timeout ?? ActionTimeout.current
         )
         if let failure {
             ExpectationReporter.report(message: failure, filePath: filePath, line: line)
@@ -62,44 +59,32 @@ extension XCUIApplication {
         coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: start))
             .press(forDuration: 0.05, thenDragTo: coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: start + 0.06)))
     }
-
-    private func tapIfPresent(_ element: XCUIElement) -> Bool {
-        guard element.exists, element.isHittable else { return false }
-        element.tap()
-        return true
-    }
 }
 
-/// The order in which ways of dismissing the keyboard are tried.
+/// The steps of dismissing the keyboard that do not need a running app.
 enum KeyboardDismissal {
-    /// How long to give the keyboard to go after one attempt, before trying the next.
-    static let settlingTime: Duration = .seconds(1)
-
-    /// Tries each way of dismissing the keyboard until it is no longer showing.
+    /// Dismisses the keyboard if it is showing, and waits for it to go.
     ///
     /// - Parameters:
     ///   - isShowing: Whether the keyboard is showing.
-    ///   - attempts: The ways to try, in order. Each returns whether it did anything.
-    ///   - timeout: How long to wait for the keyboard to go after the last attempt.
+    ///   - dismiss: Makes the gesture that dismisses the keyboard.
+    ///   - timeout: How long to wait for the keyboard to go.
     /// - Returns: `nil` if the keyboard went, or was not showing, and a description of
     ///   the failure if it is still there.
     static func failure(
         isShowing: () -> Bool,
-        attempts: [() -> Bool],
+        dismiss: () -> Void,
         timeout: Duration,
         polling: ExpectationPolling = ExpectationPolling()
     ) -> String? {
         guard isShowing() else { return nil }
 
-        for (index, attempt) in attempts.enumerated() where attempt() {
-            let isLast = index == attempts.count - 1
-            let wait = isLast ? timeout : min(settlingTime, timeout)
-            if polling.wait(timeout: wait, until: { !isShowing() }) == .met {
-                return nil
-            }
+        dismiss()
+        if polling.wait(timeout: timeout, until: { !isShowing() }) == .met {
+            return nil
         }
-        return "Could not dismiss the keyboard: it was still showing after every way of dismissing it was tried\n"
-            + "The app has to offer one: a key that hides the keyboard, a Done button in a toolbar, "
-            + "or a scroll view that dismisses the keyboard when dragged."
+        return "Could not dismiss the keyboard: it was still showing after a drag on the content above it\n"
+            + "The drag only works in a scroll view that dismisses the keyboard when dragged. "
+            + "Otherwise, tap the app's own button for dismissing the keyboard."
     }
 }
