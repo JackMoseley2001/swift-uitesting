@@ -6,6 +6,7 @@ struct DemoApp: App {
     var body: some Scene {
         WindowGroup {
             ExampleList(traits: .current)
+                .uiTestAnimationsDisabled()
         }
     }
 }
