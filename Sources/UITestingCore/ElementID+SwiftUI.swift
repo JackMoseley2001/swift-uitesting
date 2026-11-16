@@ -10,10 +10,12 @@ extension View {
     /// ```
     ///
     /// This is SwiftUI's `accessibilityIdentifier(_:)` with the string taken from the
-    /// identifier's ``ElementID/accessibilityIdentifier``.
+    /// identifier's ``ElementID/accessibilityIdentifier``. It does not check that the
+    /// view is the kind of element the identifier is for. A UI test looks for that
+    /// kind, so it does not find the element if the two differ.
     ///
     /// - Parameter id: The identifier for the view.
-    public func accessibilityIdentifier(_ id: some ElementID) -> some View {
+    public func accessibilityIdentifier<Kind: ElementKind>(_ id: ElementID<Kind>) -> some View {
         accessibilityIdentifier(id.accessibilityIdentifier)
     }
 }

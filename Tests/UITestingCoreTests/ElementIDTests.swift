@@ -1,22 +1,23 @@
+import Foundation
 import Testing
 import UITestingCore
 
 @Suite
 struct ElementIDTests {
     @Test
-    func identifierIsTheTypeNameAndTheCaseName() {
+    func identifierIsTheGroupNameAndTheMemberName() {
         #expect(LoginID.signInButton.accessibilityIdentifier == "LoginID.signInButton")
         #expect(LoginID.namespace == "LoginID")
-        #expect(LoginID.signInButton.name == "signInButton")
     }
 
     @Test
-    func sameCaseNameInTwoTypesGivesDifferentIdentifiers() {
-        #expect(LoginID.title.accessibilityIdentifier != SettingsID.title.accessibilityIdentifier)
+    func sameMemberNameInTwoGroupsGivesDifferentIdentifiers() {
+        #expect(LoginID.title.accessibilityIdentifier == "LoginID.title")
+        #expect(SettingsID.title.accessibilityIdentifier == "SettingsID.title")
     }
 
     @Test
-    func nestedTypesIncludeTheTypesTheyAreNestedIn() {
+    func nestedGroupsIncludeTheTypesTheyAreNestedIn() {
         #expect(LoginScreen.ID.title.accessibilityIdentifier == "LoginScreen.ID.title")
         #expect(SettingsScreen.ID.title.accessibilityIdentifier == "SettingsScreen.ID.title")
     }
@@ -28,14 +29,14 @@ struct ElementIDTests {
     }
 
     @Test
-    func privateTypeUsesItsOwnName() {
+    func privateGroupUsesItsOwnName() {
         #expect(PrivateID.only.accessibilityIdentifier == "PrivateID.only")
     }
 
     @Test
-    func localTypeLeavesOutContextsThatHaveNoName() {
-        enum LocalID: ElementID {
-            case only
+    func localGroupLeavesOutContextsThatHaveNoName() {
+        enum LocalID: ElementIDs {
+            static var only: Button { element() }
         }
 
         let identifier = LocalID.only.accessibilityIdentifier
@@ -46,109 +47,160 @@ struct ElementIDTests {
     }
 
     @Test
-    func genericTypeKeepsItsArguments() {
-        #expect(Wrapper<Int>.ID.only.accessibilityIdentifier == "Wrapper<Swift.Int>.ID.only")
-    }
-
-    @Test
-    func associatedValueTellsRowsApart() {
+    func argumentTellsRowsApart() {
         #expect(InboxID.row(1234).accessibilityIdentifier == "InboxID.row(1234)")
-        #expect(InboxID.row(1234).accessibilityIdentifier != InboxID.row(1235).accessibilityIdentifier)
+        #expect(InboxID.row(1234) != InboxID.row(1235))
+        #expect(InboxID.row(1234) == InboxID.row(1234))
         #expect(InboxID.list.accessibilityIdentifier == "InboxID.list")
     }
 
     @Test
-    func associatedValuesKeepTheirLabels() {
+    func argumentsKeepTheirLabels() {
         #expect(InboxID.deleteButton(row: 7).accessibilityIdentifier == "InboxID.deleteButton(row: 7)")
-        #expect(InboxID.attachment(message: "a1", index: 2).name == #"attachment(message: "a1", index: 2)"#)
+        #expect(
+            InboxID.attachment("a1", index: 2).accessibilityIdentifier == "InboxID.attachment(a1, index: 2)"
+        )
     }
 
     @Test
-    func rawStringValueIsUsedAsTheName() {
-        #expect(RawValueID.signInButton.accessibilityIdentifier == "RawValueID.sign-in-button")
+    func functionsWithDifferentLabelsGiveDifferentIdentifiers() {
+        #expect(InboxID.badge(row: 1).accessibilityIdentifier == "InboxID.badge(row: 1)")
+        #expect(InboxID.badge(section: 1).accessibilityIdentifier == "InboxID.badge(section: 1)")
     }
 
     @Test
-    func rawIntegerValueIsNotUsedAsTheName() {
-        #expect(IntegerRawValueID.first.accessibilityIdentifier == "IntegerRawValueID.first")
+    func labelsAreLeftOutWhenNotEveryArgumentIsPassedOn() {
+        #expect(InboxID.header(section: 3, style: "plain").accessibilityIdentifier == "InboxID.header(3)")
     }
 
     @Test
-    func namespaceCanBeChosen() {
-        #expect(RenamedID.title.accessibilityIdentifier == "login.title")
-    }
+    func uuidArgumentIsDescribedByItsString() {
+        let id = UUID(uuidString: "E621E1F8-C36C-495A-93FC-0C247A3E6E5F")!
 
-    @Test
-    func namespaceCanBeLeftOut() {
-        #expect(LegacyID.signInButton.accessibilityIdentifier == "sign-in-button")
+        #expect(InboxID.draft(id).accessibilityIdentifier == "InboxID.draft(E621E1F8-C36C-495A-93FC-0C247A3E6E5F)")
     }
 
     @Test
     func nameCanBeChosen() {
-        #expect(CustomNameID(row: 3).accessibilityIdentifier == "CustomNameID.row-3")
+        #expect(RenamedID.title.accessibilityIdentifier == "login.heading")
+    }
+
+    @Test
+    func namespaceCanBeChosen() {
+        #expect(RenamedID.subtitle.accessibilityIdentifier == "login.subtitle")
+    }
+
+    @Test
+    func namespaceCanBeLeftOut() {
+        #expect(UnprefixedID.signInButton.accessibilityIdentifier == "signInButton")
+    }
+
+    @Test
+    func identifierCanBeAnExactString() {
+        #expect(LegacyID.signInButton.accessibilityIdentifier == "sign-in-button")
+    }
+
+    @Test
+    func identifierKnowsItsKindOfElement() {
+        #expect(elementType(of: LoginID.title) == .staticText)
+        #expect(elementType(of: LoginID.emailField) == .textField)
+        #expect(elementType(of: LoginID.signInButton) == .button)
+        #expect(elementType(of: InboxID.row(1)) == .cell)
+        #expect(elementType(of: InboxID.list) == .any)
+    }
+
+    @Test
+    func customKindCanBeUsed() {
+        #expect(elementType(of: CustomKindID.rating) == .slider)
+    }
+
+    @Test
+    func everyElementTypeHasAKind() {
+        let kinds: [any ElementKind.Type] = [
+            ElementKinds.AnyElement.self, ElementKinds.Other.self, ElementKinds.Button.self,
+            ElementKinds.StaticText.self, ElementKinds.TextField.self, ElementKinds.SecureTextField.self,
+            ElementKinds.TextView.self, ElementKinds.SearchField.self, ElementKinds.Switch.self,
+            ElementKinds.Toggle.self, ElementKinds.CheckBox.self, ElementKinds.RadioButton.self,
+            ElementKinds.Slider.self, ElementKinds.Stepper.self, ElementKinds.Picker.self,
+            ElementKinds.PickerWheel.self, ElementKinds.DatePicker.self, ElementKinds.SegmentedControl.self,
+            ElementKinds.PopUpButton.self, ElementKinds.MenuButton.self, ElementKinds.Menu.self,
+            ElementKinds.MenuItem.self, ElementKinds.Image.self, ElementKinds.Icon.self,
+            ElementKinds.Link.self, ElementKinds.Cell.self, ElementKinds.Table.self,
+            ElementKinds.CollectionView.self, ElementKinds.ScrollView.self, ElementKinds.NavigationBar.self,
+            ElementKinds.TabBar.self, ElementKinds.Tab.self, ElementKinds.Toolbar.self,
+            ElementKinds.Alert.self, ElementKinds.Sheet.self, ElementKinds.Window.self,
+            ElementKinds.Group.self, ElementKinds.WebView.self, ElementKinds.Map.self,
+            ElementKinds.ProgressIndicator.self, ElementKinds.ActivityIndicator.self,
+            ElementKinds.PageIndicator.self, ElementKinds.Keyboard.self, ElementKinds.Key.self,
+        ]
+
+        #expect(Set(kinds.map { $0.elementType }) == Set(ElementType.allCases))
+        #expect(kinds.count == ElementType.allCases.count)
     }
 }
 
-private enum PrivateID: ElementID {
-    case only
+private func elementType<Kind: ElementKind>(of id: ElementID<Kind>) -> ElementType {
+    Kind.elementType
 }
 
-enum LoginID: ElementID {
-    case title
-    case signInButton
+private enum PrivateID: ElementIDs {
+    static var only: Button { element() }
 }
 
-enum SettingsID: ElementID {
-    case title
+enum LoginID: ElementIDs {
+    static var title: StaticText { element() }
+    static var emailField: TextField { element() }
+    static var signInButton: Button { element() }
+}
+
+enum SettingsID: ElementIDs {
+    static var title: StaticText { element() }
 }
 
 enum LoginScreen {
-    enum ID: ElementID {
-        case title
+    enum ID: ElementIDs {
+        static var title: StaticText { element() }
     }
 }
 
 enum SettingsScreen {
-    enum ID: ElementID {
-        case title
+    enum ID: ElementIDs {
+        static var title: StaticText { element() }
     }
 }
 
-enum Wrapper<Value> {
-    enum ID: ElementID {
-        case only
-    }
+enum InboxID: ElementIDs {
+    static var list: AnyElement { element() }
+    static func row(_ id: Int) -> Cell { element(id) }
+    static func deleteButton(row: Int) -> Button { element(row) }
+    static func attachment(_ message: String, index: Int) -> Image { element(message, index) }
+    static func badge(row: Int) -> StaticText { element(row) }
+    static func badge(section: Int) -> StaticText { element(section) }
+    static func header(section: Int, style: String) -> StaticText { element(section) }
+    static func draft(_ id: UUID) -> Cell { element(id) }
 }
 
-enum InboxID: ElementID {
-    case list
-    case row(Int)
-    case deleteButton(row: Int)
-    case attachment(message: String, index: Int)
-}
-
-enum RawValueID: String, ElementID {
-    case signInButton = "sign-in-button"
-}
-
-enum IntegerRawValueID: Int, ElementID {
-    case first = 1
-}
-
-enum RenamedID: ElementID {
-    case title
-
+enum RenamedID: ElementIDs {
     static var namespace: String? { "login" }
+
+    static var title: StaticText { element(name: "heading") }
+    static var subtitle: StaticText { element() }
 }
 
-enum LegacyID: String, ElementID {
-    case signInButton = "sign-in-button"
-
+enum UnprefixedID: ElementIDs {
     static var namespace: String? { nil }
+
+    static var signInButton: Button { element() }
 }
 
-struct CustomNameID: ElementID {
-    var row: Int
+enum LegacyID: ElementIDs {
+    static var signInButton: Button { Button("sign-in-button") }
+}
 
-    var name: String { "row-\(row)" }
+enum RatingControl: ElementKind {
+    static var elementType: ElementType { .slider }
+}
+
+enum CustomKindID: ElementIDs {
+    static var rating: ElementID<RatingControl> { element() }
 }

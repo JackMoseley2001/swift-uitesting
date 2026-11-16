@@ -86,14 +86,16 @@ struct AuthState: LaunchPayload {
 
 ### Identify elements for UI tests
 
-An ``ElementID`` is a typed accessibility identifier that the app and its UI tests
-share, so neither writes the identifier as a string. Declare the type in code that both
-targets compile.
+An ``ElementIDs`` group holds typed accessibility identifiers that the app and its UI
+tests share, so neither writes an identifier as a string. Declare the group in code
+that both targets compile. The type of each member says what kind of element it
+identifies, so a test does not have to.
 
 ```swift
-enum InboxID: ElementID {
-    case list
-    case row(Int)
+enum InboxID: ElementIDs {
+    static var title: StaticText { element() }
+    static var composeButton: Button { element() }
+    static func row(_ id: Int) -> Cell { element(id) }
 }
 
 ForEach(messages) { message in
@@ -102,9 +104,9 @@ ForEach(messages) { message in
 }
 ```
 
-Each identifier is prefixed with the name of its type, so two types can use the same
-case name without their identifiers clashing. An associated value identifies one
-element out of many, such as the row for a particular item.
+Each identifier is prefixed with the name of its group, so two groups can use the same
+member name without their identifiers clashing. A function identifies one element out
+of many, such as the row for a particular item.
 
 ### Release builds
 
@@ -125,7 +127,11 @@ release build, create the traits with ``LaunchTraits/init(processInfo:)`` instea
 
 ### Identifying elements
 
+- ``ElementIDs``
 - ``ElementID``
+- ``ElementKind``
+- ``ElementKinds``
+- ``ElementType``
 
 ### Describing a launch in a UI test
 
