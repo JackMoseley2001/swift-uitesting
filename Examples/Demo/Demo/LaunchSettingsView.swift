@@ -9,7 +9,7 @@ struct LaunchSettingsView: View {
     var body: some View {
         VStack(spacing: 8) {
             row("Language", Locale.preferredLanguages.first ?? "", AccessibilityID.preferredLanguage)
-            row("Locale", Locale.current.identifier, AccessibilityID.localeIdentifier)
+            row("Region", Locale.current.region?.identifier ?? "", AccessibilityID.region)
             row(
                 "Beta features",
                 UserDefaults.standard.bool(forKey: DefaultsKey.showsBetaFeatures) ? "on" : "off",

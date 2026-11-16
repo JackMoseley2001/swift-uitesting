@@ -17,7 +17,7 @@ final class LaunchSettingsTests: XCTestCase {
 
     @UITest(traits: .locale("fr_FR"))
     func localeIsPassedToTheApp(app: XCUIApplication) {
-        #expect(app.staticTexts[AccessibilityID.localeIdentifier].label.hasPrefix("fr_FR"))
+        #expect(app.staticTexts[AccessibilityID.region].label == "FR")
     }
 
     @UITest(traits: .userDefault(DefaultsKey.showsBetaFeatures, true))
@@ -32,6 +32,7 @@ final class LaunchSettingsTests: XCTestCase {
 
     @UITest(traits: .appearance(.dark))
     func deviceIsInDarkMode(app: XCUIApplication) {
+        #expect(XCUIDevice.shared.appearance == .dark)
         #expect(app.staticTexts[AccessibilityID.appearance].label == "dark", within: .seconds(5))
     }
 
