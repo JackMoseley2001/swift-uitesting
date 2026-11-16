@@ -39,6 +39,24 @@ applied after them, so a test can override its suite.
 To run a test without the macros, conform the test case to ``UITestSuite`` and call
 ``UITestRunner/run(_:traits:body:)`` from a test method.
 
+### Check the app
+
+Use ``expect(_:_:within:)`` to check a condition. A failed expectation is recorded
+against the test, which then carries on. Pass a timeout to wait for something that
+does not happen immediately.
+
+```swift
+@UITest
+func loadsTheMessage(app: XCUIApplication) {
+    app.buttons["load-message-button"].tap()
+
+    #expect(app.staticTexts["message"].exists, within: .seconds(5))
+    #expect(app.staticTexts["message"].label == "Hello")
+}
+```
+
+When a comparison with `==` fails, the message shows how the two values differ.
+
 ### Configure the launch
 
 The built-in traits add launch arguments, environment variables and typed payloads.
@@ -73,6 +91,10 @@ extension UITestTrait where Self == DismissSystemAlerts {
 - ``UITestRunner``
 - ``UITestSuite``
 - ``UITestContext``
+
+### Expectations
+
+- ``expect(_:_:within:)``
 
 ### Traits
 

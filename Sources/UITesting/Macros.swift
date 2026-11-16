@@ -74,3 +74,55 @@ public macro UITestSuite(traits: any UITestTrait...) =
 @attached(peer, names: prefixed(test_))
 public macro UITest(traits: any UITestTrait...) =
     #externalMacro(module: "UITestingMacros", type: "UITestMacro")
+
+/// Checks that a condition is true, and records a failure of the test if it is not.
+///
+/// The test continues after a failed expectation, so one run can report several.
+///
+/// ```swift
+/// @UITest
+/// func showsTheSignedInUser(app: XCUIApplication) {
+///     #expect(app.staticTexts["auth-status"].label == "Signed in")
+///     #expect(!app.buttons["sign-in-button"].exists)
+/// }
+/// ```
+///
+/// ## Waiting for a condition
+///
+/// Pass a timeout to wait for something that does not happen immediately. The condition
+/// is checked repeatedly until it is true or the timeout has passed.
+///
+/// ```swift
+/// app.buttons["load-message-button"].tap()
+/// #expect(app.staticTexts["message"].exists, within: .seconds(5))
+/// ```
+///
+/// ## Failure messages
+///
+/// A failure shows the source code of the condition and, if you pass one, your comment.
+/// When the condition compares two values with `==`, it also shows how they differ:
+///
+/// ```
+/// Expectation failed: app.staticTexts["auth-status"].label == "Signed in"
+/// - "Signed out"
+/// + "Signed in"
+/// ```
+///
+/// ## Using Swift Testing in the same file
+///
+/// Swift Testing has a macro with the same name. In a file that imports both `Testing`
+/// and `UITesting`, write the name of the module before the macro: `#UITesting::expect(…)`
+/// or `#Testing::expect(…)`. This requires Swift 6.3 or later, and swift-syntax 603 or
+/// later if your package graph pins it.
+///
+/// - Parameters:
+///   - condition: The condition to check. It cannot contain `await`.
+///   - comment: A comment to include in the failure message.
+///   - timeout: How long to wait for the condition to become true. By default the
+///     condition is checked once.
+@freestanding(expression)
+public macro expect(
+    _ condition: Bool,
+    _ comment: @autoclosure () -> String? = nil,
+    within timeout: Duration? = nil
+) = #externalMacro(module: "UITestingMacros", type: "ExpectMacro")
