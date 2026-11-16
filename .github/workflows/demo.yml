@@ -58,8 +58,9 @@ jobs:
       - name: Show failure details
         if: failure()
         run: |
-          # The formatted log shows only the first line of each failure message.
-          grep -A 8 -E "error: -\[|: error: " xcodebuild.log | head -n 200 || true
+          # The formatted log shows only the first line of each failure message, so print
+          # everything xcodebuild logged for each test that failed.
+          awk '/^Test Case .* started\.$/ { log = "" } { log = log $0 "\n" } /^Test Case .* failed \(/ { printf "%s\n", log }' xcodebuild.log | head -n 400 || true
           xcrun simctl runtime list || true
           xcrun simctl list devices available || true
           ls -lt ~/Library/Logs/DiagnosticReports 2>/dev/null | head -n 10 || true

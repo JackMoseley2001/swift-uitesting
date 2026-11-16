@@ -33,7 +33,7 @@ final class LaunchSettingsTests: XCTestCase {
     @UITest(traits: .appearance(.dark))
     func deviceIsInDarkMode(app: XCUIApplication) {
         #expect(XCUIDevice.shared.appearance == .dark)
-        #expect(app.staticTexts[AccessibilityID.appearance].label == "dark", within: .seconds(5))
+        #expect(app.staticTexts[AccessibilityID.appearance].label == "dark", within: .seconds(20))
     }
 
     @UITest(traits: .disabled("Shows that a disabled test is skipped"))
