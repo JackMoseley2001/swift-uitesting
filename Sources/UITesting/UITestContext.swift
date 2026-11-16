@@ -46,8 +46,9 @@ public struct UITestContext {
     /// not carried over to a later one.
     ///
     /// Only the `prepare(_:)` step of the traits passed here is used, because that is
-    /// the step that configures a launch. Their `setUp(_:)` and `tearDown(_:)` steps
-    /// are not run, and the steps of the test's own traits are not run again.
+    /// the step that configures a launch. Their `willLaunch(_:)`, `setUp(_:)` and
+    /// `tearDown(_:)` steps are not run, and the steps of the test's own traits are
+    /// not run again.
     ///
     /// In a test with the ``UITestTrait/manualLaunch`` trait, this can also be the
     /// call that launches the app for the first time.

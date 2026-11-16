@@ -10,12 +10,20 @@ final class UITestRunnerTests {
 
     private func run(
         steps: [String],
+        failingWillLaunch: String? = nil,
         failingSetUp: String? = nil,
         failingTearDown: String? = nil,
         body: @MainActor () async throws -> Void = {}
     ) async throws {
         try await UITestRunner.withSteps(
             steps,
+            willLaunch: { step in
+                events.append("willLaunch \(step)")
+                if step == failingWillLaunch { throw TestError(message: "willLaunch \(step)") }
+            },
+            launch: {
+                events.append("launch")
+            },
             setUp: { step in
                 events.append("setUp \(step)")
                 if step == failingSetUp { throw TestError(message: "setUp \(step)") }
@@ -46,7 +54,12 @@ final class UITestRunnerTests {
             events.append("body")
         }
 
-        #Testing::expect(events == ["setUp a", "setUp b", "body", "tearDown b", "tearDown a"])
+        #Testing::expect(
+            events == [
+                "willLaunch a", "willLaunch b", "launch",
+                "setUp a", "setUp b", "body", "tearDown b", "tearDown a",
+            ]
+        )
         #Testing::expect(additionalErrors.isEmpty)
     }
 
@@ -56,7 +69,7 @@ final class UITestRunnerTests {
             events.append("body")
         }
 
-        #Testing::expect(events == ["body"])
+        #Testing::expect(events == ["launch", "body"])
     }
 
     @Test
@@ -68,7 +81,9 @@ final class UITestRunnerTests {
         }
 
         #Testing::expect(error == TestError(message: "body"))
-        #Testing::expect(events == ["setUp a", "setUp b", "tearDown b", "tearDown a"])
+        #Testing::expect(
+            events == ["willLaunch a", "willLaunch b", "launch", "setUp a", "setUp b", "tearDown b", "tearDown a"]
+        )
         #Testing::expect(additionalErrors.isEmpty)
     }
 
@@ -81,7 +96,32 @@ final class UITestRunnerTests {
         }
 
         #Testing::expect(error == TestError(message: "setUp b"))
-        #Testing::expect(events == ["setUp a", "setUp b", "tearDown b", "tearDown a"])
+        #Testing::expect(
+            events == [
+                "willLaunch a", "willLaunch b", "willLaunch c", "launch",
+                "setUp a", "setUp b", "tearDown b", "tearDown a",
+            ]
+        )
+    }
+
+    @Test
+    func everyStepRunsItsPreLaunchWorkBeforeTheLaunch() async throws {
+        try await run(steps: ["a", "b", "c"])
+
+        #Testing::expect(events.prefix(4) == ["willLaunch a", "willLaunch b", "willLaunch c", "launch"])
+    }
+
+    @Test
+    func preLaunchErrorStopsTheLaunchAndTearsNothingDown() async {
+        let error = await thrownError {
+            try await run(steps: ["a", "b", "c"], failingWillLaunch: "b") {
+                events.append("body")
+            }
+        }
+
+        #Testing::expect(error == TestError(message: "willLaunch b"))
+        #Testing::expect(events == ["willLaunch a", "willLaunch b"])
+        #Testing::expect(additionalErrors.isEmpty)
     }
 
     @Test
@@ -91,7 +131,9 @@ final class UITestRunnerTests {
         }
 
         #Testing::expect(error == TestError(message: "tearDown b"))
-        #Testing::expect(events == ["setUp a", "setUp b", "tearDown b", "tearDown a"])
+        #Testing::expect(
+            events == ["willLaunch a", "willLaunch b", "launch", "setUp a", "setUp b", "tearDown b", "tearDown a"]
+        )
         #Testing::expect(additionalErrors.isEmpty)
     }
 

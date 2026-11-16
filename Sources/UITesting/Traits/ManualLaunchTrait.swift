@@ -11,20 +11,25 @@ extension UITestTrait where Self == ManualLaunchTrait {
     ///
     /// ```swift
     /// @UITest(traits: .manualLaunch)
-    /// func asksForAccessToPhotos(app: XCUIApplication) {
-    ///     app.resetAuthorizationStatus(for: .photos)
+    /// func loadsTheFeedFromALocalServer(app: XCUIApplication) async throws {
+    ///     // Your own code: something whose details are only known once the test is running.
+    ///     let server = try await LocalServer.start()
+    ///     app.launchEnvironment["API_URL"] = server.url.absoluteString
     ///     app.launch()
     ///
-    ///     app.buttons["choose-photo-button"].tap()
     ///     // ...
     /// }
     /// ```
     ///
     /// To launch with further traits, call ``UITestContext/relaunch(with:)``.
     ///
-    /// The `setUp(_:)` step of every trait still runs before the test, which in a test
-    /// with this trait is before the app has launched. A trait that looks for
-    /// something in the app during `setUp(_:)` does not work with this trait.
+    /// The `willLaunch(_:)` and `setUp(_:)` steps of every trait still run before the
+    /// test, which in a test with this trait means `setUp(_:)` runs before the app has
+    /// launched. A trait that looks for something in the app during `setUp(_:)` does
+    /// not work with this trait.
+    ///
+    /// If several tests need the same work done before the launch, write a trait with a
+    /// `willLaunch(_:)` step instead.
     ///
     /// On a suite, this applies to every test in the suite.
     public static var manualLaunch: Self {

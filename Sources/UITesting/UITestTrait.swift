@@ -15,6 +15,16 @@ import XCTest
 /// }
 /// ```
 ///
+/// It can do something with the app just before it launches:
+///
+/// ```swift
+/// struct ForgetPhotosAccess: UITestTrait {
+///     func willLaunch(_ context: UITestContext) async throws {
+///         context.app.resetAuthorizationStatus(for: .photos)
+///     }
+/// }
+/// ```
+///
 /// Or it can act on the test itself, without sending anything to the app:
 ///
 /// ```swift
@@ -41,8 +51,12 @@ import XCTest
 /// ## Order
 ///
 /// Traits are applied in the order they are listed, with a suite's traits before a
-/// test's own. `prepare(_:)` and `setUp(_:)` run in that order, and
+/// test's own. `prepare(_:)`, `willLaunch(_:)` and `setUp(_:)` run in that order, and
 /// `tearDown(_:)` runs in reverse.
+///
+/// Each step runs for every trait before the next step starts: every trait prepares
+/// the launch, then every trait's `willLaunch(_:)` runs, then the app is launched,
+/// and then every trait is set up.
 public protocol UITestTrait: Sendable {
     /// Configures the launch of the app, before it is launched.
     ///
@@ -52,6 +66,24 @@ public protocol UITestTrait: Sendable {
     /// - Parameter launch: The launch configuration to modify. It already holds the
     ///   changes made by the traits listed before this one.
     func prepare(_ launch: inout LaunchConfiguration) throws
+
+    /// Performs work just before the app is launched.
+    ///
+    /// The app in the context has its launch arguments and environment set, but is
+    /// not running yet. Use this for work that has to be done before the app starts
+    /// and needs the app or the test case, such as resetting a permission.
+    ///
+    /// If this throws, the app is not launched and the test fails.
+    ///
+    /// This is called once, before the first launch. It is not called again by
+    /// ``UITestContext/relaunch(with:)``. In a test with the
+    /// ``UITestTrait/manualLaunch`` trait, it is called before the test body.
+    ///
+    /// `tearDown(_:)` is called only for a trait whose `setUp(_:)` was called. If
+    /// another trait fails before then, work done here is not undone.
+    ///
+    /// - Parameter context: The app and the test that is running.
+    @MainActor func willLaunch(_ context: UITestContext) async throws
 
     /// Performs work after the app has launched and before the test body runs.
     ///
@@ -68,6 +100,8 @@ public protocol UITestTrait: Sendable {
 
 extension UITestTrait {
     public func prepare(_ launch: inout LaunchConfiguration) throws {}
+
+    @MainActor public func willLaunch(_ context: UITestContext) async throws {}
 
     @MainActor public func setUp(_ context: UITestContext) async throws {}
 
