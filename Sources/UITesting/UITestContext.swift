@@ -1,4 +1,3 @@
-#if canImport(Darwin)
 import XCTest
 
 /// The app and the test that a trait or test body is working with.
@@ -16,4 +15,3 @@ public struct UITestContext {
     /// The configuration the app was launched with, after every trait was applied.
     public let launch: LaunchConfiguration
 }
-#endif

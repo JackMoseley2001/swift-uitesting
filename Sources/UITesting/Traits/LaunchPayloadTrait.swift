@@ -1,4 +1,3 @@
-#if canImport(Darwin)
 /// A trait that sends a payload to the app when it launches.
 ///
 /// Create one with ``UITestTrait/launch(_:)``. To give a payload a shorter name at
@@ -30,4 +29,3 @@ extension UITestTrait {
         LaunchPayloadTrait(payload: payload)
     }
 }
-#endif

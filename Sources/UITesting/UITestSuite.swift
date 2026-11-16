@@ -1,4 +1,3 @@
-#if canImport(Darwin)
 import XCTest
 
 /// A test case whose tests are run by ``UITestRunner``.
@@ -21,4 +20,3 @@ public protocol UITestSuite: XCTestCase {
 extension UITestSuite {
     public static var suiteTraits: [any UITestTrait] { [] }
 }
-#endif

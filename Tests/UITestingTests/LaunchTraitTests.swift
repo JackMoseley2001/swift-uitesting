@@ -1,4 +1,3 @@
-#if canImport(Darwin)
 import XCTest
 
 @testable import UITesting
@@ -60,4 +59,3 @@ final class LaunchTraitTests: XCTestCase {
 extension UITestTrait where Self == LaunchPayloadTrait<AuthState> {
     static var loggedOut: Self { .launch(AuthState(isLoggedIn: false)) }
 }
-#endif

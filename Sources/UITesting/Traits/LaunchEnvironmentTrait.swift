@@ -1,4 +1,3 @@
-#if canImport(Darwin)
 /// A trait that sets an environment variable for the launch of the app.
 ///
 /// Create one with ``UITestTrait/environment(_:_:)``.
@@ -24,4 +23,3 @@ extension UITestTrait where Self == LaunchEnvironmentTrait {
         LaunchEnvironmentTrait(name: name, value: value)
     }
 }
-#endif

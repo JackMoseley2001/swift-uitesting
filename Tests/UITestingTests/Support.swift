@@ -1,4 +1,3 @@
-#if canImport(Darwin)
 import UITesting
 
 struct AuthState: LaunchPayload, Equatable {
@@ -18,4 +17,3 @@ struct ThrowingTrait: UITestTrait {
         throw error
     }
 }
-#endif

@@ -1,4 +1,3 @@
-#if canImport(Darwin)
 import XCTest
 
 @testable import UITesting
@@ -101,4 +100,3 @@ final class UITestRunnerTests: XCTestCase {
         XCTAssertEqual(additionalErrors, [TestError(message: "tearDown a")])
     }
 }
-#endif

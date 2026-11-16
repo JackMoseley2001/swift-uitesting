@@ -1,4 +1,3 @@
-#if canImport(Darwin)
 /// A trait that adds arguments to the launch of the app.
 ///
 /// Create one with ``UITestTrait/launchArgument(_:)`` or ``UITestTrait/launchArguments(_:)``.
@@ -28,4 +27,3 @@ extension UITestTrait where Self == LaunchArgumentsTrait {
         LaunchArgumentsTrait(arguments: arguments)
     }
 }
-#endif

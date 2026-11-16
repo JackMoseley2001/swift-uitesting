@@ -1,4 +1,3 @@
-#if canImport(Darwin)
 import XCTest
 
 /// A reusable piece of configuration or behaviour that applies to a UI test or to a whole suite.
@@ -85,4 +84,3 @@ extension LaunchConfiguration {
         markAsUITesting()
     }
 }
-#endif

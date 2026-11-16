@@ -1,4 +1,3 @@
-#if canImport(Darwin)
 import XCTest
 
 /// Launches the app for a UI test and runs the test with its traits applied.
@@ -100,4 +99,3 @@ public enum UITestRunner {
         throw firstError
     }
 }
-#endif

@@ -1,4 +1,3 @@
-#if canImport(Darwin)
 import XCTest
 
 @testable import UITesting
@@ -25,4 +24,3 @@ final class UITestTraitTests: XCTestCase {
         }
     }
 }
-#endif
