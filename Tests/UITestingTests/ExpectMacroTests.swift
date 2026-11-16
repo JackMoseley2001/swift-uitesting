@@ -1,4 +1,3 @@
-import Foundation
 import Testing
 
 @testable import UITesting
@@ -10,33 +9,11 @@ struct ExpectMacroTests {
         var isAdmin: Bool
     }
 
-    /// Runs an operation and returns the expectation failures it reported.
-    private func failures(in operation: () throws -> Void) rethrows -> [ExpectationFailure] {
-        let recorded = Recorded()
-        try ExpectationReporter.$handler.withValue({ recorded.append($0) }) {
-            try operation()
-        }
-        return recorded.failures
-    }
-
-    private final class Recorded: @unchecked Sendable {
-        private let lock = NSLock()
-        private var storage: [ExpectationFailure] = []
-
-        var failures: [ExpectationFailure] {
-            lock.withLock { storage }
-        }
-
-        func append(_ failure: ExpectationFailure) {
-            lock.withLock { storage.append(failure) }
-        }
-    }
-
     @Test
     func trueConditionReportsNothing() {
         let label = "Signed in"
 
-        let failures = failures {
+        let failures = reportedFailures {
             #UITestingExpect(label == "Signed in")
             #UITestingExpect(!label.isEmpty)
             #UITestingExpect(label.count > 3, "has a label", within: .seconds(1))
@@ -49,7 +26,7 @@ struct ExpectMacroTests {
     func macroCanBeNamedByItsModule() {
         let label = "Signed out"
 
-        let failures = failures {
+        let failures = reportedFailures {
             #UITesting::expect(label == "Signed out")
             #UITesting::expect(label == "Signed in")
         }
@@ -62,7 +39,7 @@ struct ExpectMacroTests {
         let isVisible = false
 
         let line: UInt = #line + 2
-        let failures = failures {
+        let failures = reportedFailures {
             #UITestingExpect(isVisible)
         }
 
@@ -75,7 +52,7 @@ struct ExpectMacroTests {
 
     @Test
     func testContinuesAfterAFailedExpectation() {
-        let failures = failures {
+        let failures = reportedFailures {
             #UITestingExpect(1 > 2)
             #UITestingExpect(2 > 3)
         }
@@ -87,7 +64,7 @@ struct ExpectMacroTests {
     func commentIsIncludedInTheMessage() {
         let isVisible = false
 
-        let failures = failures {
+        let failures = reportedFailures {
             #UITestingExpect(isVisible, "after signing out")
         }
 
@@ -98,7 +75,7 @@ struct ExpectMacroTests {
     func failedComparisonShowsHowTheValuesDiffer() {
         let label = "Signed out"
 
-        let failures = failures {
+        let failures = reportedFailures {
             #UITestingExpect(label == "Signed in")
         }
 
@@ -117,7 +94,7 @@ struct ExpectMacroTests {
     func failedComparisonOfStructuredValuesShowsTheChangedProperty() {
         let account = Account(name: "Ada", isAdmin: false)
 
-        let failures = failures {
+        let failures = reportedFailures {
             #UITestingExpect(account == Account(name: "Ada", isAdmin: true), "after promotion")
         }
 
@@ -141,7 +118,7 @@ struct ExpectMacroTests {
         let alignment: NSTextAlignmentStandIn = .leading
         let optionalName: String? = "Ada"
 
-        let failures = failures {
+        let failures = reportedFailures {
             #UITestingExpect(alignment == .leading)
             #UITestingExpect(optionalName == "Ada")
             #UITestingExpect(optionalName != nil)
@@ -155,7 +132,7 @@ struct ExpectMacroTests {
         let text = "Signed in"
         let prefix = text.prefix(6)
 
-        let failures = failures {
+        let failures = reportedFailures {
             #UITestingExpect(prefix == "Signed")
             #UITestingExpect(prefix == "Logged")
         }
@@ -172,7 +149,7 @@ struct ExpectMacroTests {
             return evaluations >= 3
         }
 
-        let failures = failures {
+        let failures = reportedFailures {
             #UITestingExpect(becomesTrue(), within: .seconds(5))
         }
 
@@ -188,7 +165,7 @@ struct ExpectMacroTests {
             return evaluations
         }
 
-        let failures = failures {
+        let failures = reportedFailures {
             #UITestingExpect(count() == 3, within: .seconds(5))
         }
 
@@ -200,7 +177,7 @@ struct ExpectMacroTests {
     func timeoutIsMentionedWhenTheConditionNeverBecomesTrue() {
         let label = "Loading"
 
-        let failures = failures {
+        let failures = reportedFailures {
             #UITestingExpect(label == "Loaded", "after loading", within: .milliseconds(250))
         }
 
@@ -232,7 +209,7 @@ struct ExpectMacroTests {
     func conditionCanUseMainActorState() {
         let app = XCUIApplicationStandIn()
 
-        let failures = failures {
+        let failures = reportedFailures {
             #UITestingExpect(app.isReady)
             #UITestingExpect(app.title == "Demo")
         }

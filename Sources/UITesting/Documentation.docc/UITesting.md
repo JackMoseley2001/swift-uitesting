@@ -57,6 +57,20 @@ func loadsTheMessage(app: XCUIApplication) {
 
 When a comparison with `==` fails, the message shows how the two values differ.
 
+Use `#require` when the rest of the test depends on the condition. It records the
+failure and ends the test. It can also unwrap an optional value.
+
+```swift
+@UITest
+func loadsTheMessage(app: XCUIApplication) throws {
+    app.buttons["load-message-button"].tap()
+
+    try #require(app.staticTexts["message"].exists, within: .seconds(5))
+    let text = try #require(app.staticTexts["message"].value as? String)
+    #expect(text == "Hello")
+}
+```
+
 ### Configure the launch
 
 The built-in traits add launch arguments, environment variables and typed payloads.
@@ -96,6 +110,7 @@ extension UITestTrait where Self == DismissSystemAlerts {
 
 - ``expect(_:_:within:)``
 - ``UITestingExpect(_:_:within:)``
+- ``RequirementFailedError``
 
 ### Traits
 

@@ -151,3 +151,105 @@ public macro UITestingExpect(
     _ comment: @autoclosure () -> String? = nil,
     within timeout: Duration? = nil
 ) = #externalMacro(module: "UITestingMacros", type: "ExpectMacro")
+
+/// Checks that a condition is true, and ends the test if it is not.
+///
+/// Use this instead of ``expect(_:_:within:)`` when the rest of the test makes no sense
+/// unless the condition holds. A failure is recorded against the test and then thrown,
+/// so the call is written with `try`.
+///
+/// ```swift
+/// @UITest
+/// func showsTheLoadedMessage(app: XCUIApplication) throws {
+///     app.buttons["load-message-button"].tap()
+///
+///     try #require(app.staticTexts["message"].exists, within: .seconds(5))
+///     #expect(app.staticTexts["message"].label == "Hello")
+/// }
+/// ```
+///
+/// It takes the same arguments as `#expect`, waits in the same way, and shows how the
+/// two sides of a comparison with `==` differ.
+///
+/// In a file that also imports Swift Testing, which has a macro with the same name, use
+/// `#UITestingRequire` instead.
+///
+/// - Parameters:
+///   - condition: The condition to check. It cannot contain `await`.
+///   - comment: A comment to include in the failure message.
+///   - timeout: How long to wait for the condition to become true. By default the
+///     condition is checked once.
+/// - Throws: ``RequirementFailedError`` if the condition is not true.
+@freestanding(expression)
+public macro require(
+    _ condition: Bool,
+    _ comment: @autoclosure () -> String? = nil,
+    within timeout: Duration? = nil
+) = #externalMacro(module: "UITestingMacros", type: "RequireMacro")
+
+/// Returns the value of an optional, and ends the test if it is `nil`.
+///
+/// ```swift
+/// let title = try #require(app.staticTexts["title"].value as? String)
+/// #expect(title.hasPrefix("Welcome"))
+/// ```
+///
+/// A failure is recorded against the test and then thrown, so the call is written with
+/// `try`. Pass a timeout to wait for a value to become available.
+///
+/// In a file that also imports Swift Testing, which has a macro with the same name, use
+/// `#UITestingRequire` instead.
+///
+/// - Parameters:
+///   - optionalValue: The value to unwrap. It cannot contain `await`.
+///   - comment: A comment to include in the failure message.
+///   - timeout: How long to wait for a value. By default the value is read once.
+/// - Returns: The unwrapped value.
+/// - Throws: ``RequirementFailedError`` if the value is `nil`.
+@freestanding(expression)
+@discardableResult
+public macro require<Value>(
+    _ optionalValue: Value?,
+    _ comment: @autoclosure () -> String? = nil,
+    within timeout: Duration? = nil
+) -> Value = #externalMacro(module: "UITestingMacros", type: "RequireValueMacro")
+
+/// Checks that a condition is true and ends the test if it is not, under a name that
+/// does not clash with Swift Testing.
+///
+/// This is `#require` with a different name. Use it in a file that imports both `Testing`
+/// and `UITesting`, where `#require` is ambiguous. It works with every version of Swift
+/// this package supports.
+///
+/// - Parameters:
+///   - condition: The condition to check. It cannot contain `await`.
+///   - comment: A comment to include in the failure message.
+///   - timeout: How long to wait for the condition to become true. By default the
+///     condition is checked once.
+/// - Throws: ``RequirementFailedError`` if the condition is not true.
+@freestanding(expression)
+public macro UITestingRequire(
+    _ condition: Bool,
+    _ comment: @autoclosure () -> String? = nil,
+    within timeout: Duration? = nil
+) = #externalMacro(module: "UITestingMacros", type: "RequireMacro")
+
+/// Returns the value of an optional and ends the test if it is `nil`, under a name that
+/// does not clash with Swift Testing.
+///
+/// This is `#require` with a different name. Use it in a file that imports both `Testing`
+/// and `UITesting`, where `#require` is ambiguous.
+///
+/// - Parameters:
+///   - optionalValue: The value to unwrap. It cannot contain `await`.
+///   - comment: A comment to include in the failure message.
+///   - timeout: How long to wait for a value. By default the value is read once.
+/// - Returns: The unwrapped value.
+/// - Throws: ``RequirementFailedError`` if the value is `nil`.
+@freestanding(expression)
+@discardableResult
+public macro UITestingRequire<Value>(
+    _ optionalValue: Value?,
+    _ comment: @autoclosure () -> String? = nil,
+    within timeout: Duration? = nil
+) -> Value = #externalMacro(module: "UITestingMacros", type: "RequireValueMacro")
