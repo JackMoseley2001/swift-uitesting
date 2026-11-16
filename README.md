@@ -157,6 +157,7 @@ A trait is a reusable piece of configuration or behaviour. These are built in:
 | `.locale("fr_FR")` | Launches the app in a locale. |
 | `.userDefault("key", true)` | Overrides a `UserDefaults` value for the launch. Takes a `Bool`, `Int`, `Double` or `String`. |
 | `.orientation(.landscapeLeft)` | Rotates the device for the test, and puts it back afterwards. iOS only. |
+| `.manualLaunch` | Leaves launching the app to the test. See [Launching and relaunching](#launching-and-relaunching). |
 | `.enabled(if: condition)` | Skips the test unless the condition is true. |
 | `.disabled("reason")` | Skips the test. `.disabled(if:)` skips it when a condition is true. |
 
@@ -191,7 +192,7 @@ struct Landscape: UITestTrait {
 | Step | Runs |
 |---|---|
 | `prepare(_:)` | Before the app is launched. Throw `XCTSkip` here to skip the test. |
-| `setUp(_:)` | After the app has launched, before the test. |
+| `setUp(_:)` | After the app has launched, before the test. With `.manualLaunch`, the app has not launched yet. |
 | `tearDown(_:)` | After the test, whether it passed or failed, in reverse order. |
 
 To use a trait with leading-dot syntax, add a static member:
@@ -204,6 +205,69 @@ extension UITestTrait where Self == SkipOnboarding {
 @UITest(traits: .skipOnboarding)
 func opensTheHomeScreen(app: XCUIApplication) { /* ... */ }
 ```
+
+## Launching and relaunching
+
+The app is launched before a test starts. A test can launch it again, and it can take
+over the first launch.
+
+### Relaunching
+
+`relaunch(with:)` on the test's `UITestContext` ends the app and launches it again. Use
+it to check what the app does across a restart:
+
+```swift
+@UITest
+func keepsTheDraftAcrossARestart(context: UITestContext) throws {
+    let app = context.app
+    app.textFields["draft-field"].tap()
+    app.textFields["draft-field"].typeText("Hello")
+
+    try context.relaunch()
+
+    #expect(app.textFields["draft-field"].value as? String == "Hello")
+}
+```
+
+Pass traits to launch with a different configuration. They are applied after the
+test's own traits, so they can override them:
+
+```swift
+try context.relaunch(with: .loggedOut)
+```
+
+Things to know:
+
+- Each relaunch starts from the test's traits. Traits passed to one relaunch are not
+  carried over to the next.
+- Only the `prepare(_:)` step of the traits you pass is used. Their `setUp(_:)` and
+  `tearDown(_:)` steps are not run, so a trait such as `.orientation(_:)` has no effect
+  here.
+- Relaunching does not clear what the app has stored. That is what makes it useful for
+  testing a restart.
+
+### Launching the app yourself
+
+With `.manualLaunch`, the app is configured with the test's traits but not launched.
+The test does what it needs to first, then launches the app:
+
+```swift
+@UITest(traits: .manualLaunch)
+func asksForAccessToPhotos(app: XCUIApplication) {
+    app.resetAuthorizationStatus(for: .photos)
+    app.launch()
+
+    app.buttons["choose-photo-button"].tap()
+    // ...
+}
+```
+
+Call `app.launch()` to launch with the test's traits, or `context.relaunch(with:)` to
+add more.
+
+The `setUp(_:)` step of every trait still runs before the test, which is now before
+the app has launched. A trait that looks for something in the app during `setUp(_:)`
+does not work with `.manualLaunch`.
 
 ## Reading launch data in the app
 

@@ -96,6 +96,24 @@ value in the app's `UserDefaults` for that launch.
 On iOS, `.orientation(_:)` rotates the device for the test, and puts it back when the
 test finishes.
 
+### Launch the app again, or yourself
+
+The app is launched before a test starts. Call ``UITestContext/relaunch(with:)`` to
+end it and launch it again, which lets a test check what the app does across a
+restart. Traits passed to the call are applied after the test's own traits.
+
+```swift
+@UITest(traits: .loggedIn(as: "Ada"))
+func signsOutAcrossARestart(context: UITestContext) throws {
+    try context.relaunch(with: .loggedOut)
+
+    #expect(context.app.buttons["sign-in-button"].exists)
+}
+```
+
+With `.manualLaunch`, the app is configured but not launched, so the test can do
+something first and then call `launch()` on the app.
+
 ### Skip a test
 
 `.disabled(_:)` skips a test, and `.enabled(if:_:)` and `.disabled(if:_:)` skip it
@@ -152,6 +170,7 @@ extension UITestTrait where Self == DismissSystemAlerts {
 - ``LaunchArgumentsTrait``
 - ``LaunchEnvironmentTrait``
 - ``LaunchPayloadTrait``
+- ``ManualLaunchTrait``
 
 ### Skipping tests
 
