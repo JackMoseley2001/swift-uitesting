@@ -1,7 +1,7 @@
 import UITesting
 import XCTest
 
-@UITestSuite
+@UITestSuite(traits: .timeLimit(.seconds(60)))
 final class MessageTests: XCTestCase {
     @UITest
     func loadingShowsTheMessageAfterADelay(app: XCUIApplication) throws {
@@ -14,7 +14,7 @@ final class MessageTests: XCTestCase {
         #expect(message.label == "Hello from the demo app")
     }
 
-    @UITest
+    @UITest(traits: .timeLimit(.seconds(30)))
     func loadingShowsTheMessageInAnAsyncTest(app: XCUIApplication) async throws {
         let message = app.staticTexts[AccessibilityID.message]
 
