@@ -179,6 +179,7 @@ A trait is a reusable piece of configuration or behaviour. These are built in:
 | `.resetAuthorization(for: .photos)` | Makes the app forget a permission before it launches, so the system asks again. |
 | `.manualLaunch` | Leaves launching the app to the test. See [Launching and relaunching](#launching-and-relaunching). |
 | `.actionTimeout(.seconds(10))` | Sets how long actions on elements wait. See [Actions that wait](#actions-that-wait). |
+| `.failureAttachments(false)` | Stops a failed test attaching a screenshot and the element hierarchy. See [When a test fails](#when-a-test-fails). |
 | `.enabled(if: condition)` | Skips the test unless the condition is true. |
 | `.disabled("reason")` | Skips the test. `.disabled(if:)` skips it when a condition is true. |
 
@@ -669,6 +670,54 @@ normally import `Testing`. In one that does:
 - From Swift 6.3 you can also write the module name first: `#UITesting::expect(…)`.
   That is the only way to call Swift Testing's macros in such a file:
   `#Testing::expect(…)`.
+
+## Steps
+
+A test can group what it does into named steps. They are optional.
+
+```swift
+@UITest
+func sendsAMessage(app: XCUIApplication) throws {
+    try step("Sign in") {
+        try app[LoginID.emailField].enter("ada@example.com")
+        try app[LoginID.signInButton].tap()
+    }
+
+    try step("Write the message") {
+        try app[InboxID.composeButton].tap()
+        try app[ComposeID.bodyField].enter("Hello")
+    }
+}
+```
+
+- **Failures say where they happened.** A failure inside a step starts with the step's
+  name, and with each name in turn if steps are nested:
+
+  ```
+  [Write the message › Add a photo] Could not tap ComposeID.photoButton: no button with this identifier appeared within 5 seconds
+  ```
+
+- **Reports read as steps.** In Xcode's test report each step is an activity, and the
+  taps and checks made in it are listed inside it.
+- **A step returns what its body returns**, so it can hand a value to the rest of
+  the test: `let total = try step("Read the total") { app[BasketID.total].label }`.
+- **In an `async` test**, write `try await step("…") { … }` around code that awaits.
+  XCTest cannot keep an activity open across an `await`, so in the report that step is
+  a marker where it starts, with what happens in it listed after the marker. Failures
+  still start with the step's name.
+
+## When a test fails
+
+A test that fails has two things attached to it, which Xcode shows in the test report:
+
+- **Screen at failure**: a screenshot.
+- **Element hierarchy at failure**: every element the app had, with its type,
+  identifier, label and frame. This is where to look when an element could not be
+  found.
+
+They are captured once for a test, at its first failure, so they show the app as it
+was when things went wrong. Turn them off for a suite or a test with
+`.failureAttachments(false)`.
 
 ## Without the macros
 
