@@ -9,6 +9,11 @@ enum MacroName {
 
     /// A second name for `expect`, for files that also import Swift Testing.
     static let uiTestingExpect = "UITestingExpect"
+
+    static let require = "require"
+
+    /// A second name for `require`, for files that also import Swift Testing.
+    static let uiTestingRequire = "UITestingRequire"
 }
 
 /// The labels of the macros' parameters.
@@ -47,4 +52,9 @@ enum RuntimeName {
     /// The functions that `#expect` expands into.
     static let qualifiedExpect = "\(module).__expect"
     static let qualifiedExpectEqual = "\(module).__expectEqual"
+
+    /// The functions that `#require` expands into.
+    static let qualifiedRequire = "\(module).__require"
+    static let qualifiedRequireEqual = "\(module).__requireEqual"
+    static let qualifiedRequireValue = "\(module).__requireValue"
 }
