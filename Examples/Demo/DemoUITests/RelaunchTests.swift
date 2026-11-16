@@ -1,35 +1,35 @@
 import UITesting
 import XCTest
 
-@UITestSuite(traits: .loggedIn(as: "Ada"))
+@UITestSuite(traits: .example(.account), .loggedIn(as: "Ada"))
 final class RelaunchTests: XCTestCase {
     @UITest
     func relaunchingStartsTheAppAgainWithTheSameTraits(context: UITestContext) throws {
         let app = context.app
-        try app[AccessibilityID.signOutButton].tap()
-        #expect(app[AccessibilityID.authStatus].label == "Signed out")
+        try app[AccountID.signOutButton].tap()
+        #expect(app[AccountID.authStatus].label == "Signed out")
 
         try context.relaunch()
 
-        #expect(app[AccessibilityID.authStatus].label == "Signed in")
-        #expect(app[AccessibilityID.userName].label == "Ada")
+        #expect(app[AccountID.authStatus].label == "Signed in")
+        #expect(app[AccountID.userName].label == "Ada")
     }
 
     @UITest
     func relaunchingCanChangeTheTraits(context: UITestContext) throws {
         let app = context.app
-        #expect(app[AccessibilityID.authStatus].label == "Signed in")
+        #expect(app[AccountID.authStatus].label == "Signed in")
 
         try context.relaunch(with: .loggedOut)
 
-        #expect(app[AccessibilityID.authStatus].label == "Signed out")
-        #expect(!app[AccessibilityID.promoBanner].exists)
+        #expect(app[AccountID.authStatus].label == "Signed out")
+        #expect(!app[AccountID.promoBanner].exists)
 
         try context.relaunch(with: .promoBanner)
 
         // Each relaunch starts from the test's traits, so the app is signed in again.
-        #expect(app[AccessibilityID.authStatus].label == "Signed in")
-        #expect(app[AccessibilityID.promoBanner].exists)
+        #expect(app[AccountID.authStatus].label == "Signed in")
+        #expect(app[AccountID.promoBanner].exists)
     }
 
     @UITest(traits: .manualLaunch)
@@ -39,14 +39,14 @@ final class RelaunchTests: XCTestCase {
         app.launchArguments.append(LaunchArgument.showPromoBanner)
         app.launch()
 
-        #expect(app[AccessibilityID.promoBanner].exists)
-        #expect(app[AccessibilityID.userName].label == "Ada")
+        #expect(app[AccountID.promoBanner].exists)
+        #expect(app[AccountID.userName].label == "Ada")
     }
 
     @UITest(traits: .manualLaunch)
     func theTestLaunchesTheAppWithMoreTraits(context: UITestContext) throws {
         try context.relaunch(with: .loggedOut)
 
-        #expect(context.app[AccessibilityID.authStatus].label == "Signed out")
+        #expect(context.app[AccountID.authStatus].label == "Signed out")
     }
 }

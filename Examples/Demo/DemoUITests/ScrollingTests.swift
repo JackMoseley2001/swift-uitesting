@@ -1,7 +1,7 @@
 import UITesting
 import XCTest
 
-@UITestSuite
+@UITestSuite(traits: .example(.numberList))
 final class ScrollingTests: XCTestCase {
     @UITest
     func aRowFurtherDownDoesNotExistUntilItIsScrolledTo(app: XCUIApplication) throws {
@@ -21,12 +21,12 @@ final class ScrollingTests: XCTestCase {
 
     @UITest
     func scrollsBackUp(app: XCUIApplication) throws {
-        try app[NumberID.row(30)].scrollIntoView()
-        #expect(!app[AccessibilityID.authStatus].isHittable)
+        try app[NumberID.row(40)].scrollIntoView()
+        #expect(!app[NumberID.row(1)].exists)
 
-        try app[AccessibilityID.authStatus].scrollIntoView(.up)
+        try app[NumberID.row(1)].scrollIntoView(.up)
 
-        #expect(app[AccessibilityID.authStatus].isHittable)
+        #expect(app[NumberID.row(1)].isHittable)
     }
 
     @UITest
@@ -39,10 +39,10 @@ final class ScrollingTests: XCTestCase {
 
     @UITest
     func doesNothingWhenTheElementIsInView(app: XCUIApplication) throws {
-        let top = app[AccessibilityID.authStatus].frame
+        let top = app[NumberID.row(1)].frame
 
-        try app[AccessibilityID.authStatus].scrollIntoView()
+        try app[NumberID.row(1)].scrollIntoView()
 
-        #expect(app[AccessibilityID.authStatus].frame == top)
+        #expect(app[NumberID.row(1)].frame == top)
     }
 }

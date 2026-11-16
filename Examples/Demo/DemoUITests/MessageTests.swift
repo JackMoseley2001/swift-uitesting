@@ -1,14 +1,14 @@
 import UITesting
 import XCTest
 
-@UITestSuite
+@UITestSuite(traits: .example(.message))
 final class MessageTests: XCTestCase {
     @UITest
     func loadingShowsTheMessageAfterADelay(app: XCUIApplication) throws {
-        let message = app[AccessibilityID.message]
+        let message = app[MessageID.message]
         #expect(!message.exists)
 
-        try app[AccessibilityID.loadMessageButton].tap()
+        try app[MessageID.loadButton].tap()
 
         try message.waitToAppear()
         #expect(message.label == "Hello from the demo app")
@@ -16,9 +16,9 @@ final class MessageTests: XCTestCase {
 
     @UITest
     func loadingShowsTheMessageInAnAsyncTest(app: XCUIApplication) async throws {
-        let message = app[AccessibilityID.message]
+        let message = app[MessageID.message]
 
-        try app[AccessibilityID.loadMessageButton].tap()
+        try app[MessageID.loadButton].tap()
 
         try await #require(message.exists, within: .seconds(5))
         #expect(message.label == "Hello from the demo app")

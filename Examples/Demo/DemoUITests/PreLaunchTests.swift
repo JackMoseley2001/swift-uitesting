@@ -1,17 +1,17 @@
 import UITesting
 import XCTest
 
-@UITestSuite(traits: .loggedIn(as: "Ada"))
+@UITestSuite(traits: .example(.account), .loggedIn(as: "Ada"))
 final class PreLaunchTests: XCTestCase {
     @UITest(traits: .resetAuthorization(for: .photos))
     func theAppLaunchesAfterAPermissionIsReset(app: XCUIApplication) {
-        #expect(app[AccessibilityID.userName].label == "Ada")
+        #expect(app[AccountID.userName].label == "Ada")
     }
 
     @UITest(traits: .endedBeforeLaunch)
     func aTraitCanActBeforeTheAppLaunches(app: XCUIApplication) {
         #expect(app.state == .runningForeground)
-        #expect(app[AccessibilityID.userName].label == "Ada")
+        #expect(app[AccountID.userName].label == "Ada")
     }
 }
 
