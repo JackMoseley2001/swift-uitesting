@@ -59,7 +59,12 @@ enum ExpectationReporter {
     @TaskLocal static var handler: (@Sendable (ExpectationFailure) -> Void)?
 
     /// Records a failure of the running test at the place the expectation was written.
+    ///
+    /// The message says which named steps the test was in, and the first failure of a
+    /// test attaches what the app looked like.
     static func report(message: String, filePath: StaticString, line: UInt) {
+        let message = StepPath.describing(message)
+        RunningTest.captureFailure()
         if let handler {
             handler(ExpectationFailure(message: message, filePath: "\(filePath)", line: line))
         } else {
