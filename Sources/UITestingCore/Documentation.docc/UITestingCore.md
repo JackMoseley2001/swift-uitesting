@@ -70,6 +70,16 @@ struct PromoBanner: View {
 Environment values are not available in a view's initialiser, so read
 ``LaunchTraits/current`` directly when setting up a view's initial state.
 
+### Run without animations when a test asks
+
+A UI test can ask the app to run without animations, which makes tests faster and
+steadier. Add `uiTestAnimationsDisabled()` to the root view of a SwiftUI app, and to
+pushed or presented screens that have SwiftUI animations of their own. In a UIKit app,
+call ``LaunchTraits/applyAnimationSetting()`` when the app starts.
+
+Both do nothing unless a test asks, and ``LaunchTraits/animationsDisabled`` says
+whether one did.
+
 ### Share payload types between the app and its tests
 
 A payload type must be compiled into both the app and the UI test target. Put it in a

@@ -179,6 +179,7 @@ A trait is a reusable piece of configuration or behaviour. These are built in:
 | `.resetAuthorization(for: .photos)` | Makes the app forget a permission before it launches, so the system asks again. |
 | `.manualLaunch` | Leaves launching the app to the test. See [Launching and relaunching](#launching-and-relaunching). |
 | `.actionTimeout(.seconds(10))` | Sets how long actions on elements wait. See [Actions that wait](#actions-that-wait). |
+| `.animationsDisabled` | Asks the app to run without animations. The app has to opt in. See [Running without animations](#running-without-animations). |
 | `.failureAttachments(false)` | Stops a failed test attaching a screenshot and the element hierarchy. See [When a test fails](#when-a-test-fails). |
 | `.enabled(if: condition)` | Skips the test unless the condition is true. |
 | `.disabled("reason")` | Skips the test. `.disabled(if:)` skips it when a condition is true. |
@@ -349,6 +350,56 @@ Things to know:
   a reference to large data, such as the name of a bundled fixture, not the data itself.
 - **Mismatches.** If a payload is present but cannot be decoded, the app stops with an
   assertion failure in a debug build. Use `payload(_:)` to handle the error yourself.
+
+## Running without animations
+
+XCTest waits for the app to stop animating before each action, so animations add their
+length to every test. The `.animationsDisabled` trait asks the app to run without them:
+
+```swift
+@UITestSuite(traits: .animationsDisabled)
+final class InboxTests: XCTestCase { … }
+```
+
+The app has to act on the request, with one line on its root view:
+
+```swift
+import UITestingCore
+
+@main
+struct InboxApp: App {
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+                .uiTestAnimationsDisabled()
+        }
+    }
+}
+```
+
+The modifier does nothing unless a test asks, so it is safe to leave in the app. When
+a test does ask:
+
+- **Animations that UIKit runs** happen at once, everywhere in the app. These include
+  pushes on a navigation stack and the presentation of sheets. In the demo, a push
+  took about half as long.
+- **SwiftUI's own animations**, from `withAnimation` or an `animation` modifier,
+  happen at once in the view the modifier is on and the views inside it.
+
+A screen that is pushed onto a navigation stack or presented as a sheet is a view
+hierarchy of its own, which the modifier on the root view does not reach. Add the
+modifier to those screens as well if they have SwiftUI animations:
+
+```swift
+.navigationDestination(for: Route.self) { route in
+    RouteView(route)
+        .uiTestAnimationsDisabled()
+}
+```
+
+A UIKit app calls `LaunchTraits.current.applyAnimationSetting()` when it starts, which
+covers the animations UIKit runs. The app can also read
+`LaunchTraits.current.animationsDisabled` and decide for itself.
 
 ## Element identifiers
 

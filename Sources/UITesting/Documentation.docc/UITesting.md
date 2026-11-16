@@ -241,6 +241,7 @@ extension UITestTrait where Self == DismissSystemAlerts {
 ### Steps and failures
 
 - ``FailureAttachmentsTrait``
+- ``AnimationsDisabledTrait``
 
 ### Expectations
 
