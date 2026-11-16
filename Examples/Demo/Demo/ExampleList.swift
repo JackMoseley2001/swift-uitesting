@@ -40,6 +40,7 @@ private struct ExampleScreen: View {
         case .fruitList: FruitList()
         case .numberList: NumberList()
         case .launchSettings: LaunchSettingsView()
+        case .controls: ControlsView()
         }
     }
 }

@@ -383,3 +383,19 @@ extension ElementKinds.TextField: SingleLineTextEntryKind {}
 extension ElementKinds.SecureTextField: SingleLineTextEntryKind {}
 extension ElementKinds.SearchField: SingleLineTextEntryKind {}
 extension ElementKinds.TextView: TextEntryKind {}
+
+/// A kind of element that is either on or off.
+///
+/// In a UI test, elements of these kinds have actions for reading and setting that state.
+public protocol SwitchKind: ElementKind {}
+
+extension ElementKinds.Switch: SwitchKind {}
+extension ElementKinds.Toggle: SwitchKind {}
+
+/// A kind of element that holds a wheel to pick a value from.
+///
+/// In a UI test, elements of these kinds have an action for picking a value.
+public protocol PickerWheelKind: ElementKind {}
+
+extension ElementKinds.Picker: PickerWheelKind {}
+extension ElementKinds.PickerWheel: PickerWheelKind {}
