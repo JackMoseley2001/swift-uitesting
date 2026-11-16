@@ -251,8 +251,7 @@ was written on, and the test carries on.
 ```
 
 Pass `within:` to wait for something that does not happen immediately. The condition is
-checked repeatedly until it is true or the timeout passes. The wait blocks between
-checks, in the same way as `waitForExistence(timeout:)`.
+checked repeatedly until it is true or the timeout passes.
 
 ```swift
 app.buttons["load-message-button"].tap()
@@ -276,6 +275,31 @@ let title = try #require(app.staticTexts["title"].value as? String)
 ```
 
 A condition cannot contain `await`. Await the value first and pass the result.
+
+### Waiting in async tests
+
+How a wait behaves depends on the test it is in:
+
+- **In a test that is not `async`**, the wait blocks between checks, in the same way as
+  `waitForExistence(timeout:)`.
+- **In an `async` test**, write `await` before the macro. The wait then suspends the
+  test between checks, so other work on the main actor can run, and it ends early if
+  the test's task is cancelled.
+
+```swift
+@UITest
+func loadsTheMessage(app: XCUIApplication) async throws {
+    app.buttons["load-message-button"].tap()
+
+    await #expect(app.staticTexts["message"].exists, within: .seconds(5))
+    try await #require(app.staticTexts["message"].label == "Hello", within: .seconds(5))
+    let text = try await #require(app.staticTexts["message"].value as? String, within: .seconds(5))
+}
+```
+
+Only a call with `within:` needs `await`. Without a timeout, `#expect` and `#require`
+are written the same way in every test. Each check of the condition still blocks,
+because element queries are synchronous; what is freed is the time between checks.
 
 ### In a file that also imports Swift Testing
 
