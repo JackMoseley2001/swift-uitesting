@@ -39,6 +39,25 @@ applied after them, so a test can override its suite.
 To run a test without the macros, conform the test case to ``UITestSuite`` and call
 ``UITestRunner/run(_:traits:body:)`` from a test method.
 
+### Find elements
+
+Give elements typed identifiers with an `ElementIDs` group from UITestingCore, and a
+test finds them with the same members that the app tagged them with. Each identifier
+says what kind of element it is for, so the test does not have to.
+
+```swift
+@UITest
+func deletesAMessage(app: XCUIApplication) {
+    app[InboxID.deleteButton(row: 1234)].tap()
+
+    #expect(!app[InboxID.row(1234)].exists)
+}
+```
+
+`app[id]` looks for the kind of element the identifier declares, and `element[id]`
+looks only inside another element. To choose the query yourself, pass the identifier
+to it: `app.cells[InboxID.row(1234)]`.
+
 ### Check the app
 
 Use ``expect(_:_:within:)`` to check a condition. A failed expectation is recorded

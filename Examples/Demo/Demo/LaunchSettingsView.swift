@@ -1,4 +1,5 @@
 import SwiftUI
+import UITestingCore
 
 /// Shows the settings the app was launched with, so that UI tests can check the traits
 /// that change them.
@@ -19,7 +20,7 @@ struct LaunchSettingsView: View {
         .font(.footnote)
     }
 
-    private func row(_ title: String, _ value: String, _ identifier: String) -> some View {
+    private func row(_ title: String, _ value: String, _ identifier: AccessibilityID.StaticText) -> some View {
         HStack {
             Text(title)
             Spacer()
