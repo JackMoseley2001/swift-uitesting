@@ -4,6 +4,8 @@ import XCTest
 public enum UITestRunner {
     /// Launches the app with the suite's traits and the given traits, then runs a test body.
     ///
+    /// The ``UITest(traits:)`` macro calls this for you. Call it yourself to run a test without the macro:
+    ///
     /// ```swift
     /// final class LoginTests: XCTestCase, UITestSuite {
     ///     @MainActor

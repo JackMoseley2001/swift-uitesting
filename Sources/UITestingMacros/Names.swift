@@ -4,6 +4,7 @@
 /// can recognise or mention another consistently.
 enum MacroName {
     static let uiTestSuite = "UITestSuite"
+    static let uiTest = "UITest"
 }
 
 /// The labels of the macros' parameters.
@@ -16,10 +17,25 @@ enum RuntimeName {
     /// The module that declares the macros and the runtime they expand into.
     static let module = "UITesting"
 
-    static let suiteProtocol = "\(module).UITestSuite"
-    static let traitProtocol = "\(module).UITestTrait"
+    static let suiteProtocol = "UITestSuite"
+    static let qualifiedSuiteProtocol = "\(module).\(suiteProtocol)"
+    static let qualifiedTraitProtocol = "\(module).UITestTrait"
+    static let qualifiedRunner = "\(module).UITestRunner"
     static let suiteTraits = "suiteTraits"
+
+    /// The type passed to a test body, and the name of its property that holds the app.
+    static let context = "UITestContext"
+    static let contextApplication = "app"
 
     /// The XCTest class every suite inherits from.
     static let testCase = "XCTestCase"
+    static let application = "XCUIApplication"
+
+    /// The prefix XCTest uses to recognise a test method.
+    static let testMethodPrefix = "test"
+
+    /// The prefix of the test method generated for a `@UITest` function.
+    static let generatedTestMethodPrefix = "test_"
+
+    static let mainActor = "MainActor"
 }
