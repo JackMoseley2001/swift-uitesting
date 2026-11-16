@@ -157,6 +157,7 @@ A trait is a reusable piece of configuration or behaviour. These are built in:
 | `.locale("fr_FR")` | Launches the app in a locale. |
 | `.userDefault("key", true)` | Overrides a `UserDefaults` value for the launch. Takes a `Bool`, `Int`, `Double` or `String`. |
 | `.orientation(.landscapeLeft)` | Rotates the device for the test, and puts it back afterwards. iOS only. |
+| `.resetAuthorization(for: .photos)` | Makes the app forget a permission before it launches, so the system asks again. |
 | `.manualLaunch` | Leaves launching the app to the test. See [Launching and relaunching](#launching-and-relaunching). |
 | `.enabled(if: condition)` | Skips the test unless the condition is true. |
 | `.disabled("reason")` | Skips the test. `.disabled(if:)` skips it when a condition is true. |
@@ -177,6 +178,13 @@ struct SkipOnboarding: UITestTrait {
     }
 }
 
+// Does something with the app just before it launches.
+struct ForgetPhotosAccess: UITestTrait {
+    func willLaunch(_ context: UITestContext) async throws {
+        context.app.resetAuthorizationStatus(for: .photos)
+    }
+}
+
 // Runs code around the test, without sending anything to the app.
 struct Landscape: UITestTrait {
     func setUp(_ context: UITestContext) async throws {
@@ -191,9 +199,14 @@ struct Landscape: UITestTrait {
 
 | Step | Runs |
 |---|---|
-| `prepare(_:)` | Before the app is launched. Throw `XCTSkip` here to skip the test. |
+| `prepare(_:)` | First, to build the launch arguments and environment. Throw `XCTSkip` here to skip the test. |
+| `willLaunch(_:)` | Just before the app is launched, once it has its arguments and environment. |
 | `setUp(_:)` | After the app has launched, before the test. With `.manualLaunch`, the app has not launched yet. |
 | `tearDown(_:)` | After the test, whether it passed or failed, in reverse order. |
+
+Each step runs for every trait before the next step starts. `tearDown(_:)` is called
+for a trait only if its `setUp(_:)` was called, so if a trait fails before that point,
+work that another trait did in `willLaunch(_:)` is not undone.
 
 To use a trait with leading-dot syntax, add a static member:
 
@@ -240,9 +253,11 @@ Things to know:
 
 - Each relaunch starts from the test's traits. Traits passed to one relaunch are not
   carried over to the next.
-- Only the `prepare(_:)` step of the traits you pass is used. Their `setUp(_:)` and
-  `tearDown(_:)` steps are not run, so a trait such as `.orientation(_:)` has no effect
-  here.
+- Only the `prepare(_:)` step of the traits you pass is used. Their `willLaunch(_:)`,
+  `setUp(_:)` and `tearDown(_:)` steps are not run, so a trait such as
+  `.orientation(_:)` or `.resetAuthorization(for:)` has no effect here.
+- The steps of the test's own traits are not run again either. A permission reset by
+  `.resetAuthorization(for:)` stays as the test left it.
 - Relaunching does not clear what the app has stored. That is what makes it useful for
   testing a restart.
 
@@ -253,11 +268,12 @@ The test does what it needs to first, then launches the app:
 
 ```swift
 @UITest(traits: .manualLaunch)
-func asksForAccessToPhotos(app: XCUIApplication) {
-    app.resetAuthorizationStatus(for: .photos)
+func loadsTheFeedFromALocalServer(app: XCUIApplication) async throws {
+    // Your own code: something whose details are only known once the test is running.
+    let server = try await LocalServer.start()
+    app.launchEnvironment["API_URL"] = server.url.absoluteString
     app.launch()
 
-    app.buttons["choose-photo-button"].tap()
     // ...
 }
 ```
@@ -265,9 +281,12 @@ func asksForAccessToPhotos(app: XCUIApplication) {
 Call `app.launch()` to launch with the test's traits, or `context.relaunch(with:)` to
 add more.
 
-The `setUp(_:)` step of every trait still runs before the test, which is now before
-the app has launched. A trait that looks for something in the app during `setUp(_:)`
-does not work with `.manualLaunch`.
+The `willLaunch(_:)` and `setUp(_:)` steps of every trait still run before the test,
+which means `setUp(_:)` now runs before the app has launched. A trait that looks for
+something in the app during `setUp(_:)` does not work with `.manualLaunch`.
+
+If the same work is needed by several tests, write a trait with a `willLaunch(_:)`
+step instead.
 
 ## Reading launch data in the app
 
