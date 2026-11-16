@@ -6,5 +6,6 @@ struct UITestingPlugin: CompilerPlugin {
     let providingMacros: [any Macro.Type] = [
         UITestSuiteMacro.self,
         UITestMacro.self,
+        ExpectMacro.self,
     ]
 }

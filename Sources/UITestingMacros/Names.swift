@@ -5,11 +5,13 @@
 enum MacroName {
     static let uiTestSuite = "UITestSuite"
     static let uiTest = "UITest"
+    static let expect = "expect"
 }
 
 /// The labels of the macros' parameters.
 enum MacroParameter {
     static let traits = "traits"
+    static let within = "within"
 }
 
 /// The names of the declarations that macro expansions refer to.
@@ -38,4 +40,8 @@ enum RuntimeName {
     static let generatedTestMethodPrefix = "test_"
 
     static let mainActor = "MainActor"
+
+    /// The functions that `#expect` expands into.
+    static let qualifiedExpect = "\(module).__expect"
+    static let qualifiedExpectEqual = "\(module).__expectEqual"
 }
