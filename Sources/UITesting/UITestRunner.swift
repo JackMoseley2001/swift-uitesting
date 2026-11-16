@@ -50,23 +50,25 @@ public enum UITestRunner {
 
         let context = UITestContext(app: app, testCase: suite, launch: launch)
         try await endingOnFailedRequirement {
-            try await withSteps(
-                traits,
-                willLaunch: { try await $0.willLaunch(context) },
-                launch: {
-                    if launchesAutomatically(with: traits) {
-                        app.launch()
-                    }
-                },
-                setUp: { try await $0.setUp(context) },
-                tearDown: { try await $0.tearDown(context) },
-                recordAdditionalError: { error in
-                    suite.record(
-                        XCTIssue(type: .thrownError, compactDescription: "\(error)", associatedError: error)
-                    )
-                },
-                body: { try await body(context) }
-            )
+            try await ActionTimeout.$current.withValue(ActionTimeout.timeout(from: traits)) {
+                try await withSteps(
+                    traits,
+                    willLaunch: { try await $0.willLaunch(context) },
+                    launch: {
+                        if launchesAutomatically(with: traits) {
+                            app.launch()
+                        }
+                    },
+                    setUp: { try await $0.setUp(context) },
+                    tearDown: { try await $0.tearDown(context) },
+                    recordAdditionalError: { error in
+                        suite.record(
+                            XCTIssue(type: .thrownError, compactDescription: "\(error)", associatedError: error)
+                        )
+                    },
+                    body: { try await body(context) }
+                )
+            }
         }
     }
 
