@@ -18,7 +18,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/swiftlang/swift-syntax", "600.0.0"..<"605.0.0"),
-        .package(url: "https://github.com/pointfreeco/swift-macro-testing", "0.6.0"..<"1.0.0"),
+        .package(url: "https://github.com/pointfreeco/swift-macro-testing", "0.7.0"..<"1.0.0"),
     ],
     targets: [
         .target(name: "UITestingCore"),
@@ -52,6 +52,7 @@ let package = Package(
             dependencies: [
                 "UITestingMacros",
                 .product(name: "MacroTesting", package: "swift-macro-testing"),
+                .product(name: "SwiftSyntaxMacroExpansion", package: "swift-syntax"),
             ]
         ),
     ]
