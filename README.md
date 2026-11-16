@@ -460,6 +460,8 @@ func deletesAMessage(app: XCUIApplication) throws {
 | `waitToAppear()` | The element exists. |
 | `waitToDisappear()` | The element no longer exists. |
 
+Fields have more. See [Entering text](#entering-text).
+
 If the element is not ready in time, the failure is recorded at the line of the call
 and the test ends, so actions are written with `try`. The message says what went wrong:
 
@@ -498,6 +500,63 @@ Things to know:
   way as `waitForExistence(timeout:)`.
 - **Elements found by a string.** `app.buttons["save"]` is a plain `XCUIElement`, with
   XCTest's own actions.
+
+## Entering text
+
+Identifiers declared as `TextField`, `SecureTextField`, `SearchField` or `TextView`
+have actions for text. Like `tap()`, they wait for the field to exist and be enabled,
+and they give the field the keyboard themselves:
+
+```swift
+@UITest
+func updatesTheProfile(app: XCUIApplication) throws {
+    try app[ProfileID.nameField].replaceText(with: "Grace Hopper")
+    try app[ProfileID.passwordField].enter("cobol")
+    try app[ProfileID.passwordField].submit()
+
+    #expect(app[ProfileID.nameField].text == "Grace Hopper")
+}
+```
+
+| Member | What it does |
+|---|---|
+| `enter(_:)` | Types at the end of whatever the field holds. |
+| `replaceText(with:)` | Deletes what the field holds, then types. |
+| `clear()` | Deletes what the field holds. |
+| `submit()` | Presses Return. Not on `TextView`, where Return starts a new line. |
+| `text` | The text in the field, read without waiting. Empty for an empty field, where `XCUIElement` reports the placeholder. |
+
+### Putting the keyboard away
+
+`submit()` is the direct way for a single-line field: Return runs the field's submit
+action and, in most apps, hides the keyboard.
+
+For anything else, such as a multi-line editor, use `dismissKeyboard()` on the app:
+
+```swift
+try app[ProfileID.notesField].enter("A longer note")
+try app.dismissKeyboard()
+
+#expect(!app.isKeyboardShowing)
+```
+
+iOS has no gesture that hides the keyboard in every app, so `dismissKeyboard()` tries
+the ways an app can offer, in order, and stops at the first that works:
+
+1. A key on the keyboard that hides it, which iPad keyboards have.
+2. A "Done" button in a toolbar.
+3. A short drag on the content above the keyboard, which works in a scroll view that
+   allows it, such as one with SwiftUI's `scrollDismissesKeyboard(_:)`.
+
+It does nothing if the keyboard is not showing. If the keyboard is still there after
+all three, the test ends with a failure that says the app has to offer one of them.
+
+Things to know:
+
+- **Secure fields** report a bullet for each character, so `text` cannot be compared
+  with what was typed.
+- **Hardware keyboard.** If the simulator has "Connect Hardware Keyboard" switched
+  on, the software keyboard may not show, and `isKeyboardShowing` is `false`.
 
 ## Expectations
 
