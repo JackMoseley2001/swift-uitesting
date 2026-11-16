@@ -74,21 +74,25 @@ final class ProfileFormTests: XCTestCase {
     }
 
     @UITest
-    func submittingPressesReturnAndPutsTheKeyboardAway(app: XCUIApplication) throws {
+    func submittingPressesReturn(app: XCUIApplication) throws {
         try app[ProfileID.nameField].replaceText(with: "Ada King")
-        #expect(app.isKeyboardShowing)
+        #expect(!app[ProfileID.submittedName].exists)
 
         try app[ProfileID.nameField].submit()
 
-        #expect(!app.isKeyboardShowing, within: .seconds(2))
-        #expect(app[ProfileID.nameField].text == "Ada King")
+        try app[ProfileID.submittedName].waitToAppear()
+        #expect(app[ProfileID.submittedName].label == "Submitted Ada King")
     }
 
     @UITest
-    func dismissingTheKeyboardDoesNothingWhenItIsNotShowing(app: XCUIApplication) throws {
-        try app.dismissKeyboard()
+    func theAppsOwnButtonHidesTheKeyboard(app: XCUIApplication) throws {
+        try app[ProfileID.notesField].replaceText(with: "A note")
+        #expect(app.keyboards.firstMatch.exists)
 
-        #expect(app[ProfileID.nameField].text == "Ada Lovelace")
+        try app[ProfileID.hideKeyboardButton].tap()
+
+        #expect(!app.keyboards.firstMatch.exists, within: .seconds(2))
+        #expect(app[ProfileID.notesField].text == "A note")
     }
 
     @UITest

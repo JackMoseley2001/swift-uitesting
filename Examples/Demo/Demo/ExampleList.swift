@@ -36,7 +36,7 @@ private struct ExampleScreen: View {
         switch example {
         case .account: AccountView(traits: .current)
         case .message: MessageView()
-        case .profileForm: ProfileForm(traits: .current)
+        case .profileForm: ProfileForm()
         case .fruitList: FruitList()
         case .numberList: NumberList()
         case .launchSettings: LaunchSettingsView()

@@ -8,12 +8,9 @@ struct ProfileForm: View {
     @State private var password = ""
     @State private var notes = "First line\nSecond line"
 
-    @FocusState private var isEditing: Bool
-    private let keyboardDismissal: KeyboardDismissal
+    @State private var submittedName: String?
 
-    init(traits: LaunchTraits) {
-        keyboardDismissal = traits[KeyboardDismissal.self] ?? .immediately
-    }
+    @FocusState private var isEditing: Bool
 
     var body: some View {
         ScrollView {
@@ -21,6 +18,7 @@ struct ProfileForm: View {
                 TextField("Name", text: $name)
                     .textFieldStyle(.roundedBorder)
                     .autocorrectionDisabled()
+                    .onSubmit { submittedName = name }
                     .accessibilityIdentifier(ProfileID.nameField)
 
                 SecureField("Password", text: $password)
@@ -36,20 +34,23 @@ struct ProfileForm: View {
                 Text("\(name)|\(password)|\(notes)")
                     .font(.footnote)
                     .accessibilityIdentifier(ProfileID.summary)
+
+                if let submittedName {
+                    Text("Submitted \(submittedName)")
+                        .font(.footnote)
+                        .accessibilityIdentifier(ProfileID.submittedName)
+                }
             }
             .padding()
         }
-        .scrollDismissesKeyboard(keyboardDismissal.mode)
         .focused($isEditing)
-        // A button above the keyboard that puts it away, for when the scroll view is
-        // not set up to. UI tests tap it by its identifier.
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
-                Button("Done") {
+                Button("Hide keyboard", systemImage: "keyboard.chevron.compact.down.fill") {
                     isEditing = false
                 }
-                .accessibilityIdentifier(ProfileID.keyboardDoneButton)
+                .accessibilityIdentifier(ProfileID.hideKeyboardButton)
             }
         }
     }
