@@ -6,7 +6,7 @@ final class RelaunchTests: XCTestCase {
     @UITest
     func relaunchingStartsTheAppAgainWithTheSameTraits(context: UITestContext) throws {
         let app = context.app
-        app[AccessibilityID.signOutButton].tap()
+        try app[AccessibilityID.signOutButton].tap()
         #expect(app[AccessibilityID.authStatus].label == "Signed out")
 
         try context.relaunch()

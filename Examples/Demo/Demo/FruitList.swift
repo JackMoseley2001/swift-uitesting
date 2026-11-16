@@ -5,6 +5,7 @@ import UITestingCore
 /// out the row for a particular item.
 struct FruitList: View {
     @State private var selection: Fruit?
+    @State private var canClear = false
 
     var body: some View {
         VStack(spacing: 8) {
@@ -17,6 +18,20 @@ struct FruitList: View {
                 }
                 .accessibilityIdentifier(FruitID.row(fruit.id))
             }
+
+            // Stays disabled for a moment after a selection, so that UI tests have to
+            // wait for it before they can tap it.
+            Button("Clear selection") {
+                selection = nil
+            }
+            .disabled(!canClear)
+            .accessibilityIdentifier(FruitID.clearButton)
+        }
+        .task(id: selection) {
+            canClear = false
+            guard selection != nil else { return }
+            try? await Task.sleep(for: .seconds(1))
+            canClear = !Task.isCancelled
         }
     }
 }
