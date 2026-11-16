@@ -3,6 +3,21 @@ import XCTest
 
 @UITestSuite
 final class ProfileFormTests: XCTestCase {
+    /// A helper needs no `@MainActor` of its own. The suite adds it.
+    private func summary(in app: XCUIApplication) -> String {
+        app[ProfileID.summary].label
+    }
+
+    private var nameField: UITestElement<ElementKinds.TextField> {
+        XCUIApplication()[ProfileID.nameField]
+    }
+
+    @UITest
+    func helpersCanReadElements(app: XCUIApplication) {
+        #expect(summary(in: app) == "Ada Lovelace||First line\nSecond line")
+        #expect(nameField.text == "Ada Lovelace")
+    }
+
     @UITest
     func readsTheTextInAField(app: XCUIApplication) {
         #expect(app[ProfileID.nameField].text == "Ada Lovelace")

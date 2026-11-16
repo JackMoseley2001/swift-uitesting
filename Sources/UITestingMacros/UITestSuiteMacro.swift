@@ -47,19 +47,33 @@ public struct UITestSuiteMacro: ExtensionMacro, MemberAttributeMacro {
         return [decl.cast(ExtensionDeclSyntax.self)]
     }
 
-    /// Adds `@MainActor` to each `@UITest` function, because the UI testing APIs a test
-    /// calls are isolated to the main actor.
+    /// Adds `@MainActor` to the functions and computed properties of the suite, because
+    /// the UI testing APIs that tests and their helpers call are isolated to the main actor.
+    ///
+    /// Members that state their own isolation are left alone, and so are overrides,
+    /// which have to keep the isolation of what they override.
     public static func expansion(
         of node: AttributeSyntax,
         attachedTo declaration: some DeclGroupSyntax,
         providingAttributesFor member: some DeclSyntaxProtocol,
         in context: some MacroExpansionContext
     ) throws -> [AttributeSyntax] {
+        let attributes: AttributeListSyntax
+        let modifiers: DeclModifierListSyntax
+        if let function = member.as(FunctionDeclSyntax.self) {
+            attributes = function.attributes
+            modifiers = function.modifiers
+        } else if let variable = member.as(VariableDeclSyntax.self), variable.isComputed {
+            attributes = variable.attributes
+            modifiers = variable.modifiers
+        } else {
+            return []
+        }
+
         guard
-            let function = member.as(FunctionDeclSyntax.self),
-            function.attributes.contains(attributeNamed: MacroName.uiTest),
-            !function.attributes.contains(attributeNamed: RuntimeName.mainActor),
-            !function.modifiers.contains(.nonisolated)
+            !attributes.containsGlobalActor,
+            !modifiers.contains(.nonisolated),
+            !modifiers.contains(.override)
         else {
             return []
         }

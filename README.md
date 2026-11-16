@@ -142,8 +142,25 @@ Things to know:
 - Do not start the name of a test that takes no parameters with `test`. XCTest would
   also run that method directly, without launching the app. The macro reports this as
   an error and offers to rename it.
-- `@UITestSuite` isolates each `@UITest` method to the main actor, so you do not need
-  to write `@MainActor`.
+- `@UITestSuite` isolates the suite's methods and computed properties to the main
+  actor, so tests and their helpers can use elements without writing `@MainActor`:
+
+  ```swift
+  @UITestSuite
+  final class LoginTests: XCTestCase {
+      private func title(in app: XCUIApplication) -> String {
+          app[LoginID.title].label
+      }
+
+      @UITest
+      func showsTheTitle(app: XCUIApplication) {
+          #expect(title(in: app) == "Welcome")
+      }
+  }
+  ```
+
+  Overrides such as `setUp()` keep the isolation of what they override, so they
+  cannot call these helpers directly. Mark a member `nonisolated` to opt it out.
 
 ## Traits
 
