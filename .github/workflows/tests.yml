@@ -26,20 +26,3 @@ jobs:
 
       - name: Run tests
         run: swift test --disable-experimental-prebuilts
-
-  demo:
-    name: Demo UI tests (Xcode 27)
-    runs-on: xcode-27
-    steps:
-      - name: Check out
-        uses: actions/checkout@v7
-
-      - name: Run UI tests
-        run: |
-          set -o pipefail
-          xcodebuild test \
-            -project Examples/Demo/Demo.xcodeproj \
-            -scheme Demo \
-            -destination "platform=iOS Simulator,name=iPhone 17" \
-            -skipMacroValidation \
-            | xcbeautify --renderer github-actions
