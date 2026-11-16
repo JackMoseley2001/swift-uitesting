@@ -97,6 +97,21 @@ public macro UITest(traits: any UITestTrait...) =
 /// #expect(app.staticTexts["message"].exists, within: .seconds(5))
 /// ```
 ///
+/// In a test that is not `async`, the wait blocks between checks, in the same way as
+/// `XCUIElement.waitForExistence(timeout:)`. In an `async` test, write `await` before
+/// the macro. The wait then suspends the test between checks, so other work on the
+/// main actor can run, and it ends early if the test's task is cancelled.
+///
+/// ```swift
+/// @UITest
+/// func loadsTheMessage(app: XCUIApplication) async {
+///     app.buttons["load-message-button"].tap()
+///     await #expect(app.staticTexts["message"].exists, within: .seconds(5))
+/// }
+/// ```
+///
+/// Without a timeout the macro never needs `await`.
+///
 /// ## Failure messages
 ///
 /// A failure shows the source code of the condition and, if you pass one, your comment.
@@ -169,7 +184,8 @@ public macro UITestingExpect(
 /// ```
 ///
 /// It takes the same arguments as `#expect`, waits in the same way, and shows how the
-/// two sides of a comparison with `==` differ.
+/// two sides of a comparison with `==` differ. In an `async` test, a call with a timeout
+/// is written `try await #require(…, within: …)`.
 ///
 /// In a file that also imports Swift Testing, which has a macro with the same name, use
 /// `#UITestingRequire` instead.
@@ -195,7 +211,8 @@ public macro require(
 /// ```
 ///
 /// A failure is recorded against the test and then thrown, so the call is written with
-/// `try`. Pass a timeout to wait for a value to become available.
+/// `try`. Pass a timeout to wait for a value to become available; in an `async` test
+/// that call is written with `try await`.
 ///
 /// In a file that also imports Swift Testing, which has a macro with the same name, use
 /// `#UITestingRequire` instead.

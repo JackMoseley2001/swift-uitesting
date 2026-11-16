@@ -12,21 +12,25 @@ struct ExpectationFailure: Equatable, Sendable {
     ///   - summary: What went wrong, such as "Expectation failed".
     ///   - expression: The source code that was checked.
     ///   - comment: The comment passed with the expectation, if any.
-    ///   - timeout: How long the expectation waited, if it waited.
+    ///   - outcome: How the check ended.
     ///   - difference: A description of how the two sides of a comparison differ, if known.
     static func message(
         summary: String,
         expression: String,
         comment: String?,
-        timeout: Duration?,
+        outcome: WaitOutcome,
         difference: String?
     ) -> String {
         var lines: [String]
-        if let timeout {
-            let seconds = timeout.timeInterval
-            let unit = seconds == 1 ? "second" : "seconds"
-            lines = ["\(summary) after \(String(format: "%g", seconds)) \(unit): \(expression)"]
-        } else {
+        switch outcome {
+        case .timedOut(let timeout):
+            lines = ["\(summary) after \(describe(timeout)): \(expression)"]
+        case .cancelled(let timeout):
+            lines = [
+                "\(summary): \(expression)",
+                "The wait was cancelled before its timeout of \(describe(timeout)) had passed.",
+            ]
+        case .met, .notMet:
             lines = ["\(summary): \(expression)"]
         }
         if let comment {
@@ -36,6 +40,11 @@ struct ExpectationFailure: Equatable, Sendable {
             lines.append(difference)
         }
         return lines.joined(separator: "\n")
+    }
+
+    private static func describe(_ duration: Duration) -> String {
+        let seconds = duration.timeInterval
+        return "\(String(format: "%g", seconds)) \(seconds == 1 ? "second" : "seconds")"
     }
 }
 

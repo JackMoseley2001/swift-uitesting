@@ -201,6 +201,27 @@ struct RequireValueMacroTests {
     }
 
     @Test
+    func tryAndAwaitBeforeTheMacroAreKept() {
+        assertMacro {
+            """
+            let title = try await #require(app.staticTexts["title"].value as? String, within: .seconds(5))
+            """
+        } expansion: {
+            """
+            let title = try await UITesting.__requireValue(
+                {
+                    app.staticTexts["title"].value as? String
+                },
+                expression: #"app.staticTexts["title"].value as? String"#,
+                timeout: .seconds(5),
+                filePath: "Test.swift",
+                line: 1
+            )
+            """
+        }
+    }
+
+    @Test
     func comparisonIsNotSplitWhenUnwrapping() {
         assertMacro {
             """

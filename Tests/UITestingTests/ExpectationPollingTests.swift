@@ -8,6 +8,8 @@ struct ExpectationPollingTests {
     private final class ManualClock {
         var now = ContinuousClock.now
         var sleeps: [Duration] = []
+        var suspensions: [Duration] = []
+        var cancelAfterSuspensions: Int?
 
         var polling: ExpectationPolling {
             ExpectationPolling(
@@ -16,6 +18,13 @@ struct ExpectationPollingTests {
                 sleep: { duration in
                     self.sleeps.append(duration)
                     self.now += duration
+                },
+                suspend: { duration in
+                    self.suspensions.append(duration)
+                    self.now += duration
+                    if self.suspensions.count == self.cancelAfterSuspensions {
+                        throw CancellationError()
+                    }
                 }
             )
         }
@@ -26,12 +35,12 @@ struct ExpectationPollingTests {
         let clock = ManualClock()
         var evaluations = 0
 
-        let result = clock.polling.wait(timeout: nil) {
+        let result = clock.polling.wait(timeout: nil as Duration?) {
             evaluations += 1
             return false
         }
 
-        #Testing::expect(!result)
+        #Testing::expect(result == .notMet)
         #Testing::expect(evaluations == 1)
         #Testing::expect(clock.sleeps.isEmpty)
     }
@@ -42,7 +51,7 @@ struct ExpectationPollingTests {
 
         let result = clock.polling.wait(timeout: .seconds(5)) { true }
 
-        #Testing::expect(result)
+        #Testing::expect(result == .met)
         #Testing::expect(clock.sleeps.isEmpty)
     }
 
@@ -56,7 +65,7 @@ struct ExpectationPollingTests {
             return evaluations == 4
         }
 
-        #Testing::expect(result)
+        #Testing::expect(result == .met)
         #Testing::expect(evaluations == 4)
         #Testing::expect(clock.sleeps == Array(repeating: .milliseconds(100), count: 3))
     }
@@ -71,7 +80,7 @@ struct ExpectationPollingTests {
             return false
         }
 
-        #Testing::expect(!result)
+        #Testing::expect(result == .timedOut(.milliseconds(250)))
         #Testing::expect(evaluations == 4)
         #Testing::expect(clock.sleeps == [.milliseconds(100), .milliseconds(100), .milliseconds(50)])
     }
@@ -85,5 +94,45 @@ struct ExpectationPollingTests {
                 throw TestError(message: "condition")
             }
         }
+    }
+
+    @Test
+    func suspendingWaitChecksAgainUntilTheConditionIsTrue() async {
+        let clock = ManualClock()
+        var evaluations = 0
+
+        let result = await clock.polling.wait(timeout: .seconds(5)) {
+            evaluations += 1
+            return evaluations == 4
+        }
+
+        #Testing::expect(result == .met)
+        #Testing::expect(clock.suspensions == Array(repeating: .milliseconds(100), count: 3))
+        #Testing::expect(clock.sleeps.isEmpty)
+    }
+
+    @Test
+    func suspendingWaitGivesUpWhenTheTimeoutHasPassed() async {
+        let clock = ManualClock()
+
+        let result = await clock.polling.wait(timeout: .milliseconds(250)) { false }
+
+        #Testing::expect(result == .timedOut(.milliseconds(250)))
+        #Testing::expect(clock.suspensions == [.milliseconds(100), .milliseconds(100), .milliseconds(50)])
+    }
+
+    @Test
+    func suspendingWaitEndsWhenTheTaskIsCancelled() async {
+        let clock = ManualClock()
+        clock.cancelAfterSuspensions = 2
+        var evaluations = 0
+
+        let result = await clock.polling.wait(timeout: .seconds(5)) {
+            evaluations += 1
+            return false
+        }
+
+        #Testing::expect(result == .cancelled(.seconds(5)))
+        #Testing::expect(evaluations == 2)
     }
 }

@@ -57,6 +57,19 @@ func loadsTheMessage(app: XCUIApplication) {
 
 When a comparison with `==` fails, the message shows how the two values differ.
 
+A wait blocks between checks in a test that is not `async`. In an `async` test, write
+`await` before the macro, and the wait suspends the test instead, so other work on the
+main actor can run while it waits.
+
+```swift
+@UITest
+func loadsTheMessage(app: XCUIApplication) async {
+    app.buttons["load-message-button"].tap()
+
+    await #expect(app.staticTexts["message"].exists, within: .seconds(5))
+}
+```
+
 Use `#require` when the rest of the test depends on the condition. It records the
 failure and ends the test. It can also unwrap an optional value.
 
