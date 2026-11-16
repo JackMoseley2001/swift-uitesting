@@ -26,7 +26,8 @@ This package sits on top of XCTest's UI testing support and gives you:
 - **`@UITestSuite` and `@UITest`**, which generate the code that launches the app for each test.
 - **Traits** that configure a suite or a single test, including ones you write yourself.
 - **Typed data sent to the app at launch**, with a small library the app uses to read it.
-- **Typed element identifiers** that the app and its tests share, so neither writes them as strings.
+- **Typed element identifiers** that the app and its tests share, so neither writes them as strings
+  and a test does not have to say what kind of element it is looking for.
 - **`#expect` and `#require`**, with optional waiting and a diff when a comparison fails.
 
 ## Status
@@ -333,22 +334,25 @@ Things to know:
 ## Element identifiers
 
 A UI test finds an element by its accessibility identifier. Written as strings, the
-identifiers have to be kept the same in the app and in the tests by hand, and two
-screens can use the same string without anyone noticing.
+identifiers have to be kept the same in the app and in the tests by hand, two screens
+can use the same string without anyone noticing, and every test has to know whether
+the element is a button, a label or a text field.
 
-An `ElementID` is a typed identifier. Declare it in code that both the app and the UI
-test target compile, as you do for a payload:
+A group of typed identifiers solves all three. Declare it in code that both the app
+and the UI test target compile, as you do for a payload. Each member's type says what
+kind of element it identifies:
 
 ```swift
 import UITestingCore
 
-enum LoginID: ElementID {
-    case emailField
-    case signInButton
+enum LoginID: ElementIDs {
+    static var title: StaticText { element() }
+    static var emailField: TextField { element() }
+    static var signInButton: Button { element() }
 }
 ```
 
-The app tags a view with a case, and a test finds the element with the same case:
+The app tags a view with a member, and a test finds the element with the same member:
 
 ```swift
 // In the app
@@ -356,31 +360,53 @@ Button("Sign in") { signIn() }
     .accessibilityIdentifier(LoginID.signInButton)
 
 // In a UI test
-app.buttons[LoginID.signInButton].tap()
+app[LoginID.signInButton].tap()
+#expect(app[LoginID.title].label == "Welcome")
 ```
 
-In a test, `app.buttons[id]` and the other typed queries look for that type of element.
-`app[id]` finds the element whatever its type, and `element[id]` looks only inside
-another element.
+`app[id]` looks for the kind of element the identifier declares, so
+`app[LoginID.signInButton]` finds what `app.buttons["LoginID.signInButton"]` does.
+`element[id]` looks only inside another element.
+
+### Kinds of element
+
+Inside a group, `Button`, `StaticText`, `TextField` and the rest are types of
+identifier, one for each element type that XCTest reports. Some common ones:
+
+| Kind | Matches |
+|---|---|
+| `Button` | Buttons, including a SwiftUI `NavigationLink`. |
+| `StaticText` | Text the user cannot edit: a SwiftUI `Text`, a `UILabel`. |
+| `TextField`, `SecureTextField`, `TextView` | A text field, a password field, and a multi-line editor. |
+| `Switch` | A SwiftUI `Toggle` on iOS. On macOS it is a `CheckBox`. |
+| `Slider`, `Stepper`, `Picker`, `DatePicker`, `SegmentedControl` | Controls. A SwiftUI `Picker` is a different kind for each picker style. |
+| `Image`, `Link`, `Cell`, `Table`, `CollectionView`, `ScrollView` | Content and containers. |
+| `AnyElement` | An element of any kind. |
+
+The kind is what XCTest sees, which is not always what the SwiftUI view is called. If
+the element exists but is a different kind from the one its identifier declares, the
+test does not find it. When you are not sure, or the kind differs between platforms,
+declare the identifier as `AnyElement`. The Accessibility Inspector, and
+`print(app.debugDescription)` in a test, show the kind of each element.
 
 ### Clashes
 
-The string an element gets is the name of the identifier's type, a full stop, and the
-name of the case: `LoginID.signInButton` is `"LoginID.signInButton"`. So a `title` case
-in `LoginID` and a `title` case in `SettingsID` are different identifiers, and within
-one enumeration the compiler stops two cases from sharing a name. A nested type
-includes the types it is nested in, so `LoginScreen.ID` and `SettingsScreen.ID` are
-kept apart too.
+The string an element gets is the name of the group, a full stop, and the name of the
+member: `LoginID.signInButton` is `"LoginID.signInButton"`. So a `title` in `LoginID` and
+a `title` in `SettingsID` are different identifiers, and within one group the compiler
+stops two members from sharing a name. A nested type includes the types it is nested
+in, so `LoginScreen.ID` and `SettingsScreen.ID` are kept apart too.
 
 ### Lists
 
-Give a case an associated value to identify one element out of many:
+Use a function to identify one element out of many, and pass its arguments on to
+`element`:
 
 ```swift
-enum InboxID: ElementID {
-    case list
-    case row(Int)
-    case deleteButton(row: Int)
+enum InboxID: ElementIDs {
+    static var list: CollectionView { element() }
+    static func row(_ id: Int) -> Cell { element(id) }
+    static func deleteButton(row: Int) -> Button { element(row) }
 }
 
 // In the app
@@ -390,25 +416,27 @@ ForEach(messages) { message in
 }
 
 // In a UI test
-app.buttons[InboxID.row(1234)].tap()
+app[InboxID.row(1234)].tap()
 ```
+
+`InboxID.row(1234)` is `"InboxID.row(1234)"`.
 
 Things to know:
 
-- **Associated values.** Use simple ones, such as integers, strings and UUIDs. A value
-  of one of your own types is described with the name of its module, which is
-  different in the app and in the UI test target.
-- **Identifiers the app already has.** Give the cases raw string values to choose each
-  name, and add `static var namespace: String? { nil }` to drop the prefix. The
-  identifier is then exactly the raw value, and avoiding clashes is up to you.
+- **Computed properties, not `let`.** Write each identifier as a computed property or a
+  function, as above. A stored property such as
+  `static let title: StaticText = element()` cannot work out its own name, and every
+  one in the group would get the same identifier.
+- **Arguments.** Each argument is described the way `print` shows it. Use ones whose
+  description does not change between runs, such as integers, strings and UUIDs.
+- **Identifiers the app already has.** Create the identifier from the exact string:
+  `static var signInButton: Button { Button("sign-in-button") }`.
 - **Renaming.** The default identifiers follow the names in your code. To keep them
-  stable when a type is renamed, give the type its own `namespace`.
-- **UIKit and AppKit.** Set the element's identifier to the value's
-  `accessibilityIdentifier` string:
+  stable, give the group its own `namespace`, or pass `name:` to `element`.
+- **Choosing the query yourself.** Every query also takes an identifier, and ignores
+  its kind: `app.tables.cells[InboxID.row(1234)]`.
+- **UIKit and AppKit.** Set the element's identifier to the string:
   `button.accessibilityIdentifier = LoginID.signInButton.accessibilityIdentifier`.
-- **Where the names come from.** A case's name is read at run time, as `print` reads it.
-  If the app is built without reflection metadata, or the type is
-  `CustomStringConvertible`, give the type its own `name`.
 
 ## Expectations
 
