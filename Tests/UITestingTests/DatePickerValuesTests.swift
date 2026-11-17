@@ -66,10 +66,12 @@ struct DatePickerValuesTests {
         let twelveHour = try #Testing::require(DatePickerValues.timeWheels(values: english, periodTitles: periods))
         #Testing::expect(twelveHour == (0, 1, 2))
 
-        let periodFirst = try #Testing::require(DatePickerValues.timeWheels(values: ["오후", "10", "13"], periodTitles: ["오전", "오후"]))
+        let periodFirst = try #Testing::require(
+            DatePickerValues.timeWheels(values: ["오후", "10", "13"], periodTitles: ["오전", "오후"]))
         #Testing::expect(periodFirst == (1, 2, 0))
 
-        let twentyFourHour = try #Testing::require(DatePickerValues.timeWheels(values: ["22", "13"], periodTitles: periods))
+        let twentyFourHour = try #Testing::require(
+            DatePickerValues.timeWheels(values: ["22", "13"], periodTitles: periods))
         #Testing::expect(twentyFourHour.hour == 0)
         #Testing::expect(twentyFourHour.minute == 1)
         #Testing::expect(twentyFourHour.period == nil)
