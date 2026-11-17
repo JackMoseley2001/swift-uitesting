@@ -32,5 +32,11 @@ struct AccountView: View {
             }
             .padding()
         }
+        .onUITestMessage(ExpireSession.self) { _ in
+            auth = AuthState(isLoggedIn: false)
+        }
+        .onUITestMessage(RenameUser.self) { message in
+            auth.name = message.name
+        }
     }
 }

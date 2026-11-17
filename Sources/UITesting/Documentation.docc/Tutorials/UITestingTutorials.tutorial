@@ -8,13 +8,14 @@
     }
 
     @Chapter(name: "Writing tests") {
-        Launch the app in the state a test needs, find its elements, act on them and
-        check what it shows.
+        Launch the app in the state a test needs, find its elements, act on them,
+        check what it shows, and send it messages while it runs.
 
         @Image(source: "chapter-writing-tests.svg", alt: "A phone showing a screen with a button, and a tick beside it.")
 
         @TutorialReference(tutorial: "doc:WritingYourFirstTest")
         @TutorialReference(tutorial: "doc:ActingOnTheApp")
+        @TutorialReference(tutorial: "doc:TalkingToTheApp")
     }
 
     @Chapter(name: "Extending the library") {

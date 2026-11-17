@@ -31,6 +31,7 @@ A trait is a reusable piece of configuration or behaviour. These are built in:
 | `.systemAlerts(.allow, for: .microphone)` | Answers the system's permission alerts for the test. See <doc:SystemAlerts>. |
 | `.resetAuthorization(for: .photos)` | Makes the app forget a permission before it launches, so the system asks again. |
 | `.manualLaunch` | Leaves launching the app to the test. See <doc:LaunchingAndRelaunching>. |
+| `.messageChannel` | Lets the test send messages to the app while it is running. See <doc:SendingMessages>. |
 | `.actionTimeout(.seconds(10))` | Sets how long actions on elements wait. See <doc:ActingOnElements>. |
 | `.animationsDisabled` | Asks the app to run without animations. The app has to opt in, with `uiTestAnimationsDisabled()` from UITestingCore. |
 | `.failureAttachments(false)` | Stops a failed test attaching a screenshot and the element hierarchy. See <doc:StepsAndFailures>. |
@@ -47,6 +48,7 @@ Each group of traits has an article of its own:
 - <doc:SkippingTests> covers `.enabled(if:_:)` and `.disabled(_:)`.
 - <doc:SystemAlerts> covers `.systemAlerts(_:for:)` and `.resetAuthorization(for:)`.
 - <doc:LaunchingAndRelaunching> covers `.manualLaunch`.
+- <doc:SendingMessages> covers `.messageChannel`.
 - <doc:WritingTraits> shows how to write your own.
 
 ## Topics
@@ -74,6 +76,7 @@ Each group of traits has an article of its own:
 
 - <doc:SkippingTests>
 - ``ConditionTrait``
+- ``MessageChannelTrait``
 - ``ActionTimeoutTrait``
 - ``AnimationsDisabledTrait``
 - ``FailureAttachmentsTrait``
