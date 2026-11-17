@@ -644,6 +644,27 @@ Things to know:
 - **Elements found by a string.** `app.buttons["save"]` is a plain `XCUIElement`, with
   XCTest's own actions.
 
+### Swipe actions on a row
+
+```swift
+try app[InboxID.row(1234)].swipeAction("Archive")
+try app[InboxID.row(1234)].swipeAction("Unread", edge: .leading)
+try app[InboxID.row(1234)].swipeAction(InboxID.deleteButton(1234))
+```
+
+`swipeAction` waits for the row, swipes it, waits for the action and taps it. The
+action is given by its label, or by an identifier, which does not depend on the
+language of the app.
+
+- **The swipe is slow**, so that it shows the actions and does not carry the first one
+  out, as a full swipe does.
+- **The action is looked for beside the row.** XCTest does not report a row's actions
+  as part of the row, so the action is the match at the height of the row. The action
+  of another row, or a button with the same label elsewhere, is not taken for it.
+- **A failure lists the actions the swipe showed.**
+- **Sides are for a left-to-right language.** `.trailing`, the default, swipes the row
+  to the left.
+
 ## Entering text
 
 Identifiers declared as `TextField`, `SecureTextField`, `SearchField` or `TextView`
