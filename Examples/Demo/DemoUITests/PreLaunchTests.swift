@@ -1,7 +1,7 @@
 import UITesting
 import XCTest
 
-@UITestSuite(traits: .example(.account), .loggedIn(as: "Ada"))
+@UITestSuite(traits: .example(.account), .loggedIn(as: "Ada"), .animationsDisabled)
 final class PreLaunchTests: XCTestCase {
     @UITest(traits: .resetAuthorization(for: .photos))
     func theAppLaunchesAfterAPermissionIsReset(app: XCUIApplication) {

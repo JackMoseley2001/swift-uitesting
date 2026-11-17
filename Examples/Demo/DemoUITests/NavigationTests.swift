@@ -1,7 +1,7 @@
 import UITesting
 import XCTest
 
-@UITestSuite
+@UITestSuite(traits: .animationsDisabled)
 final class NavigationTests: XCTestCase {
     @UITest
     func theAppOpensOnTheListOfExamples(app: XCUIApplication) {

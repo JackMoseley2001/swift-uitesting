@@ -1,7 +1,7 @@
 import UITesting
 import XCTest
 
-@UITestSuite(traits: .example(.controls))
+@UITestSuite(traits: .example(.controls), .animationsDisabled)
 final class ControlsTests: XCTestCase {
     @UITest
     func turnsASwitchOnAndOff(app: XCUIApplication) throws {

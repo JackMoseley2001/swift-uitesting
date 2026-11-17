@@ -1,7 +1,7 @@
 import UITesting
 import XCTest
 
-@UITestSuite(traits: .example(.account), .loggedIn(as: "Ada"))
+@UITestSuite(traits: .example(.account), .loggedIn(as: "Ada"), .animationsDisabled)
 final class AuthenticationTests: XCTestCase {
     @UITest
     func showsTheNamePassedByTheTest(app: XCUIApplication) {

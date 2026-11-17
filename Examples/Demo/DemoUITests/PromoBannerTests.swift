@@ -1,7 +1,7 @@
 import UITesting
 import XCTest
 
-@UITestSuite(traits: .example(.account))
+@UITestSuite(traits: .example(.account), .animationsDisabled)
 final class PromoBannerTests: XCTestCase {
     @UITest
     func bannerIsHiddenByDefault(app: XCUIApplication) {

@@ -1,7 +1,7 @@
 import UITesting
 import XCTest
 
-@UITestSuite(traits: .example(.permission), .resetAuthorization(for: .microphone))
+@UITestSuite(traits: .example(.permission), .resetAuthorization(for: .microphone), .animationsDisabled)
 final class SystemAlertTests: XCTestCase {
     @UITest
     func allowingGivesTheAppAccess(app: XCUIApplication) throws {
@@ -60,7 +60,7 @@ final class SystemAlertTests: XCTestCase {
 }
 
 /// Tests that leave the answer to a trait.
-@UITestSuite(traits: .example(.permission), .systemAlerts(.allow, for: .microphone))
+@UITestSuite(traits: .example(.permission), .systemAlerts(.allow, for: .microphone), .animationsDisabled)
 final class SystemAlertTraitTests: XCTestCase {
     @UITest
     func theTraitAnswersWhileAnExpectationWaits(app: XCUIApplication) throws {

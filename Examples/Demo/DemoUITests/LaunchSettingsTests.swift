@@ -1,7 +1,7 @@
 import UITesting
 import XCTest
 
-@UITestSuite(traits: .example(.launchSettings))
+@UITestSuite(traits: .example(.launchSettings), .animationsDisabled)
 final class LaunchSettingsTests: XCTestCase {
     @UITest
     func defaultsApplyWithoutAnyTraits(app: XCUIApplication) {

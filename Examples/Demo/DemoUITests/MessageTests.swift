@@ -1,7 +1,7 @@
 import UITesting
 import XCTest
 
-@UITestSuite(traits: .example(.message))
+@UITestSuite(traits: .example(.message), .animationsDisabled)
 final class MessageTests: XCTestCase {
     @UITest
     func loadingShowsTheMessageAfterADelay(app: XCUIApplication) throws {
