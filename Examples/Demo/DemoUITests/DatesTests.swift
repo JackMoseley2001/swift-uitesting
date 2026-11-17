@@ -1,7 +1,7 @@
 import UITesting
 import XCTest
 
-@UITestSuite(traits: .example(.dates))
+@UITestSuite(traits: .example(.dates), .animationsDisabled)
 final class DatesTests: XCTestCase {
     @UITest
     func setsADateInACompactPicker(app: XCUIApplication) throws {
