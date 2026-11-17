@@ -27,7 +27,9 @@ public enum UITestRunner {
     /// 4. Each trait's `setUp(_:)` runs, in the same order.
     /// 5. The test body runs.
     /// 6. Each trait's `tearDown(_:)` runs, in reverse order,
-    ///    whether or not the earlier steps succeeded.
+    ///    whether or not the earlier steps succeeded. If a trait's
+    ///    `willLaunch(_:)` throws, the app is not launched, and that trait and
+    ///    the ones before it are torn down.
     ///
     /// - Parameters:
     ///   - suite: The test case that is running.
@@ -153,8 +155,9 @@ public enum UITestRunner {
     /// Runs each step's pre-launch work, launches, sets up each step, runs the body, then tears the
     /// steps down in reverse order.
     ///
-    /// A step is torn down if its set-up was started, even if the set-up or the body threw.
-    /// If pre-launch work throws, nothing is launched and no step is set up or torn down.
+    /// A step is torn down if its pre-launch work was started, even if that work, a set-up or
+    /// the body threw. If pre-launch work throws, nothing is launched and no step is set up;
+    /// the step that threw and the steps before it are torn down, and later steps are not.
     /// The first error is thrown, and any later error is passed to `recordAdditionalError`.
     @MainActor
     static func withSteps<Step>(
@@ -171,11 +174,11 @@ public enum UITestRunner {
 
         do {
             for step in steps {
+                startedSteps.append(step)
                 try await willLaunch(step)
             }
             launch()
             for step in steps {
-                startedSteps.append(step)
                 try await setUp(step)
             }
             try await body()

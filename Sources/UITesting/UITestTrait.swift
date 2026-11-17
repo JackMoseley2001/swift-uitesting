@@ -79,8 +79,8 @@ public protocol UITestTrait: Sendable {
     /// ``UITestContext/relaunch(with:)``. In a test with the
     /// ``UITestTrait/manualLaunch`` trait, it is called before the test body.
     ///
-    /// `tearDown(_:)` is called only for a trait whose `setUp(_:)` was called. If
-    /// another trait fails before then, work done here is not undone.
+    /// If this throws, `tearDown(_:)` is still called for this trait and for the
+    /// traits before it, so work done here can be undone there.
     ///
     /// - Parameter context: The app and the test that is running.
     @MainActor func willLaunch(_ context: UITestContext) async throws
@@ -92,7 +92,10 @@ public protocol UITestTrait: Sendable {
 
     /// Performs work after the test body has finished, whether it passed or failed.
     ///
-    /// This is called for every trait whose `setUp(_:)` was called.
+    /// This is called for every trait whose `willLaunch(_:)` was called, in reverse
+    /// order. That is every trait, unless a trait's `willLaunch(_:)` threw: then it
+    /// is called for that trait and the ones before it, and `setUp(_:)` has not run
+    /// for any of them.
     ///
     /// - Parameter context: The app and the test that is running.
     @MainActor func tearDown(_ context: UITestContext) async throws
