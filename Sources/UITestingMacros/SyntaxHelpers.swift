@@ -14,6 +14,15 @@ extension AttributeSyntax {
     }
 }
 
+extension AttributeSyntax {
+    /// The expression passed for the `arguments:` parameter, if there is one.
+    var argumentsExpression: ExprSyntax? {
+        arguments?.as(LabeledExprListSyntax.self)?
+            .first { $0.label?.text == MacroParameter.arguments }?
+            .expression
+    }
+}
+
 extension AttributeListSyntax {
     /// Whether the list has an attribute with the given name, written with or without a module prefix.
     func contains(attributeNamed name: String) -> Bool {

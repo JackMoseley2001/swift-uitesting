@@ -15,6 +15,15 @@ final class LaunchSettingsTests: XCTestCase {
         #expect(app[LaunchSettingsID.preferredLanguage].label.hasPrefix("fr"))
     }
 
+    @UITest(traits: .manualLaunch, arguments: ["fr", "de", "ja"])
+    func eachLanguageIsPassedToTheApp(_ language: String, context: UITestContext) throws {
+        // The traits are the same for every argument, so the test launches the app itself
+        // to give each launch its own.
+        try context.relaunch(with: .language(language))
+
+        #expect(context.app[LaunchSettingsID.preferredLanguage].label.hasPrefix(language))
+    }
+
     @UITest(traits: .locale("fr_FR"))
     func localeIsPassedToTheApp(app: XCUIApplication) {
         #expect(app[LaunchSettingsID.region].label == "FR")

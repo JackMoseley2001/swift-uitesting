@@ -79,6 +79,53 @@ public macro UITestSuite(traits: any UITestTrait...) =
 public macro UITest(traits: any UITestTrait...) =
     #externalMacro(module: "UITestingMacros", type: "UITestMacro")
 
+/// Declares a UI test that is run once for each of a collection of arguments.
+///
+/// The method takes one parameter for the argument, as well as the app and the context if
+/// it wants them:
+///
+/// ```swift
+/// @UITest(arguments: [Fruit.apple, .pear, .cherry])
+/// func tappingARowSelectsItsFruit(_ fruit: Fruit, app: XCUIApplication) throws {
+///     try app[FruitID.row(fruit.id)].tap()
+///
+///     #expect(app[FruitID.selection].label == "Selected \(fruit.name)")
+/// }
+/// ```
+///
+/// ## How the test is run
+///
+/// The macro adds one method, named `test_` followed by the name of the function. It runs
+/// the function once for each argument, in order, and each run is a test of its own: the
+/// app is launched fresh with the test's traits, and the traits are set up and torn down
+/// around it. A failure with one argument does not stop the others from running.
+///
+/// XCTest knows the method as one test, so it is shown once in Xcode and in reports, and it
+/// fails if it fails for any argument. Each run is a step named after its argument, so a
+/// failure starts with which one it was, such as `[fruit: Pear]`. Give the type of the
+/// argument a `description` that tells the arguments apart.
+///
+/// ## Launching differently for each argument
+///
+/// The traits are the same for every argument. To launch the app differently for each
+/// one, leave the launch to the test with ``UITestTrait/manualLaunch``:
+///
+/// ```swift
+/// @UITest(traits: .manualLaunch, arguments: ["en", "fr", "de"])
+/// func showsTheTitle(in language: String, context: UITestContext) throws {
+///     try context.relaunch(with: .language(language))
+///
+///     #expect(context.app[HomeID.title].exists)
+/// }
+/// ```
+///
+/// - Parameters:
+///   - traits: The traits for this test, applied after the suite's traits.
+///   - arguments: The values to run the test with.
+@attached(peer, names: prefixed(test_))
+public macro UITest<Arguments: Collection>(traits: any UITestTrait..., arguments: Arguments) =
+    #externalMacro(module: "UITestingMacros", type: "UITestMacro")
+
 /// Checks that a condition is true, and records a failure of the test if it is not.
 ///
 /// The test continues after a failed expectation, so one run can report several.

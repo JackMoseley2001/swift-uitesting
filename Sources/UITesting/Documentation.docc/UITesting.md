@@ -296,6 +296,7 @@ extension UITestTrait where Self == DismissSystemAlerts {
 
 - ``UITestSuite(traits:)``
 - ``UITest(traits:)``
+- ``UITest(traits:arguments:)``
 - ``UITestRunner``
 - ``UITestSuite``
 - ``UITestContext``
