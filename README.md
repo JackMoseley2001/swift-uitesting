@@ -574,13 +574,16 @@ and close them again.
 |---|---|---|
 | `compact`, the default | Yes | Yes |
 | `graphical` | Yes | No |
-| `wheel` | No | Yes, for a picker that shows a time only |
+| `wheel` | Yes, for a picker that shows a date only | Yes |
 
 - **The hour is from 0 to 23**, whether or not the picker shows AM and PM.
 - **The month and AM or PM are found by name**, in the language of the device. If the
   test launches the app in another language, pass it:
   `setDate(year: 2026, month: 3, day: 9, locale: Locale(identifier: "fr"))`.
 - **A date outside the picker's range** fails, because its day cannot be selected.
+- **A `wheel` picker that shows a date and a time** has one wheel for the day, such as
+  "Tue, Nov 14", which does not show the year. Its time can be set, and its date
+  cannot.
 
 ### Scrolling to an element
 
