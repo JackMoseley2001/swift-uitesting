@@ -108,6 +108,22 @@ public enum ElementKinds {
         public static var elementType: ElementType { .popUpButton }
     }
 
+    /// A control that shows its options in a menu when it is pressed, such as a
+    /// SwiftUI `Picker` with the `menu` style, or a SwiftUI `Menu`.
+    ///
+    /// XCTest reports one as a button on iOS and as a pop-up button on macOS, and this
+    /// kind matches whichever it is. In a UI test, elements of this kind have an
+    /// action for selecting an option.
+    public enum MenuPicker: ElementKind {
+        public static var elementType: ElementType {
+            #if os(macOS)
+                .popUpButton
+            #else
+                .button
+            #endif
+        }
+    }
+
     /// A button that shows a menu.
     public enum MenuButton: ElementKind {
         public static var elementType: ElementType { .menuButton }
@@ -292,6 +308,9 @@ extension ElementIDs {
 
     /// The type of an identifier for a pop-up button.
     public typealias PopUpButton = ElementID<ElementKinds.PopUpButton>
+
+    /// The type of an identifier for a control that shows its options in a menu.
+    public typealias MenuPicker = ElementID<ElementKinds.MenuPicker>
 
     /// The type of an identifier for a button that shows a menu.
     public typealias MenuButton = ElementID<ElementKinds.MenuButton>

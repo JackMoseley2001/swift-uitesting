@@ -126,6 +126,15 @@ struct ElementIDTests {
     }
 
     @Test
+    func menuPickerIsTheTypeThatThePlatformReports() {
+        #if os(macOS)
+            #expect(ElementKinds.MenuPicker.elementType == .popUpButton)
+        #else
+            #expect(ElementKinds.MenuPicker.elementType == .button)
+        #endif
+    }
+
+    @Test
     func everyElementTypeHasAKind() {
         let kinds: [any ElementKind.Type] = [
             ElementKinds.AnyElement.self, ElementKinds.Other.self, ElementKinds.Button.self,
