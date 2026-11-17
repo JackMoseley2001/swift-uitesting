@@ -8,7 +8,7 @@
 /// final class LoginTests: XCTestCase {
 ///     @UITest
 ///     func showsSignInButton(app: XCUIApplication) {
-///         XCTAssertTrue(app.buttons["Sign in"].exists)
+///         #expect(app.buttons["Sign in"].exists)
 ///     }
 /// }
 /// ```
@@ -40,12 +40,12 @@ public macro UITestSuite(traits: any UITestTrait...) =
 /// final class LoginTests: XCTestCase {
 ///     @UITest
 ///     func showsSignInButton(app: XCUIApplication) {
-///         XCTAssertTrue(app.buttons["Sign in"].exists)
+///         #expect(app.buttons["Sign in"].exists)
 ///     }
 ///
 ///     @UITest(traits: .launch(AuthState(isLoggedIn: true)))
 ///     func skipsSignInWhenAuthenticated(app: XCUIApplication) {
-///         XCTAssertTrue(app.staticTexts["Home"].exists)
+///         #expect(app.staticTexts["Home"].exists)
 ///     }
 /// }
 /// ```

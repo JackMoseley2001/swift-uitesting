@@ -1,0 +1,157 @@
+@Tutorial(time: 20) {
+    @Intro(title: "Writing a custom trait") {
+        Turn the set-up that several tests share into traits: one that configures the
+        launch, one that takes a value, one that runs code around the test, and one
+        that skips it.
+
+        A trait is a type that conforms to `UITestTrait`. Every requirement of the
+        protocol has a default that does nothing, so a trait implements only the
+        steps it needs.
+    }
+
+    @Section(title: "Configure the launch") {
+        @ContentAndMedia {
+            The first step of a trait is `prepare(_:)`, which adds to the arguments
+            and environment that the app is launched with. Most traits need nothing
+            else.
+        }
+
+        @Steps {
+            @Step {
+                Declare a trait that adds a launch argument.
+
+                `prepare(_:)` is given the launch as the traits before this one left
+                it. The app checks for the argument with
+                `LaunchTraits.current.hasArgument("--skip-onboarding")`.
+
+                @Code(name: "SkipOnboarding.swift", file: "CustomTrait-SkipOnboarding-01.swift")
+            }
+
+            @Step {
+                Add a static member, so that the trait can be written with a leading
+                dot.
+
+                The extension is constrained to the trait's own type. That is what
+                lets Swift find `.skipOnboarding` where a trait is expected.
+
+                @Code(name: "SkipOnboarding.swift", file: "CustomTrait-SkipOnboarding-02.swift")
+            }
+
+            @Step {
+                Use the trait on a suite or on a test.
+
+                Traits are applied in the order they are written, the suite's before
+                the test's.
+
+                @Code(name: "HomeTests.swift", file: "CustomTrait-HomeTests-01.swift")
+            }
+        }
+    }
+
+    @Section(title: "Take a value") {
+        @ContentAndMedia {
+            A trait is an ordinary value, so it can hold what it needs. A static
+            function in place of a static property gives it a parameter where it is
+            used.
+        }
+
+        @Steps {
+            @Step {
+                Declare a trait that tells the app which canned response to show, by
+                setting an environment variable.
+
+                The app reads the variable from `LaunchTraits.current.environment`. For
+                anything more structured than a string, send a `LaunchPayload` with
+                `launch.setPayload(_:)` instead.
+
+                @Code(name: "FeedFixture.swift", file: "CustomTrait-FeedFixture-01.swift")
+            }
+
+            @Step {
+                Add a static function that takes the name of the fixture.
+
+                @Code(name: "FeedFixture.swift", file: "CustomTrait-FeedFixture-02.swift")
+            }
+
+            @Step {
+                Give each test the fixture it needs.
+
+                A later trait that sets the same variable replaces the earlier value,
+                which is how a test overrides its suite.
+
+                @Code(name: "HomeTests.swift", file: "CustomTrait-HomeTests-02.swift")
+            }
+        }
+    }
+
+    @Section(title: "Run code around the test") {
+        @ContentAndMedia {
+            A trait does not have to send anything to the app. `setUp(_:)` runs after
+            the app has launched and before the test, and `tearDown(_:)` runs after
+            the test, whether it passed or failed. Both are given the app and the
+            test case in a `UITestContext`.
+        }
+
+        @Steps {
+            @Step {
+                Declare a trait that switches the device to its dark appearance for
+                the test.
+
+                `setUp(_:)` runs on the main actor, so it can use the device and the
+                app directly.
+
+                @Code(name: "DarkAppearance.swift", file: "CustomTrait-DarkAppearance-01.swift")
+            }
+
+            @Step {
+                Put the device back in `tearDown(_:)`, so that the next test starts
+                from the same place.
+
+                Traits are torn down in reverse order. A trait is torn down even if
+                the test failed or a later trait threw during set-up.
+
+                @Code(name: "DarkAppearance.swift", file: "CustomTrait-DarkAppearance-02.swift")
+            }
+
+            @Step {
+                Add the static member, and use the trait on one test.
+
+                For work that has to happen before the app starts, such as resetting
+                a permission, implement `willLaunch(_:)` in the same way. It runs once
+                the app has its arguments and environment, and before it is launched.
+
+                @Code(name: "HomeTests.swift", file: "CustomTrait-HomeTests-03.swift")
+            }
+        }
+    }
+
+    @Section(title: "Skip a test from a trait") {
+        @ContentAndMedia {
+            A trait can decide that a test should not run at all. Throwing `XCTSkip`
+            from `prepare(_:)` skips the test before the app is launched.
+        }
+
+        @Steps {
+            @Step {
+                Declare a trait for tests that need a staging server, which skips
+                them where no server is configured.
+
+                The trait reads the address from the environment of the test runner,
+                skips the test if it is missing, and passes it on to the app if it
+                is there.
+
+                @Code(name: "RequiresStaging.swift", file: "CustomTrait-RequiresStaging-01.swift")
+            }
+
+            @Step {
+                Use it on the suite whose tests talk to the server.
+
+                Xcode shows a skipped test with the reason the trait gave. For a
+                simple condition you do not need a trait of your own: the built-in
+                `.enabled(if:_:)` and `.disabled(_:)` do the same.
+
+                @Code(name: "CheckoutTests.swift", file: "CustomTrait-CheckoutTests-01.swift")
+            }
+        }
+    }
+}

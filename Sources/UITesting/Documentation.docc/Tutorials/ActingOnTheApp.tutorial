@@ -1,0 +1,112 @@
+@Tutorial(time: 15) {
+    @Intro(title: "Acting on the app and waiting for it") {
+        Type into fields, tap buttons, and check results that take a moment to
+        arrive, without scattering waits through the test.
+
+        The app in this tutorial has a sign-in screen. Signing in takes a second or
+        two, and then the app shows a greeting, or an error if the password was wrong.
+    }
+
+    @Section(title: "Type and tap") {
+        @ContentAndMedia {
+            The kind of an identifier decides what a test can do with the element. A
+            text field can be typed into, a button cannot. Every action waits for the
+            element to exist and be enabled before it goes ahead.
+        }
+
+        @Steps {
+            @Step {
+                Declare the identifiers of the sign-in screen, in a file that is a
+                member of the app target and the UI test target.
+
+                `TextField` and `SecureTextField` are kinds that take text. The app
+                tags its views with these members, as in the first tutorial.
+
+                @Code(name: "LoginID.swift", file: "ActingOnTheApp-LoginID-01.swift")
+            }
+
+            @Step {
+                Start a suite that launches the app signed out, and type into the
+                two fields.
+
+                `enter(_:)` taps the field to give it the keyboard, then types. For a
+                field that may already hold text, `replaceText(with:)` deletes what is
+                there first.
+
+                @Code(name: "SignInTests.swift", file: "ActingOnTheApp-SignInTests-01.swift")
+            }
+
+            @Step {
+                Tap the button.
+
+                If the app only enables the button once both fields are filled in,
+                `tap()` waits for that. If it never happens, the failure says so:
+                "Could not tap LoginID.signInButton: the button was still disabled
+                after 5 seconds".
+
+                @Code(name: "SignInTests.swift", file: "ActingOnTheApp-SignInTests-02.swift")
+            }
+        }
+    }
+
+    @Section(title: "Wait for the result") {
+        @ContentAndMedia {
+            Reading from an element does not wait: `label` and `exists` say what is
+            true now. To check something that takes a moment, give the expectation
+            a timeout.
+        }
+
+        @Steps {
+            @Step {
+                Check the greeting, giving it up to five seconds to be right.
+
+                With `within:`, the condition is checked again and again until it is
+                true or the time is up. Without it, this line would run before the app
+                had finished signing in, and fail.
+
+                @Code(name: "SignInTests.swift", file: "ActingOnTheApp-SignInTests-03.swift")
+            }
+
+            @Step {
+                Add a test for the wrong password, and use `#require` where the rest
+                of the test depends on the result.
+
+                `#expect` records a failure and carries on. `#require` records it and
+                ends the test, so the lines after it never run against an app that is
+                in the wrong state. It is written with `try`.
+
+                @Code(name: "SignInTests.swift", file: "ActingOnTheApp-SignInTests-04.swift")
+            }
+
+            @Step {
+                Give the suite more time for its actions, because signing in is slow
+                on a busy CI machine.
+
+                `.actionTimeout(_:)` sets how long `tap()`, `enter(_:)` and the other
+                actions wait. An expectation waits only for the time it is given.
+
+                @Code(name: "SignInTests.swift", file: "ActingOnTheApp-SignInTests-05.swift")
+            }
+        }
+    }
+
+    @Section(title: "Name the steps") {
+        @ContentAndMedia {
+            A longer test is easier to read, and its failures are easier to place,
+            when its parts have names.
+        }
+
+        @Steps {
+            @Step {
+                Wrap each part of the first test in a step.
+
+                A failure inside a step starts with its name, such as "[Sign in] Could
+                not tap LoginID.signInButton…", and Xcode's test report lists what
+                each step did inside it. A failed test also has a screenshot and the
+                app's element hierarchy attached.
+
+                @Code(name: "SignInTests.swift", file: "ActingOnTheApp-SignInTests-06.swift")
+            }
+        }
+    }
+}
