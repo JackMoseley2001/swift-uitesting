@@ -991,6 +991,10 @@ let title = try #require(app.staticTexts["title"].value as? String)
 
 A condition cannot contain `await`. Await the value first and pass the result.
 
+A suite is still an `XCTestCase`, so XCTest's own assertions, such as `XCTAssertEqual`
+and `XCTFail`, work in a test as they always have. `#expect` and `#require` are the
+ones to reach for, because they can wait, and they show how two values differ.
+
 ### Waiting in async tests
 
 How a wait behaves depends on the test it is in:
@@ -1091,7 +1095,7 @@ final class AccountTests: XCTestCase, UITestSuite {
     @MainActor
     func testShowsTheSignedInUser() async throws {
         try await UITestRunner.run(self, traits: [.launchArgument("--skip-onboarding")]) { context in
-            XCTAssertEqual(context.app.staticTexts["user-name"].label, "Ada")
+            #expect(context.app.staticTexts["user-name"].label == "Ada")
         }
     }
 }
@@ -1111,7 +1115,12 @@ xcodebuild test -project Examples/Demo/Demo.xcodeproj -scheme Demo -destination 
 ## Documentation
 
 Every public symbol has a documentation comment, and both libraries have a DocC
-catalog. In Xcode, choose Product > Build Documentation.
+catalog. In Xcode, choose Product > Build Documentation. The catalogs have:
+
+- **Articles**, one for each topic in this README, such as writing tests, traits,
+  entering text, alerts and system alerts.
+- **Tutorials** that build a suite step by step: writing your first UI test, acting on
+  the app and waiting for it, and writing a custom trait.
 
 ## Developing the package
 

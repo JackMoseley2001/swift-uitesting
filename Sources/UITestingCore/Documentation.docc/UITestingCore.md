@@ -1,122 +1,38 @@
 # ``UITestingCore``
 
-Read the launch arguments, environment and typed payloads that a UI test passes to your app,
-and give its elements typed identifiers that the test can find them by.
+Read what a UI test passes to your app at launch, and give the app's elements typed identifiers that tests find them by.
 
 ## Overview
 
-A UI test runs in a separate process from the app it drives, so the only way to
-configure the app before it starts is through its launch arguments and launch
-environment. UITestingCore gives both sides a shared, typed way to use them.
+A UI test runs in a separate process from the app it drives. UITestingCore is the part
+of the package that both sides share: the app links it to read what a test asked for
+and to tag its elements, and the UI test target gets it through the UITesting library.
 
-Link UITestingCore to your app target. It has no dependency on XCTest, so it is
-safe to ship in the app.
-
-### Describe the launch in the UI test
-
-A ``LaunchConfiguration`` collects the arguments and environment for one launch.
-Use arguments for simple flags, and a ``LaunchPayload`` for structured values.
-
-```swift
-var launch = LaunchConfiguration()
-launch.arguments.append("--skip-onboarding")
-try launch.setPayload(AuthState(isLoggedIn: false))
-
-let app = XCUIApplication()
-app.launchArguments = launch.arguments
-app.launchEnvironment = launch.environment
-app.launch()
-```
-
-### Read the launch in the app
-
-``LaunchTraits/current`` exposes the same values to the app.
-
-```swift
-let traits = LaunchTraits.current
-
-if traits.hasArgument("--skip-onboarding") {
-    onboarding.markAsSeen()
-}
-
-if let auth = traits[AuthState.self] {
-    session.override(isLoggedIn: auth.isLoggedIn, userID: auth.userID)
-}
-```
-
-### Read the launch in SwiftUI views
-
-In SwiftUI, the same traits are available from the environment as `launchTraits`.
-The value defaults to ``LaunchTraits/current``, and previews and unit tests can
-override it.
-
-```swift
-struct PromoBanner: View {
-    @Environment(\.launchTraits) private var launchTraits
-
-    var body: some View {
-        if launchTraits.hasArgument("--show-promo-banner") {
-            Text("Free delivery this week")
-        }
-    }
-}
-
-#Preview {
-    PromoBanner()
-        .environment(\.launchTraits, LaunchTraits(arguments: ["--show-promo-banner"]))
-}
-```
-
-Environment values are not available in a view's initialiser, so read
-``LaunchTraits/current`` directly when setting up a view's initial state.
-
-### Run without animations when a test asks
-
-A UI test can ask the app to run without animations, which makes tests faster and
-steadier. Add `uiTestAnimationsDisabled()` to the root view of a SwiftUI app, and to
-pushed or presented screens that have SwiftUI animations of their own. In a UIKit app,
-call ``LaunchTraits/applyAnimationSetting()`` when the app starts.
-
-Both do nothing unless a test asks, and ``LaunchTraits/animationsDisabled`` says
-whether one did.
-
-### Share payload types between the app and its tests
-
-A payload type must be compiled into both the app and the UI test target. Put it in a
-framework or package that both link, or add its source file to both targets.
+Link UITestingCore to your app target. It has no dependency on XCTest, so it is safe
+to ship in the app.
 
 ```swift
 import UITestingCore
 
-struct AuthState: LaunchPayload {
-    var isLoggedIn: Bool
-    var userID: String?
+// What a test asked for at launch
+if let auth = LaunchTraits.current[AuthState.self] {
+    session.override(isLoggedIn: auth.isLoggedIn, name: auth.name)
 }
+
+// An identifier that the app and its tests share
+Button("Sign in") { signIn() }
+    .accessibilityIdentifier(LoginID.signInButton)
 ```
 
-### Identify elements for UI tests
+### What is in the library
 
-An ``ElementIDs`` group holds typed accessibility identifiers that the app and its UI
-tests share, so neither writes an identifier as a string. Declare the group in code
-that both targets compile. The type of each member says what kind of element it
-identifies, so a test does not have to.
-
-```swift
-enum InboxID: ElementIDs {
-    static var title: StaticText { element() }
-    static var composeButton: Button { element() }
-    static func row(_ id: Int) -> Cell { element(id) }
-}
-
-ForEach(messages) { message in
-    MessageRow(message)
-        .accessibilityIdentifier(InboxID.row(message.id))
-}
-```
-
-Each identifier is prefixed with the name of its group, so two groups can use the same
-member name without their identifiers clashing. A function identifies one element out
-of many, such as the row for a particular item.
+- **Launch data.** ``LaunchTraits`` gives the app the arguments, environment and typed
+  payloads of its launch. See <doc:ReadingLaunchData>.
+- **Element identifiers.** An ``ElementIDs`` group holds typed accessibility
+  identifiers, so that neither the app nor a test writes one as a string. See
+  <doc:ElementIdentifiers>.
+- **Animations.** A test can ask the app to run without them. See
+  <doc:RunningWithoutAnimations>.
 
 ### Release builds
 
@@ -126,23 +42,14 @@ release build, create the traits with ``LaunchTraits/init(processInfo:)`` instea
 
 ## Topics
 
-### Reading the launch in the app
+### Launch data
 
-- ``LaunchTraits``
+- <doc:ReadingLaunchData>
 
-### Defining payloads
+### Elements
 
-- ``LaunchPayload``
-- ``LaunchPayloadDecodingError``
+- <doc:ElementIdentifiers>
 
-### Identifying elements
+### Animations
 
-- ``ElementIDs``
-- ``ElementID``
-- ``ElementKind``
-- ``ElementKinds``
-- ``ElementType``
-
-### Describing a launch in a UI test
-
-- ``LaunchConfiguration``
+- <doc:RunningWithoutAnimations>

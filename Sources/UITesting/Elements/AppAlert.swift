@@ -12,8 +12,8 @@ import XCTest
 /// try app.alert.tap("Delete")
 /// ```
 ///
-/// ``XCTest/XCUIApplication/alert`` is the alert that is showing, and
-/// ``XCTest/XCUIApplication/dialog`` is the confirmation dialog or action sheet.
+/// `app.alert` is the alert that is showing, and `app.dialog` is the confirmation
+/// dialog or action sheet.
 ///
 /// Like the actions of ``UITestElement``, the actions here wait first, for as long as
 /// the test's ``UITestTrait/actionTimeout(_:)`` allows, and end the test with a

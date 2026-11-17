@@ -1,0 +1,154 @@
+@Tutorial(time: 15) {
+    @Intro(title: "Writing your first UI test") {
+        Send the app the state a test needs, tag the elements the test looks for, and
+        write a suite that checks what the app shows.
+
+        The app in this tutorial has an account screen, which shows whether a user is
+        signed in and lets them sign out.
+    }
+
+    @Section(title: "Tell the app what state to start in") {
+        @ContentAndMedia {
+            A UI test runs in a separate process from the app, so it cannot reach into
+            the app to sign a user in. It sends the app a payload when it launches it,
+            and the app reads the payload as it starts.
+        }
+
+        @Steps {
+            @Step {
+                Declare the payload in a file that is a member of both the app target
+                and the UI test target.
+
+                A payload is any `Codable` type that conforms to `LaunchPayload`. Both
+                targets have to compile it, because the test encodes it and the app
+                decodes it.
+
+                @Code(name: "AuthState.swift", file: "FirstTest-AuthState-01.swift")
+            }
+
+            @Step {
+                In the app, start the account screen with no user signed in.
+
+                This is the app before it knows anything about tests. It links
+                UITestingCore, the part of the package that is safe to ship in an app.
+
+                @Code(name: "AccountView.swift", file: "FirstTest-AccountView-01.swift")
+            }
+
+            @Step {
+                Read the payload from `LaunchTraits.current` when the view is created.
+
+                The subscript returns `nil` when no test sent a payload, which is every
+                launch by a user, so the app falls back to its normal state.
+                `LaunchTraits.current` is always empty in a release build.
+
+                @Code(name: "AccountView.swift", file: "FirstTest-AccountView-02.swift")
+            }
+        }
+    }
+
+    @Section(title: "Give the elements identifiers") {
+        @ContentAndMedia {
+            A test finds an element by its accessibility identifier. A group of typed
+            identifiers lets the app and the test share them, so that neither writes
+            one as a string, and the test does not have to say what kind of element
+            it is looking for.
+        }
+
+        @Steps {
+            @Step {
+                Declare a group of identifiers, in a file that is a member of both
+                targets.
+
+                The type of each member is the kind of element it identifies. A SwiftUI
+                `Text` is a `StaticText`. Write each one as a computed property: a
+                stored property cannot work out its own name.
+
+                @Code(name: "AccountID.swift", file: "FirstTest-AccountID-01.swift")
+            }
+
+            @Step {
+                Tag the views with the members of the group.
+
+                `accessibilityIdentifier(_:)` takes the identifier itself. The string
+                the element gets is the name of the group and the name of the member,
+                such as `"AccountID.authStatus"`.
+
+                @Code(name: "AccountView.swift", file: "FirstTest-AccountView-03.swift")
+            }
+        }
+    }
+
+    @Section(title: "Write the suite") {
+        @ContentAndMedia {
+            A suite is a class that inherits from `XCTestCase`, marked with
+            `@UITestSuite`. Each test is a method marked with `@UITest`. The app is
+            launched fresh before each test.
+        }
+
+        @Steps {
+            @Step {
+                Create a file in the UI test target, and declare the suite with the
+                payload as a trait.
+
+                `.launch(_:)` sends the payload with every launch of the app in this
+                suite. A suite needs both imports: UITesting for the macros and XCTest
+                for `XCTestCase`.
+
+                @Code(name: "AccountTests.swift", file: "FirstTest-AccountTests-01.swift")
+            }
+
+            @Step {
+                Add a test that takes the launched app and checks what it shows.
+
+                `app[AccountID.userName]` finds the element the app tagged with that
+                identifier. `#expect` records a failure if the condition is false, and
+                the test carries on, so one run can report several.
+
+                @Code(name: "AccountTests.swift", file: "FirstTest-AccountTests-02.swift")
+            }
+
+            @Step {
+                Give the two states short names, by extending `UITestTrait`.
+
+                A suite that says `.loggedIn(as: "Ada")` reads better than one that
+                builds the payload where it is used, and every suite can share the
+                names.
+
+                @Code(name: "Traits.swift", file: "FirstTest-Traits-01.swift")
+            }
+
+            @Step {
+                Use the short name on the suite, and override it for one test.
+
+                A test's traits are applied after its suite's, so this one test
+                launches signed out. Its last check uses `exists`, which is read
+                straight from the element, as every property of `XCUIElement` is.
+
+                @Code(name: "AccountTests.swift", file: "FirstTest-AccountTests-03.swift")
+            }
+
+            @Step {
+                Add a test that taps a button and waits for the result.
+
+                `tap()` waits until the button exists and is enabled, and
+                `waitToDisappear()` waits for it to go. If either gives up, the failure
+                is recorded on that line and the test ends, which is why they are
+                written with `try`.
+
+                @Code(name: "AccountTests.swift", file: "FirstTest-AccountTests-04.swift")
+            }
+
+            @Step {
+                Run the suite with Product > Test.
+
+                Xcode shows each test as `test_` followed by the name of your method,
+                which is the method the macro adds for XCTest to find. XCTest's own
+                assertions, such as `XCTAssertEqual`, still work inside a test if you
+                have helpers that use them.
+
+                @Code(name: "AccountTests.swift", file: "FirstTest-AccountTests-04.swift")
+            }
+        }
+    }
+}

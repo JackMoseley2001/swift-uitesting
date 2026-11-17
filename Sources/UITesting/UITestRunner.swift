@@ -11,7 +11,7 @@ public enum UITestRunner {
     ///     @MainActor
     ///     func testShowsSignInButton() async throws {
     ///         try await UITestRunner.run(self, traits: [.launchArgument("--skip-onboarding")]) { context in
-    ///             XCTAssertTrue(context.app.buttons["Sign in"].exists)
+    ///             #expect(context.app.buttons["Sign in"].exists)
     ///         }
     ///     }
     /// }

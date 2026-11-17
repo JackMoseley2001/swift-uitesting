@@ -1,0 +1,28 @@
+@Tutorials(name: "UITesting") {
+    @Intro(title: "Writing UI tests with UITesting") {
+        Build a UI test suite for a small account screen, from the first launch to
+        traits of your own.
+
+        Each tutorial shows the code in the app, the code that the app and its tests
+        share, and the tests themselves.
+    }
+
+    @Chapter(name: "Writing tests") {
+        Launch the app in the state a test needs, find its elements, act on them and
+        check what it shows.
+
+        @Image(source: "chapter-writing-tests.svg", alt: "A phone showing a screen with a button, and a tick beside it.")
+
+        @TutorialReference(tutorial: "doc:WritingYourFirstTest")
+        @TutorialReference(tutorial: "doc:ActingOnTheApp")
+    }
+
+    @Chapter(name: "Extending the library") {
+        Package the set-up that your tests share, so that a test says what it needs
+        in a word.
+
+        @Image(source: "chapter-extending.svg", alt: "Three blocks side by side, standing for traits applied in order.")
+
+        @TutorialReference(tutorial: "doc:WritingACustomTrait")
+    }
+}
