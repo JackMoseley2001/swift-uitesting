@@ -1,0 +1,122 @@
+@Tutorial(time: 15) {
+    @Intro(title: "Talking to the app during a test") {
+        Send the app a message in the middle of a test, to make something happen that
+        the test cannot do through the user interface.
+
+        The account screen from the first tutorial shows a signed-in user. On a real
+        server a session can expire at any moment, and the app should sign the user
+        out when it does. No button in the app does that, so the test tells the app
+        directly.
+    }
+
+    @Section(title: "Declare a message and receive it") {
+        @ContentAndMedia {
+            A message is a typed value, like a launch payload, that the app and the UI
+            test target both compile. A payload configures the app once, at launch. A
+            message arrives later, while the app is running.
+        }
+
+        @Steps {
+            @Step {
+                Declare the message in a file that is a member of both the app target
+                and the UI test target.
+
+                A message is any `Codable` type that conforms to `UITestMessage`. This
+                one needs no properties: that it arrived is all the app needs to know.
+
+                @Code(name: "SessionMessage.swift", file: "Messages-SessionMessage-01.swift")
+            }
+
+            @Step {
+                Start from the account screen as the first tutorial left it.
+
+                @Code(name: "AccountView.swift", file: "Messages-AccountView-01.swift")
+            }
+
+            @Step {
+                Say what the app does when the message arrives, with
+                `onUITestMessage(_:perform:)`.
+
+                The closure runs on the main actor, so it can change the view's state.
+                The modifier adds nothing to the view in a release build, and receives
+                only when a UI test launched the app, so it is safe to leave in.
+
+                @Code(name: "AccountView.swift", file: "Messages-AccountView-02.swift")
+            }
+        }
+    }
+
+    @Section(title: "Send the message from a test") {
+        @ContentAndMedia {
+            A test sends a message through its `UITestContext`. The call returns when
+            the app has finished handling the message, so the next line can check
+            what the app shows.
+        }
+
+        @Steps {
+            @Step {
+                Create a suite with the `.messageChannel` trait.
+
+                The trait opens a channel between the test and the app it launches,
+                and closes it when the test finishes. A test without it cannot send
+                messages, and its failure says so.
+
+                @Code(name: "SessionTests.swift", file: "Messages-SessionTests-01.swift")
+            }
+
+            @Step {
+                Add a test that takes the context, and send the message.
+
+                `send(_:)` waits for the app to be receiving the message, as `tap()`
+                waits for a button, so it can be the first line of a test. If the app
+                never handles it, the failure is recorded on this line and the test
+                ends, which is why it is written with `try`.
+
+                @Code(name: "SessionTests.swift", file: "Messages-SessionTests-02.swift")
+            }
+        }
+    }
+
+    @Section(title: "Send values with a message") {
+        @ContentAndMedia {
+            A message can carry whatever the app needs to act on it. Its properties are
+            encoded by the test and decoded by the app.
+        }
+
+        @Steps {
+            @Step {
+                Add a second message, with a property.
+
+                @Code(name: "SessionMessage.swift", file: "Messages-SessionMessage-02.swift")
+            }
+
+            @Step {
+                Receive it in the app, and use the value it carries.
+
+                Each type of message has a receiver of its own. If the closure throws,
+                the test that sent the message fails with the error.
+
+                @Code(name: "AccountView.swift", file: "Messages-AccountView-03.swift")
+            }
+
+            @Step {
+                Send it from a test, twice.
+
+                Every message is handled before the next line of the test runs, so the
+                two checks cannot see each other's name.
+
+                @Code(name: "SessionTests.swift", file: "Messages-SessionTests-03.swift")
+            }
+
+            @Step {
+                Send a message after the app has been launched again.
+
+                The relaunched app starts signed in, because it is launched with the
+                suite's traits again. It connects to the same channel, and `send(_:)`
+                waits for it.
+
+                @Code(name: "SessionTests.swift", file: "Messages-SessionTests-04.swift")
+            }
+        }
+    }
+}

@@ -43,6 +43,9 @@ a first suite and a trait of your own step by step.
 - **Typed elements.** A test finds an element by the identifier the app gave it, and
   the actions on it wait for it to be ready. See <doc:FindingElements> and
   <doc:ActingOnElements>.
+- **Messages.** A test can send the app a typed message while it runs, to make
+  something happen that it cannot do through the user interface. See
+  <doc:SendingMessages>.
 - **Expectations.** `#expect` and `#require` check the app, can wait, and show how two
   values differ. XCTest's own assertions still work beside them. See
   <doc:Expectations>.
@@ -79,6 +82,7 @@ a first suite and a trait of your own step by step.
 
 - <doc:LaunchingAndRelaunching>
 - <doc:LeavingTheAppAndOpeningLinks>
+- <doc:SendingMessages>
 
 ### Reading a test and its failures
 

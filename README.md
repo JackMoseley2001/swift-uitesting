@@ -26,6 +26,8 @@ This package sits on top of XCTest's UI testing support and gives you:
 - **`@UITestSuite` and `@UITest`**, which generate the code that launches the app for each test.
 - **Traits** that configure a suite or a single test, including ones you write yourself.
 - **Typed data sent to the app at launch**, with a small library the app uses to read it.
+- **Typed messages sent to the app while it runs**, for what a test cannot do through the
+  user interface, such as expiring a session.
 - **Typed element identifiers** that the app and its tests share, so neither writes them as strings
   and a test does not have to say what kind of element it is looking for.
 - **`#expect` and `#require`**, with optional waiting and a diff when a comparison fails.
@@ -223,6 +225,7 @@ A trait is a reusable piece of configuration or behaviour. These are built in:
 | `.systemAlerts(.allow, for: .microphone)` | Answers the system's permission alerts for the test. See [System alerts](#system-alerts). |
 | `.resetAuthorization(for: .photos)` | Makes the app forget a permission before it launches, so the system asks again. |
 | `.manualLaunch` | Leaves launching the app to the test. See [Launching and relaunching](#launching-and-relaunching). |
+| `.messageChannel` | Lets the test send messages to the app while it is running. See [Sending messages to the running app](#sending-messages-to-the-running-app). |
 | `.actionTimeout(.seconds(10))` | Sets how long actions on elements wait. See [Actions that wait](#actions-that-wait). |
 | `.animationsDisabled` | Asks the app to run without animations. The app has to opt in. See [Running without animations](#running-without-animations). |
 | `.failureAttachments(false)` | Stops a failed test attaching a screenshot and the element hierarchy. See [When a test fails](#when-a-test-fails). |
@@ -412,6 +415,126 @@ something in the app during `setUp(_:)` does not work with `.manualLaunch`.
 
 If the same work is needed by several tests, write a trait with a `willLaunch(_:)`
 step instead.
+
+## Sending messages to the running app
+
+A payload configures the app once, when it launches. A message reaches it later, in the
+middle of a test, to make something happen that the test cannot do through the user
+interface: a session that expires, a notification that arrives, a clock that moves on.
+
+A message is a `Codable` type that the app and the UI test target both compile, as a
+payload is:
+
+```swift
+import UITestingCore
+
+struct ExpireSession: UITestMessage {}
+```
+
+The app says what to do when one arrives:
+
+```swift
+AccountView()
+    .onUITestMessage(ExpireSession.self) { _ in
+        session.expire()
+    }
+```
+
+And a test that has the `.messageChannel` trait sends it:
+
+```swift
+@UITest(traits: .loggedIn(as: "Ada"), .messageChannel)
+func signsOutWhenTheSessionExpires(context: UITestContext) throws {
+    try context.send(ExpireSession())
+
+    #expect(context.app[AccountID.authStatus].label == "Signed out")
+}
+```
+
+### Sending from a test
+
+`send(_:)` is on the test's `UITestContext`. It returns when the app has finished
+handling the message, so the next line can check what the app shows.
+
+- **It waits for the app to be ready**, as actions on elements do. An app that has only
+  just launched, or a screen that is still on its way in, may not be receiving the
+  message yet, so `send(_:)` tries again until it is. That makes it safe as the first
+  line of a test, and after `relaunch(with:)`.
+- **It waits for up to 5 seconds**, or for the time set with `.actionTimeout(_:)`, or
+  for one call with `within:`:
+  `try context.send(ImportLibrary(), within: .seconds(30))`.
+- **A failure says what went wrong**, is recorded at the line of the call, and ends the
+  test:
+
+  ```
+  Could not send ExpireSession: nothing in the app was receiving this message after 5 seconds
+  ```
+
+  ```
+  The app failed to handle RenameUser: nameTooLong
+  ```
+
+- **A message can carry values.** Give the type properties, and the app receives them:
+
+  ```swift
+  struct RenameUser: UITestMessage {
+      var name: String
+  }
+
+  try context.send(RenameUser(name: "Grace"))
+  ```
+
+### Receiving in the app
+
+In SwiftUI, `onUITestMessage(_:perform:)` receives messages of one type for as long as
+the view it is on is on screen. The closure runs on the main actor, and can be `async`
+and throw. An error it throws fails the test that sent the message.
+
+Outside SwiftUI, do the same in a task with `UITestMessages.receive(_:perform:)`,
+which handles messages until the task is cancelled:
+
+```swift
+let receiving = Task {
+    await UITestMessages.receive(RenameUser.self) { message in
+        try account.rename(to: message.name)
+    }
+}
+```
+
+`UITestMessages.messages(of:)` gives the messages as an `AsyncSequence`, for code that
+would sooner loop over them. The test carries on when the loop comes back for the next
+message.
+
+```swift
+for await message in UITestMessages.messages(of: RenameUser.self) {
+    account.rename(to: message.name)
+}
+```
+
+All three are safe to leave in the app. Nothing is received unless a UI test launched
+the app with `.messageChannel`. `onUITestMessage` adds nothing to the view in a release
+build, and in a debug build it starts receiving only when a UI test launched the app.
+
+Things to know:
+
+- **Release builds.** The app finds the test through `LaunchTraits.current`, which is
+  always empty in a release build. A shipped app never listens for messages, and a UI
+  test cannot send them to a release build.
+- **The view has to be on screen.** A view's `onUITestMessage` stops receiving when the
+  view goes away. Put it on a view that is there for as long as tests need it, such as
+  the root view for something the whole app reacts to.
+- **Several receivers.** If more than one place receives the same type of message, each
+  gets it, in the order they started receiving.
+- **Messages go one way.** A message makes something happen in the app. It cannot
+  return a value to the test, which reads the result from the app's elements.
+- **How it travels.** The test listens on a port of the device's loopback interface,
+  which nothing outside the device can reach, and launches the app with the port in
+  its environment. The app connects the first time it asks to receive a message. The
+  channel lasts for one test and is closed when the test is torn down.
+- **Messages are JSON.** Keep them small, as you do payloads.
+- **An app that ends while handling a message** has not answered it, so `send(_:)`
+  keeps waiting, and sends the message again if the app is launched again in time.
+- **Platforms.** It is tested on the iOS simulator.
 
 ## Reading launch data in the app
 
@@ -1120,7 +1243,8 @@ catalog. In Xcode, choose Product > Build Documentation. The catalogs have:
 - **Articles**, one for each topic in this README, such as writing tests, traits,
   entering text, alerts and system alerts.
 - **Tutorials** that build a suite step by step: writing your first UI test, acting on
-  the app and waiting for it, and writing a custom trait.
+  the app and waiting for it, talking to the app during a test, and writing a custom
+  trait.
 
 ## Developing the package
 

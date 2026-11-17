@@ -31,6 +31,8 @@ Button("Sign in") { signIn() }
 - **Element identifiers.** An ``ElementIDs`` group holds typed accessibility
   identifiers, so that neither the app nor a test writes one as a string. See
   <doc:ElementIdentifiers>.
+- **Messages.** A test can send the app a ``UITestMessage`` while it runs, and the app
+  says what to do when one arrives. See <doc:ReceivingMessages>.
 - **Animations.** A test can ask the app to run without them. See
   <doc:RunningWithoutAnimations>.
 
@@ -45,6 +47,10 @@ release build, create the traits with ``LaunchTraits/init(processInfo:)`` instea
 ### Launch data
 
 - <doc:ReadingLaunchData>
+
+### Messages
+
+- <doc:ReceivingMessages>
 
 ### Elements
 
