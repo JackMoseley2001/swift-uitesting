@@ -61,7 +61,9 @@ extension UITestElement where Kind == ElementKinds.DatePicker {
             // The calendar is found by a button that it keeps, because the element
             // has to be found again after the button that shows the years is renamed.
             let nextMonth = "DatePicker.NextMonth"
-            let shown = Self.pickerInFront(in: app, containing: .button, identifier: nextMonth) { $0.buttons[nextMonth] }
+            let shown = Self.pickerInFront(in: app, containing: .button, identifier: nextMonth) {
+                $0.buttons[nextMonth]
+            }
             guard let shown else {
                 try fail(
                     "\(summary): no calendar showed after its date was tapped. "
@@ -155,7 +157,9 @@ extension UITestElement where Kind == ElementKinds.DatePicker {
         if !isInline {
             let buttons = element.buttons
             (buttons.count > 1 ? buttons.element(boundBy: buttons.count - 1) : buttons.firstMatch).tap()
-            let shown = Self.pickerInFront(in: app, containing: .pickerWheel, identifier: nil) { $0.pickerWheels.firstMatch }
+            let shown = Self.pickerInFront(in: app, containing: .pickerWheel, identifier: nil) {
+                $0.pickerWheels.firstMatch
+            }
             guard let shown else {
                 try fail(
                     "\(summary): no wheels showed after its time was tapped. "
