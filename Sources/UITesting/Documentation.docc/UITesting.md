@@ -206,6 +206,24 @@ launch.
 On iOS, `.orientation(_:)` rotates the device for the test, and puts it back when the
 test finishes.
 
+### Leave the app, come back, and open links
+
+``UITestContext`` can send the app to the background and bring it back, with
+``UITestContext/background(within:filePath:line:)`` and ``UITestContext/foreground()``,
+and end it with ``UITestContext/terminate()``. ``UITestContext/open(_:)`` opens a link
+in the way the system does: an app that is running receives it, and an app that is not
+running is launched with it.
+
+```swift
+@UITest
+func opensAnOrderFromTheBackground(context: UITestContext) throws {
+    try context.background()
+    context.open(URL(string: "shop://orders/42")!)
+
+    #expect(context.app[OrderID.title].label == "Order 42")
+}
+```
+
 ### Launch the app again, or yourself
 
 The app is launched before a test starts. Call ``UITestContext/relaunch(with:)`` to
