@@ -88,3 +88,35 @@ extension XCUIElement {
         )
     }
 }
+
+extension UITestElement {
+    /// Pulls a list or scroll view down to refresh it, once it exists.
+    ///
+    /// ```swift
+    /// try app[InboxID.list].pullToRefresh()
+    /// #expect(app[InboxID.row(1234)].exists, within: .seconds(5))
+    /// ```
+    ///
+    /// The pull is a drag from near the top of the element to near its bottom. It
+    /// refreshes only if the content is at its top, because otherwise the drag
+    /// scrolls the content back up, as it does for a person.
+    ///
+    /// The call returns when the drag is done, not when the refresh is. Wait for what
+    /// the refresh brings with an expectation that has a timeout.
+    ///
+    /// - Parameter timeout: How long to wait for the element. The default is the
+    ///   test's ``UITestTrait/actionTimeout(_:)``.
+    /// - Throws: ``RequirementFailedError`` if the element is not there in time. The
+    ///   failure is recorded at the line of the call, and the test ends.
+    public func pullToRefresh(
+        within timeout: Duration? = nil,
+        filePath: StaticString = #filePath,
+        line: UInt = #line
+    ) throws {
+        try wait(toBe: .exists, inOrderTo: "pull to refresh", within: timeout, filePath: filePath, line: line)
+        element.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.2)).press(
+            forDuration: 0.05,
+            thenDragTo: element.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.9))
+        )
+    }
+}

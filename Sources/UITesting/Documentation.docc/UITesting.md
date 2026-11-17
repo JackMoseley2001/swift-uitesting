@@ -85,7 +85,8 @@ A row further down a list does not exist until the list is scrolled to it. Scrol
 it with ``UITestElement/scrollIntoView(_:maximumSwipes:filePath:line:)``, which returns
 the element so that an action can follow.
 
-To use a swipe action of a row in a list, call
+To refresh a list, pull it down with
+``UITestElement/pullToRefresh(within:filePath:line:)``. To use a swipe action of a row in a list, call
 `swipeAction(_:edge:)` on the row with the action's label, or with an identifier.
 
 ### Enter text
