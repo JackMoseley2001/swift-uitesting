@@ -1,0 +1,66 @@
+# AGENTS.md
+
+This file provides guidance to coding agents when working with code in this repository.
+
+## What this is
+
+A Swift package that layers Swift Testing-style macros and traits (`@UITestSuite`, `@UITest`, `#expect`, `#require`) on top of XCTest's UI testing. Pre-release: no tagged version, API may change. `README.md` is the user-facing reference for every feature and is kept in step with the API.
+
+## Commands
+
+```bash
+# Package tests (unit tests; run on macOS, no simulator needed)
+swift test --disable-experimental-prebuilts
+
+# One suite / one test
+swift test --disable-experimental-prebuilts --filter ScrollSearchTests
+swift test --disable-experimental-prebuilts --filter ScrollSearchTests/doesNotScrollWhenTheElementIsInView
+
+# One test target
+swift test --disable-experimental-prebuilts --filter UITestingMacrosTests
+
+# Demo app's UI tests (the only tests that drive a real app on a simulator)
+xcodebuild test -project Examples/Demo/Demo.xcodeproj -scheme Demo \
+  -destination "platform=iOS Simulator,name=iPhone 17" -skipMacroValidation
+
+# One demo suite / test (generated methods are named test_<function name>)
+xcodebuild test ... -only-testing:DemoUITests/FruitListTests/test_<functionName>
+```
+
+- `--disable-experimental-prebuilts` is required: with the prebuilt swift-syntax, the macro test bundle fails to link.
+- `-skipMacroValidation` is required for `xcodebuild` on the command line.
+- The `UITestingTests` target needs Swift 6.3+ (its files import both `Testing` and `UITesting`). The libraries and other test targets build with Swift 6.0.
+- There is no linter or formatter configuration in the repo; match the surrounding style.
+- CI (`.github/workflows`) runs both of the above on every pull request, on Xcode 27. The demo workflow retries only when the simulator was not ready, never on a failing test.
+
+## Architecture
+
+Three targets, with a strict dependency direction:
+
+- **`UITestingCore`** — linked into the *app*. Must not depend on XCTest. Holds what both sides of the process boundary share: `LaunchConfiguration` (arguments + environment), `LaunchPayload` (Codable values encoded into the launch environment), `LaunchTraits.current` (how the app reads them back, plus SwiftUI environment helpers), and typed element identifiers (`ElementID<Kind>`, `ElementIDs` groups, `ElementKind`).
+- **`UITesting`** — linked into the *UI test target*. Re-exports `UITestingCore`. Holds the macro declarations (`Macros.swift`), the runner, traits, typed elements and expectations.
+- **`UITestingMacros`** — the compiler plugin. Only swift-syntax; it cannot see the runtime, so it refers to runtime declarations by name.
+
+### How a test runs
+
+`@UITestSuite` conforms the class to the `UITestSuite` protocol, generates `suiteTraits`, and adds `@MainActor` to the class's methods and computed properties (not to overrides, or members already `nonisolated`/actor-annotated). `@UITest` is a peer macro that adds `test_<name>()`, which calls `UITestRunner.run(self, traits:) { context in self.<name>(...) }`.
+
+`UITestRunner.run` is the centre of the runtime. In order: every trait's `prepare(_:)` builds the `LaunchConfiguration` (suite traits first) → every `willLaunch` → `app.launch()` unless a `ManualLaunchTrait` is present → every `setUp` → body → `tearDown` in reverse, only for traits whose `setUp` started. The first error is thrown; later ones are recorded as extra XCTest issues. Per-test settings that code deep in the library needs (action timeout, failure capture, system alert rules) are passed down as task-locals set in `run`, and the runner finds them by inspecting the trait list (e.g. `$0 is ManualLaunchTrait`, `as? any SystemAlertAnswering`) rather than through `UITestTrait` requirements.
+
+`UITestContext.relaunch(with:)` re-applies only `prepare(_:)` of the extra traits on top of the test's configuration; no other trait steps run again.
+
+### Expectations
+
+`#expect`/`#require` (and their `UITestingExpect`/`UITestingRequire` aliases, which exist because Swift Testing has macros with the same names) share one expansion, `ExpectationExpansion`. It wraps the argument in a closure so it can be re-evaluated while polling, splits a top-level `==` into two closures so a failure can show a CustomDump diff, and expands to `UITesting.__expect` / `__expectEqual` / `__require` / `__requireEqual` / `__requireValue`. `#require` records the failure at the call site and then throws `RequirementFailedError`, which the runner swallows so the failure is not reported twice.
+
+### Conventions that span files
+
+- **Names shared between plugin and runtime live in `Sources/UITestingMacros/Names.swift`** (`MacroName`, `MacroParameter`, `RuntimeName`). Renaming a runtime symbol that an expansion refers to (`UITestRunner`, `__expect…`, `suiteTraits`, `UITestContext.app`, the `test_` prefix) means updating that file and the expected expansions in `Tests/UITestingMacrosTests`.
+- **Logic is split from XCUITest so it can be unit tested.** Anything that does not need a running app is a pure type taking closures or plain values (`ScrollSearch`, `ElementWait`, `TextEntry`, `SwipeActions`, `DatePickerValues`, `SystemAlertRules`, `ControlState`, `ExpectationPolling`, `UITestRunner.withSteps`), and the `UITestElement+*.swift` extensions are thin wrappers that feed it `XCUIElement` calls. New element behaviour should follow the same split; the pure part gets tests in `Tests/UITestingTests`, the wrapper gets a demo screen and UI test.
+- **Tests use Swift Testing**, not XCTest. In `UITestingTests`, both `Testing` and `UITesting` are imported, so expectations must be written module-qualified: `#Testing::expect(...)`. `Tests/UITestingTests/Support.swift` has `reportedFailures(in:)`, which captures the library's own expectation failures (via the `ExpectationReporter.$handler` task-local) so they can be asserted on rather than failing the test.
+- **Macro tests** use `assertMacro` from swift-macro-testing with inline expansion/diagnostic snapshots.
+- **Every public symbol has a documentation comment**, and each library has a DocC catalog (`Documentation.docc`) whose topic lists need updating when public API is added. New features also get a README section.
+
+### Demo app (`Examples/Demo`)
+
+An Xcode project that depends on the package by relative path. Three folders: `Demo` (the SwiftUI app), `DemoUITests`, and `Shared`, which is a member of both targets and holds the payload types and `ElementIDs` groups that app and tests share. The app opens on a list of examples; each UI test suite jumps straight to its screen with the `.example(...)` trait defined in `DemoUITests/Traits.swift`. A new library feature normally adds an `…ID.swift` in `Shared`, a view in `Demo`, an entry in `Example`, and a `…Tests.swift` in `DemoUITests`.
