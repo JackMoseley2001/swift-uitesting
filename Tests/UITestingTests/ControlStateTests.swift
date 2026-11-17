@@ -57,6 +57,30 @@ struct ControlStateTests {
     }
 
     @Test
+    func stepThatChangesNothingIsAllowedWhenChangeIsNotRequired() {
+        var value = 4
+        var taps = 0
+
+        let stuckAt = ControlState.step(
+            times: 3,
+            requiringChange: false,
+            value: { "\(value)" },
+            tap: {
+                taps += 1
+                value = min(value + 1, 5)
+            },
+            waitForChange: { _ in
+                Issue.record("The value was waited for")
+                return false
+            }
+        )
+
+        #Testing::expect(stuckAt == nil)
+        #Testing::expect(taps == 3)
+        #Testing::expect(value == 5)
+    }
+
+    @Test
     func stepIsTakenOnTrustWhenTheStepperReportsNoValue() {
         var taps = 0
 
