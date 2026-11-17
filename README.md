@@ -557,6 +557,31 @@ try app[ProfileID.countryPicker].select("France")
 
 Positions of a slider run from 0 at its start to 1 at its end.
 
+### Date pickers
+
+Identifiers declared as `DatePicker` can be set to a date or a time, on iOS:
+
+```swift
+try app[BookingID.datePicker].setDate(year: 2026, month: 3, day: 9)
+try app[BookingID.timePicker].setTime(hour: 14, minute: 30)
+```
+
+A date picker is several controls, and which ones depends on its style. These actions
+open the calendar or the wheels if they have to, set them, check where they ended up
+and close them again.
+
+| Style | `setDate` | `setTime` |
+|---|---|---|
+| `compact`, the default | Yes | Yes |
+| `graphical` | Yes | No |
+| `wheel` | No | Yes, for a picker that shows a time only |
+
+- **The hour is from 0 to 23**, whether or not the picker shows AM and PM.
+- **The month and AM or PM are found by name**, in the language of the device. If the
+  test launches the app in another language, pass it:
+  `setDate(year: 2026, month: 3, day: 9, locale: Locale(identifier: "fr"))`.
+- **A date outside the picker's range** fails, because its day cannot be selected.
+
 ### Scrolling to an element
 
 A list only creates the rows near the ones on screen. A row further down does not

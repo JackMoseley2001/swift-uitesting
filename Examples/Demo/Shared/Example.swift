@@ -13,6 +13,7 @@ enum Example: String, CaseIterable, Identifiable, LaunchPayload {
     case launchSettings
     case controls
     case animation
+    case dates
     case permission
 
     var id: Self { self }
@@ -27,6 +28,7 @@ enum Example: String, CaseIterable, Identifiable, LaunchPayload {
         case .launchSettings: "Launch settings"
         case .controls: "Controls"
         case .animation: "Animation"
+        case .dates: "Dates"
         case .permission: "Permission"
         }
     }
