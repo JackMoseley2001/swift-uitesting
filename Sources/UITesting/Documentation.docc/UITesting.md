@@ -90,6 +90,33 @@ field holds.
 To press Return in a single-line field, use
 ``UITestElement/submit(within:filePath:line:)``.
 
+### Answer system alerts
+
+A permission alert belongs to the system and not to the app, so the app's identifiers
+cannot find it. On iOS, ``SystemAlert/current`` reaches the one that is showing:
+
+```swift
+@UITest(traits: .resetAuthorization(for: .microphone))
+func recordsAfterAccessIsAllowed(app: XCUIApplication) throws {
+    try app[RecorderID.recordButton].tap()
+    try SystemAlert.current.allow()
+
+    #expect(app[RecorderID.status].label == "Recording")
+}
+```
+
+``SystemAlert/allow(within:filePath:line:)`` and
+``SystemAlert/deny(within:filePath:line:)`` work in any language. Other buttons are
+tapped by label with ``SystemAlert/tap(_:within:filePath:line:)``, or by position with
+``SystemAlert/tapButton(at:within:filePath:line:)``.
+
+To answer alerts for a whole test or suite, use the
+``UITestTrait/systemAlerts(_:for:)`` trait:
+
+```swift
+@UITest(traits: .systemAlerts(.allow, for: .microphone, .camera))
+```
+
 ### Check the app
 
 Use ``expect(_:_:within:)`` to check a condition. A failed expectation is recorded
@@ -236,6 +263,9 @@ extension UITestTrait where Self == DismissSystemAlerts {
 
 - ``UITestElement``
 - ``ScrollDirection``
+- ``SystemAlert``
+- ``SystemAlertsTrait``
+- ``SystemAlertAnswer``
 - ``ActionTimeoutTrait``
 
 ### Steps and failures
