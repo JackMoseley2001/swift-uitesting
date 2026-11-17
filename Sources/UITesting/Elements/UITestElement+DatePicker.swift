@@ -16,8 +16,17 @@ extension UITestElement where Kind == ElementKinds.DatePicker {
     /// calendar again.
     ///
     /// For a picker with the `wheel` style that shows a date only, it turns the wheels
-    /// for the year, the month and the day. One that shows a time as well has a single
-    /// wheel for the day, which does not show the year, so its date cannot be set.
+    /// for the year, the month and the day.
+    ///
+    /// A picker with the `wheel` style that shows a time as well has a single wheel
+    /// for the day, which shows it as "Tue, Nov 14". It takes a day up to 49 days from
+    /// the one it is on, so it is turned in several steps to a date that is further
+    /// away, and the app is given each date on the way. The wheel does not show the
+    /// year, so the picker is taken to be on the date nearest to the one asked for
+    /// that reads the same. That is right for a date within two years of the picker's
+    /// own, and can be wrong for one further away.
+    /// XCTest can only turn that wheel when the app runs in the language and region of
+    /// the device.
     ///
     /// - Parameters:
     ///   - year: The year.
@@ -60,7 +69,7 @@ extension UITestElement where Kind == ElementKinds.DatePicker {
         let isInline = element.buttons[showYears].exists
         if !isInline, element.pickerWheels.count > 0 {
             try setDateOnWheels(
-                year: year, month: monthName, day: day, summary: summary, filePath: filePath, line: line)
+                year: year, month: month, day: day, locale: locale, summary: summary, filePath: filePath, line: line)
             return
         }
         var calendar = element
@@ -226,57 +235,86 @@ extension UITestElement where Kind == ElementKinds.DatePicker {
     }
 
     /// Sets the date of a picker with the wheel style, which has its wheels inside it.
-    ///
-    /// The year is set first and the day last, because the days that the picker
-    /// accepts depend on the month and the year.
     private func setDateOnWheels(
         year: Int,
-        month: String,
+        month: Int,
         day: Int,
+        locale: Locale,
         summary: String,
         filePath: StaticString,
         line: UInt
     ) throws {
         let wheels = element.pickerWheels
         func values() -> [String] { wheels.allElementsBoundByIndex.map { "\($0.value ?? "")" } }
+        func failure(_ reason: String) -> String {
+            "\(summary): \(reason). They show: \(values().joined(separator: ", "))"
+        }
 
         let start = values()
-        guard let positions = DatePickerValues.monthDayAndYearWheels(values: start) else {
-            let hasTime = DatePickerValues.timeWheels(values: start, periodTitles: []) != nil
-            let reason =
-                hasTime
-                ? "the picker has one wheel for the day, which does not show the year, so its date cannot be set"
-                : "the picker's wheels are not those of a date"
+        if let positions = DatePickerValues.monthDayAndYearWheels(values: start) {
+            // The year is set first and the day last, because the days that the
+            // picker accepts depend on the month and the year.
+            let monthName = DatePickerValues.monthName(month, locale: locale) ?? ""
+            func isOn(_ position: Int, _ number: Int) -> Bool {
+                DatePickerValues.leadingNumber(in: values()[position]) == number
+            }
+            if !isOn(positions.year, year) {
+                wheels.element(boundBy: positions.year).adjust(toPickerWheelValue: "\(year)")
+            }
+            if values()[positions.month] != monthName {
+                wheels.element(boundBy: positions.month).adjust(toPickerWheelValue: monthName)
+            }
+            if !isOn(positions.day, day) {
+                wheels.element(boundBy: positions.day).adjust(toPickerWheelValue: "\(day)")
+            }
+            // A day that the month does not have is turned back by the picker.
+            let isSet = ExpectationPolling().wait(timeout: .seconds(2)) {
+                isOn(positions.year, year) && values()[positions.month] == monthName && isOn(positions.day, day)
+            }
+            guard isSet == .met else {
+                try fail(failure("the wheels did not end on the date"), filePath: filePath, line: line)
+            }
+            return
+        }
+
+        // A picker that shows a time as well has one wheel for the day, before the
+        // wheels for the time.
+        let periods = DatePickerValues.periodTitles(locale: locale)
+        guard let time = DatePickerValues.timeWheels(values: start, periodTitles: periods), time.hour > 0 else {
+            try fail(failure("the picker's wheels are not those of a date"), filePath: filePath, line: line)
+        }
+        let dayWheel = DatePickerValues.DayWheel(locale: locale)
+        let parts = DateComponents(year: year, month: month, day: day, hour: 12)
+        guard
+            let target = dayWheel.calendar.date(from: parts),
+            dayWheel.calendar.dateComponents([.month, .day], from: target) == DateComponents(month: month, day: day)
+        else {
+            try fail("\(summary): there is no such date", filePath: filePath, line: line)
+        }
+        guard let shown = dayWheel.date(showing: start[0], nearestTo: target) else {
             try fail(
-                "\(summary): \(reason). They show: \(start.joined(separator: ", "))",
+                failure(
+                    "the picker's wheel for the day shows no year, and no date within "
+                        + "\(DatePickerValues.DayWheel.furthestDay) days of the one asked for reads as "
+                        + "\"\(start[0])\" in the language \"\(locale.identifier)\""),
                 filePath: filePath,
                 line: line
             )
         }
-        func isOn(_ position: Int, _ number: Int) -> Bool {
-            DatePickerValues.leadingNumber(in: values()[position]) == number
-        }
-
-        if !isOn(positions.year, year) {
-            wheels.element(boundBy: positions.year).adjust(toPickerWheelValue: "\(year)")
-        }
-        if values()[positions.month] != month {
-            wheels.element(boundBy: positions.month).adjust(toPickerWheelValue: month)
-        }
-        if !isOn(positions.day, day) {
-            wheels.element(boundBy: positions.day).adjust(toPickerWheelValue: "\(day)")
-        }
-
-        // A day that the month does not have is turned back by the picker.
-        let isSet = ExpectationPolling().wait(timeout: .seconds(2)) {
-            isOn(positions.year, year) && values()[positions.month] == month && isOn(positions.day, day)
-        }
-        guard isSet == .met else {
-            try fail(
-                "\(summary): the wheels ended on: \(values().joined(separator: ", "))",
-                filePath: filePath,
-                line: line
-            )
+        let wheel = wheels.element(boundBy: 0)
+        for date in dayWheel.turns(from: shown, to: target) {
+            wheel.adjust(toPickerWheelValue: dayWheel.title(on: date))
+            let expected = dayWheel.value(on: date)
+            let isTurned = ExpectationPolling().wait(timeout: .seconds(2)) {
+                dayWheel.shows(values().first ?? "", on: date)
+            }
+            guard isTurned == .met else {
+                try fail(
+                    failure("the wheel for the day did not turn to \"\(expected)\""),
+                    filePath: filePath,
+                    line: line
+                )
+            }
         }
     }
 
