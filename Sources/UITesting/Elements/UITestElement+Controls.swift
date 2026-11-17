@@ -366,7 +366,8 @@ extension UITestElement where Kind == ElementKinds.MenuPicker {
     /// ```
     ///
     /// The options are not inside the control: the menu is shown over the app. So the
-    /// option is the element with this label that can be tapped once the menu is open.
+    /// option is the element with this label, in the app the control was looked up
+    /// in, that can be tapped once the menu is open.
     ///
     /// - Parameters:
     ///   - label: The label of the option to select.
@@ -381,11 +382,12 @@ extension UITestElement where Kind == ElementKinds.MenuPicker {
         filePath: StaticString = #filePath,
         line: UInt = #line
     ) throws {
-        try wait(toBe: .enabled, inOrderTo: "select \"\(label)\" in", within: timeout, filePath: filePath, line: line)
+        let intent = "select \"\(label)\" in"
+        let app = try owningApp(inOrderTo: intent, filePath: filePath, line: line)
+        try wait(toBe: .enabled, inOrderTo: intent, within: timeout, filePath: filePath, line: line)
         let own = element.frame
         element.tap()
 
-        let app = XCUIApplication()
         let hasLabel = NSPredicate(format: "label == %@", label)
         let queries = [app.menuItems.matching(hasLabel), app.buttons.matching(hasLabel)]
         // The menu is in front of the app, so its option is the last element with the
