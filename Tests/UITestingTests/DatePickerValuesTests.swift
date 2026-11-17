@@ -61,7 +61,8 @@ struct DatePickerValuesTests {
 
     @Test
     func timeWheelsAreToldApartByTheirValues() throws {
-        let twelveHour = try #Testing::require(DatePickerValues.timeWheels(values: ["10 o’clock", "13 minutes", "PM"]))
+        let english = ["10 o’clock", "13 minutes", "PM"]
+        let twelveHour = try #Testing::require(DatePickerValues.timeWheels(values: english))
         #Testing::expect(twelveHour == (0, 1, 2))
 
         let periodFirst = try #Testing::require(DatePickerValues.timeWheels(values: ["오후", "10", "13"]))
