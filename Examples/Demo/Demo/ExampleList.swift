@@ -48,6 +48,7 @@ private struct ExampleScreen: View {
         case .alerts: AlertsView()
         case .dates: DatesView()
         case .permission: PermissionView()
+        case .lifecycle: LifecycleView()
         }
     }
 }

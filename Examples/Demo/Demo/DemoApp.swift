@@ -7,6 +7,7 @@ struct DemoApp: App {
         WindowGroup {
             ExampleList(traits: .current)
                 .uiTestAnimationsDisabled()
+                .onOpenURL { OpenedLinks.shared.latest = $0 }
         }
     }
 }

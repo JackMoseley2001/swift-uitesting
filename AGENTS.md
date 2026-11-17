@@ -47,7 +47,7 @@ Three targets, with a strict dependency direction:
 
 `UITestRunner.run` is the centre of the runtime. In order: every trait's `prepare(_:)` builds the `LaunchConfiguration` (suite traits first) → every `willLaunch` → `app.launch()` unless a `ManualLaunchTrait` is present → every `setUp` → body → `tearDown` in reverse, only for traits whose `setUp` started. The first error is thrown; later ones are recorded as extra XCTest issues. Per-test settings that code deep in the library needs (action timeout, failure capture, system alert rules) are passed down as task-locals set in `run`, and the runner finds them by inspecting the trait list (e.g. `$0 is ManualLaunchTrait`, `as? any SystemAlertAnswering`) rather than through `UITestTrait` requirements.
 
-`UITestContext.relaunch(with:)` re-applies only `prepare(_:)` of the extra traits on top of the test's configuration; no other trait steps run again.
+`UITestContext` also has the app lifecycle calls (`background`, `foreground`, `terminate`, `open`, `relaunch(opening:with:)`) in `Lifecycle/`. `UITestContext.relaunch(with:)` re-applies only `prepare(_:)` of the extra traits on top of the test's configuration; no other trait steps run again.
 
 ### Expectations
 
@@ -56,7 +56,7 @@ Three targets, with a strict dependency direction:
 ### Conventions that span files
 
 - **Names shared between plugin and runtime live in `Sources/UITestingMacros/Names.swift`** (`MacroName`, `MacroParameter`, `RuntimeName`). Renaming a runtime symbol that an expansion refers to (`UITestRunner`, `__expect…`, `suiteTraits`, `UITestContext.app`, the `test_` prefix) means updating that file and the expected expansions in `Tests/UITestingMacrosTests`.
-- **Logic is split from XCUITest so it can be unit tested.** Anything that does not need a running app is a pure type taking closures or plain values (`ScrollSearch`, `ElementWait`, `TextEntry`, `SwipeActions`, `DatePickerValues`, `SystemAlertRules`, `ControlState`, `ExpectationPolling`, `UITestRunner.withSteps`), and the `UITestElement+*.swift` extensions are thin wrappers that feed it `XCUIElement` calls. New element behaviour should follow the same split; the pure part gets tests in `Tests/UITestingTests`, the wrapper gets a demo screen and UI test.
+- **Logic is split from XCUITest so it can be unit tested.** Anything that does not need a running app is a pure type taking closures or plain values (`ScrollSearch`, `ElementWait`, `TextEntry`, `SwipeActions`, `DatePickerValues`, `SystemAlertRules`, `ControlState`, `AppStateWait`, `ExpectationPolling`, `UITestRunner.withSteps`), and the `UITestElement+*.swift` extensions are thin wrappers that feed it `XCUIElement` calls. New element behaviour should follow the same split; the pure part gets tests in `Tests/UITestingTests`, the wrapper gets a demo screen and UI test.
 - **Tests use Swift Testing**, not XCTest. In `UITestingTests`, both `Testing` and `UITesting` are imported, so expectations must be written module-qualified: `#Testing::expect(...)`. `Tests/UITestingTests/Support.swift` has `reportedFailures(in:)`, which captures the library's own expectation failures (via the `ExpectationReporter.$handler` task-local) so they can be asserted on rather than failing the test.
 - **Macro tests** use `assertMacro` from swift-macro-testing with inline expansion/diagnostic snapshots.
 - **Every public symbol has a documentation comment**, and each library has a DocC catalog (`Documentation.docc`) whose topic lists need updating when public API is added. New features also get a README section.
