@@ -1,7 +1,7 @@
 import SwiftUI
 import UITestingCore
 
-/// A switch, a slider and two pickers, and a line of text that shows what they are set to.
+/// A switch, a slider, two pickers and a stepper, and a line of text that shows what they are set to.
 struct ControlsView: View {
     static let sizes = ["Small", "Medium", "Large"]
     static let colours = ["Red", "Green", "Blue", "Yellow"]
@@ -10,6 +10,7 @@ struct ControlsView: View {
     @State private var volume = 0.5
     @State private var size = "Medium"
     @State private var colour = "Green"
+    @State private var quantity = 2
 
     var body: some View {
         ScrollView {
@@ -32,6 +33,9 @@ struct ControlsView: View {
                 .pickerStyle(.wheel)
                 .frame(height: 120)
                 .accessibilityIdentifier(ControlsID.colourPicker)
+
+                Stepper("Quantity \(quantity)", value: $quantity, in: 0...5)
+                    .accessibilityIdentifier(ControlsID.quantityStepper)
 
                 Text("\(notifications ? "on" : "off")|\(Int((volume * 100).rounded()))|\(size)|\(colour)")
                     .font(.footnote)
