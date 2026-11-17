@@ -154,6 +154,154 @@ extension UITestElement where Kind == ElementKinds.Slider {
     }
 }
 
+extension UITestElement where Kind == ElementKinds.Stepper {
+    /// Steps the stepper up, once it exists and is enabled.
+    ///
+    /// ```swift
+    /// try app[BasketID.quantityStepper].increment()
+    /// try app[BasketID.quantityStepper].increment(times: 3)
+    /// ```
+    ///
+    /// If the stepper reports a value, each step is checked: a step that leaves the
+    /// value as it was, such as one past the end of the stepper's range, fails. Read
+    /// the value with `value`, as for any element.
+    ///
+    /// Pass `requiringChange: false` when a step is allowed to change nothing, such as
+    /// in a test that the stepper stops at the end of its range:
+    ///
+    /// ```swift
+    /// try app[BasketID.quantityStepper].increment(times: 10, requiringChange: false)
+    /// #expect(app[BasketID.quantityStepper].value as? String == "5")
+    /// ```
+    ///
+    /// - Parameters:
+    ///   - times: How many steps to take. The default is 1.
+    ///   - requiringChange: Whether a step that leaves the value as it was fails. The
+    ///     default is `true`.
+    ///   - timeout: How long to wait for the stepper, and for its value to change. The
+    ///     default is the test's ``UITestTrait/actionTimeout(_:)``.
+    /// - Throws: ``RequirementFailedError`` if the stepper is not ready in time, or its
+    ///   value does not change. The failure is recorded at the line of the call, and
+    ///   the test ends.
+    public func increment(
+        times: Int = 1,
+        requiringChange: Bool = true,
+        within timeout: Duration? = nil,
+        filePath: StaticString = #filePath,
+        line: UInt = #line
+    ) throws {
+        try step(
+            .increment,
+            times: times,
+            requiringChange: requiringChange,
+            within: timeout,
+            filePath: filePath,
+            line: line
+        )
+    }
+
+    /// Steps the stepper down, once it exists and is enabled.
+    ///
+    /// ```swift
+    /// try app[BasketID.quantityStepper].decrement()
+    /// ```
+    ///
+    /// If the stepper reports a value, each step is checked: a step that leaves the
+    /// value as it was, such as one past the end of the stepper's range, fails. Pass
+    /// `requiringChange: false` when a step is allowed to change nothing.
+    ///
+    /// - Parameters:
+    ///   - times: How many steps to take. The default is 1.
+    ///   - requiringChange: Whether a step that leaves the value as it was fails. The
+    ///     default is `true`.
+    ///   - timeout: How long to wait for the stepper, and for its value to change. The
+    ///     default is the test's ``UITestTrait/actionTimeout(_:)``.
+    /// - Throws: ``RequirementFailedError`` if the stepper is not ready in time, or its
+    ///   value does not change. The failure is recorded at the line of the call, and
+    ///   the test ends.
+    public func decrement(
+        times: Int = 1,
+        requiringChange: Bool = true,
+        within timeout: Duration? = nil,
+        filePath: StaticString = #filePath,
+        line: UInt = #line
+    ) throws {
+        try step(
+            .decrement,
+            times: times,
+            requiringChange: requiringChange,
+            within: timeout,
+            filePath: filePath,
+            line: line
+        )
+    }
+
+    private enum Step: String {
+        case increment
+        case decrement
+    }
+
+    private func step(
+        _ step: Step,
+        times: Int,
+        requiringChange: Bool,
+        within timeout: Duration?,
+        filePath: StaticString,
+        line: UInt
+    ) throws {
+        try wait(toBe: .enabled, inOrderTo: step.rawValue, within: timeout, filePath: filePath, line: line)
+
+        let polling = ExpectationPolling()
+        let settling = min(timeout ?? ActionTimeout.current, .seconds(2))
+        let reported = { "\(element.value ?? "")" }
+        let stuckAt = ControlState.step(
+            times: times,
+            requiringChange: requiringChange,
+            value: reported,
+            tap: { tapButton(for: step) },
+            waitForChange: { before in polling.wait(timeout: settling, until: { reported() != before }) == .met }
+        )
+        if let stuckAt {
+            try fail(
+                "Could not \(step.rawValue) \(accessibilityIdentifier): "
+                    + "its value was still \(stuckAt) after tapping it",
+                filePath: filePath,
+                line: line
+            )
+        }
+    }
+
+    /// Taps the half of the stepper that steps up or down.
+    ///
+    /// SwiftUI gives the two halves identifiers made from the stepper's own. Without
+    /// those, the halves are the stepper's two buttons in order. The buttons can take
+    /// a moment to appear after the stepper does, so this waits for them briefly. A
+    /// stepper that never has buttons is tapped a quarter of the way in from the end
+    /// of the control inside it.
+    private func tapButton(for step: Step) {
+        let named = element.buttons["\(accessibilityIdentifier)-\(step == .increment ? "Increment" : "Decrement")"]
+        let buttons = element.buttons
+        _ = ExpectationPolling().wait(timeout: .seconds(1), until: { named.exists || buttons.count == 2 })
+        if named.exists {
+            named.tap()
+            return
+        }
+        if buttons.count == 2 {
+            buttons.element(boundBy: step == .increment ? 1 : 0).tap()
+            return
+        }
+
+        // The offset is worked out from frames read now, and applied to the stepper,
+        // so that the tap does not depend on the inner element still being there.
+        let whole = element.frame
+        let inner = element.children(matching: .other).firstMatch
+        let control = inner.exists ? inner.frame : whole
+        let x = control.minX + control.width * (step == .increment ? 0.75 : 0.25) - whole.minX
+        let y = control.midY - whole.minY
+        element.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: x, dy: y)).tap()
+    }
+}
+
 // Picker wheels are only on iOS, and so is the XCTest call that turns one.
 #if os(iOS)
 extension UITestElement where Kind: PickerWheelKind {
