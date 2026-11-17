@@ -1,3 +1,5 @@
+import SwiftUI
+
 /// A trait that adds arguments to the launch of the app.
 ///
 /// Create one with ``UITestTrait/launchArgument(_:)`` or ``UITestTrait/launchArguments(_:)``.
@@ -44,6 +46,23 @@ extension UITestTrait where Self == LaunchArgumentsTrait {
         LaunchArgumentsTrait(arguments: ["-AppleLocale", identifier])
     }
 
+    /// Launches the app with a Dynamic Type size, as if it were the text size chosen in
+    /// Settings.
+    ///
+    /// The app picks the size up with no extra code. The device's own setting is not
+    /// changed, so the size lasts for that launch only. It has an effect on platforms
+    /// whose apps are built with UIKit, such as iOS.
+    ///
+    /// ```swift
+    /// @UITest(traits: .dynamicTypeSize(.accessibility3))
+    /// func titleStillFitsAtLargeSizes(app: XCUIApplication) { /* ... */ }
+    /// ```
+    ///
+    /// - Parameter size: The Dynamic Type size the app should use.
+    public static func dynamicTypeSize(_ size: DynamicTypeSize) -> Self {
+        LaunchArgumentsTrait(arguments: ["-UIPreferredContentSizeCategoryName", size.contentSizeCategoryName])
+    }
+
     /// Overrides a value in the app's `UserDefaults` for the launch.
     ///
     /// The app reads the value from `UserDefaults.standard` as usual, with no extra code.
@@ -86,5 +105,29 @@ extension UITestTrait where Self == LaunchArgumentsTrait {
     ///   - value: The value the app should read.
     public static func userDefault(_ key: String, _ value: String) -> Self {
         LaunchArgumentsTrait(arguments: ["-\(key)", value])
+    }
+}
+
+extension DynamicTypeSize {
+    /// The name UIKit gives this size, which is the raw value of the matching
+    /// `UIContentSizeCategory`.
+    var contentSizeCategoryName: String {
+        let suffix =
+            switch self {
+            case .xSmall: "XS"
+            case .small: "S"
+            case .medium: "M"
+            case .large: "L"
+            case .xLarge: "XL"
+            case .xxLarge: "XXL"
+            case .xxxLarge: "XXXL"
+            case .accessibility1: "AccessibilityM"
+            case .accessibility2: "AccessibilityL"
+            case .accessibility3: "AccessibilityXL"
+            case .accessibility4: "AccessibilityXXL"
+            case .accessibility5: "AccessibilityXXXL"
+            @unknown default: "L"
+            }
+        return "UICTContentSizeCategory" + suffix
     }
 }

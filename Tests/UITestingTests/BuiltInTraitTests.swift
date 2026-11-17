@@ -1,3 +1,4 @@
+import SwiftUI
 import Testing
 import XCTest
 
@@ -17,6 +18,35 @@ struct BuiltInTraitTests {
         let launch = try LaunchConfiguration(applying: [.locale("fr_FR")])
 
         #Testing::expect(launch.arguments == ["-AppleLocale", "fr_FR"])
+    }
+
+    @Test
+    func dynamicTypeSizeSetsTheAppsPreferredContentSizeCategory() throws {
+        let launch = try LaunchConfiguration(applying: [.dynamicTypeSize(.accessibility3)])
+
+        #Testing::expect(
+            launch.arguments == ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXL"]
+        )
+    }
+
+    @Test
+    func everyDynamicTypeSizeHasTheNameOfItsContentSizeCategory() {
+        #Testing::expect(
+            DynamicTypeSize.allCases.map(\.contentSizeCategoryName) == [
+                "UICTContentSizeCategoryXS",
+                "UICTContentSizeCategoryS",
+                "UICTContentSizeCategoryM",
+                "UICTContentSizeCategoryL",
+                "UICTContentSizeCategoryXL",
+                "UICTContentSizeCategoryXXL",
+                "UICTContentSizeCategoryXXXL",
+                "UICTContentSizeCategoryAccessibilityM",
+                "UICTContentSizeCategoryAccessibilityL",
+                "UICTContentSizeCategoryAccessibilityXL",
+                "UICTContentSizeCategoryAccessibilityXXL",
+                "UICTContentSizeCategoryAccessibilityXXXL",
+            ]
+        )
     }
 
     @Test

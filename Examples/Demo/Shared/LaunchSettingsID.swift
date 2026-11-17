@@ -6,4 +6,5 @@ enum LaunchSettingsID: ElementIDs {
     static var region: StaticText { element() }
     static var betaFeatures: StaticText { element() }
     static var orientation: StaticText { element() }
+    static var textSize: StaticText { element() }
 }

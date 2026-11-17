@@ -5,6 +5,7 @@ import UITestingCore
 /// that change them.
 struct LaunchSettingsView: View {
     @Environment(\.verticalSizeClass) private var verticalSizeClass
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
         ScrollView {
@@ -17,6 +18,7 @@ struct LaunchSettingsView: View {
                     LaunchSettingsID.betaFeatures
                 )
                 row("Orientation", verticalSizeClass == .compact ? "landscape" : "portrait", LaunchSettingsID.orientation)
+                row("Text size", "\(dynamicTypeSize)", LaunchSettingsID.textSize)
             }
             .font(.footnote)
             .padding()

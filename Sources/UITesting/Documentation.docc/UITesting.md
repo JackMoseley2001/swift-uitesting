@@ -199,8 +199,9 @@ The built-in traits add launch arguments, environment variables and typed payloa
 The app reads them back with `LaunchTraits` from UITestingCore.
 
 Others set things the system reads for you: `.language(_:)` and `.locale(_:)` choose
-the language and region the app launches in, and `.userDefault(_:_:)` overrides a
-value in the app's `UserDefaults` for that launch.
+the language and region the app launches in, `.dynamicTypeSize(_:)` chooses its text
+size, and `.userDefault(_:_:)` overrides a value in the app's `UserDefaults` for that
+launch.
 
 On iOS, `.orientation(_:)` rotates the device for the test, and puts it back when the
 test finishes.
@@ -314,6 +315,10 @@ extension UITestTrait where Self == DismissSystemAlerts {
 - ``LaunchPayloadTrait``
 - ``ManualLaunchTrait``
 - ``ResetAuthorizationTrait``
+
+### Changing the device
+
+- ``OrientationTrait``
 
 ### Skipping tests
 
