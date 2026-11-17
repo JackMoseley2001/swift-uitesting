@@ -40,12 +40,14 @@ enum ControlState {
     ///
     /// - Parameters:
     ///   - times: How many steps to take.
+    ///   - requiringChange: Whether a step that leaves the value as it was stops the stepping.
     ///   - value: Reads the value the stepper reports, which is empty if it reports none.
     ///   - tap: Takes one step.
     ///   - waitForChange: Waits for the value to differ from the one given, and returns whether it does.
     /// - Returns: `nil` if every step was taken. Otherwise the value the stepper stayed at.
     static func step(
         times: Int,
+        requiringChange: Bool = true,
         value: () -> String,
         tap: () -> Void,
         waitForChange: (_ from: String) -> Bool
@@ -53,7 +55,7 @@ enum ControlState {
         for _ in 0..<max(times, 0) {
             let before = value()
             tap()
-            if !before.isEmpty, !waitForChange(before) {
+            if requiringChange, !before.isEmpty, !waitForChange(before) {
                 return before
             }
         }
