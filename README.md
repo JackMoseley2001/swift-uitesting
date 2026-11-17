@@ -175,6 +175,7 @@ A trait is a reusable piece of configuration or behaviour. These are built in:
 | `.language("fr")` | Launches the app in a language. |
 | `.locale("fr_FR")` | Launches the app in a locale. |
 | `.userDefault("key", true)` | Overrides a `UserDefaults` value for the launch. Takes a `Bool`, `Int`, `Double` or `String`. |
+| `.dynamicTypeSize(.accessibility3)` | Launches the app with a Dynamic Type size. The device's setting is not changed. |
 | `.orientation(.landscapeLeft)` | Rotates the device for the test, and puts it back afterwards. iOS only. |
 | `.systemAlerts(.allow, for: .microphone)` | Answers the system's permission alerts for the test. See [System alerts](#system-alerts). |
 | `.resetAuthorization(for: .photos)` | Makes the app forget a permission before it launches, so the system asks again. |

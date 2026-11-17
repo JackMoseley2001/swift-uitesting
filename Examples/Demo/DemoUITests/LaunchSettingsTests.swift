@@ -7,6 +7,7 @@ final class LaunchSettingsTests: XCTestCase {
     func defaultsApplyWithoutAnyTraits(app: XCUIApplication) {
         #expect(app[LaunchSettingsID.betaFeatures].label == "off")
         #expect(app[LaunchSettingsID.orientation].label == "portrait")
+        #expect(app[LaunchSettingsID.textSize].label == "large")
     }
 
     @UITest(traits: .language("fr"))
@@ -27,6 +28,11 @@ final class LaunchSettingsTests: XCTestCase {
     @UITest(traits: .orientation(.landscapeLeft))
     func deviceIsRotated(app: XCUIApplication) {
         #expect(app[LaunchSettingsID.orientation].label == "landscape", within: .seconds(5))
+    }
+
+    @UITest(traits: .dynamicTypeSize(.accessibility3))
+    func dynamicTypeSizeIsPassedToTheApp(app: XCUIApplication) {
+        #expect(app[LaunchSettingsID.textSize].label == "accessibility3")
     }
 
     @UITest(traits: .disabled("Shows that a disabled test is skipped"))
