@@ -13,6 +13,8 @@ struct DatesView: View {
     @State private var dateAndTime = start
     @State private var calendar = start
     @State private var timeWheel = start
+    @State private var dateWheel = start
+    @State private var dateAndTimeWheel = start
 
     var body: some View {
         ScrollView {
@@ -40,6 +42,22 @@ struct DatesView: View {
                     .accessibilityIdentifier(DatesID.calendarPicker)
                 Text(Self.day(calendar))
                     .accessibilityIdentifier(DatesID.calendar)
+
+                DatePicker("Date", selection: $dateWheel, displayedComponents: [.date])
+                    .datePickerStyle(.wheel)
+                    .labelsHidden()
+                    .frame(height: 120)
+                    .accessibilityIdentifier(DatesID.dateWheelPicker)
+                Text(Self.day(dateWheel))
+                    .accessibilityIdentifier(DatesID.dateWheel)
+
+                DatePicker("Date and time", selection: $dateAndTimeWheel)
+                    .datePickerStyle(.wheel)
+                    .labelsHidden()
+                    .frame(height: 120)
+                    .accessibilityIdentifier(DatesID.dateAndTimeWheelPicker)
+                Text("\(Self.day(dateAndTimeWheel)) \(Self.time(dateAndTimeWheel))")
+                    .accessibilityIdentifier(DatesID.dateAndTimeWheel)
             }
             .font(.footnote)
             .padding()

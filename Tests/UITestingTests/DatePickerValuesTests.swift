@@ -7,6 +7,7 @@ import Testing
 struct DatePickerValuesTests {
     private let english = Locale(identifier: "en_US")
     private let french = Locale(identifier: "fr_FR")
+    private let periods = ["AM", "PM"]
 
     @Test
     func monthNameIsInTheLanguageOfThePicker() {
@@ -62,13 +63,15 @@ struct DatePickerValuesTests {
     @Test
     func timeWheelsAreToldApartByTheirValues() throws {
         let english = ["10 o’clock", "13 minutes", "PM"]
-        let twelveHour = try #Testing::require(DatePickerValues.timeWheels(values: english))
+        let twelveHour = try #Testing::require(DatePickerValues.timeWheels(values: english, periodTitles: periods))
         #Testing::expect(twelveHour == (0, 1, 2))
 
-        let periodFirst = try #Testing::require(DatePickerValues.timeWheels(values: ["오후", "10", "13"]))
+        let periodFirst = try #Testing::require(
+            DatePickerValues.timeWheels(values: ["오후", "10", "13"], periodTitles: ["오전", "오후"]))
         #Testing::expect(periodFirst == (1, 2, 0))
 
-        let twentyFourHour = try #Testing::require(DatePickerValues.timeWheels(values: ["22", "13"]))
+        let twentyFourHour = try #Testing::require(
+            DatePickerValues.timeWheels(values: ["22", "13"], periodTitles: periods))
         #Testing::expect(twentyFourHour.hour == 0)
         #Testing::expect(twentyFourHour.minute == 1)
         #Testing::expect(twentyFourHour.period == nil)
@@ -76,9 +79,56 @@ struct DatePickerValuesTests {
 
     @Test
     func wheelsThatAreNotATimeAreNotTaken() {
-        #Testing::expect(DatePickerValues.timeWheels(values: ["November", "14", "2023"]) == nil)
-        #Testing::expect(DatePickerValues.timeWheels(values: ["November", "2023"]) == nil)
-        #Testing::expect(DatePickerValues.timeWheels(values: []) == nil)
+        #Testing::expect(DatePickerValues.timeWheels(values: ["November", "14", "2023"], periodTitles: periods) == nil)
+        #Testing::expect(DatePickerValues.timeWheels(values: ["November", "2023"], periodTitles: periods) == nil)
+        #Testing::expect(DatePickerValues.timeWheels(values: [], periodTitles: periods) == nil)
+    }
+
+    @Test
+    func wheelForTheDayIsLeftOutOfTheTimeWheels() throws {
+        let twelveHour = ["Tue, Nov 14", "10 o’clock", "13 minutes", "PM"]
+        let withPeriod = try #Testing::require(DatePickerValues.timeWheels(values: twelveHour, periodTitles: periods))
+        #Testing::expect(withPeriod == (1, 2, 3))
+
+        let today = try #Testing::require(
+            DatePickerValues.timeWheels(values: ["Today", "22", "13"], periodTitles: periods))
+        #Testing::expect(today.hour == 1)
+        #Testing::expect(today.minute == 2)
+        #Testing::expect(today.period == nil)
+
+        let numbered = try #Testing::require(
+            DatePickerValues.timeWheels(values: ["14 nov.", "22", "13"], periodTitles: periods))
+        #Testing::expect(numbered.hour == 1)
+        #Testing::expect(numbered.period == nil)
+    }
+
+    @Test
+    func periodTitlesAreThoseOfTheLanguage() {
+        #Testing::expect(DatePickerValues.periodTitles(locale: english) == ["AM", "PM"])
+    }
+
+    @Test
+    func dateWheelsAreToldApartByTheirValues() throws {
+        let monthFirst = try #Testing::require(
+            DatePickerValues.monthDayAndYearWheels(values: ["November", "14", "2023"]))
+        #Testing::expect(monthFirst == (0, 1, 2))
+
+        let dayFirst = try #Testing::require(
+            DatePickerValues.monthDayAndYearWheels(values: ["14", "November", "2023"]))
+        #Testing::expect(dayFirst == (1, 0, 2))
+
+        let yearFirst = try #Testing::require(
+            DatePickerValues.monthDayAndYearWheels(values: ["2023", "November", "14"]))
+        #Testing::expect(yearFirst == (1, 2, 0))
+    }
+
+    @Test
+    func wheelsThatAreNotADateAreNotTaken() {
+        #Testing::expect(DatePickerValues.monthDayAndYearWheels(values: ["10 o’clock", "13 minutes", "PM"]) == nil)
+        #Testing::expect(DatePickerValues.monthDayAndYearWheels(values: ["November", "2023"]) == nil)
+        #Testing::expect(DatePickerValues.monthDayAndYearWheels(values: ["Tue, Nov 14", "22", "13"]) == nil)
+        #Testing::expect(DatePickerValues.monthDayAndYearWheels(values: ["November", "14", "15"]) == nil)
+        #Testing::expect(DatePickerValues.monthDayAndYearWheels(values: ["Tue, 14 Nov", "16", "45"]) == nil)
     }
 
     @Test
@@ -91,5 +141,66 @@ struct DatePickerValuesTests {
 
         #Testing::expect(DatePickerValues.monthAndYearWheels(values: ["10 o’clock", "13 minutes", "PM"]) == nil)
         #Testing::expect(DatePickerValues.monthAndYearWheels(values: ["2023", "2024"]) == nil)
+    }
+
+    // MARK: The wheel for the day
+
+    private var utc: Calendar {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "UTC") ?? .gmt
+        return calendar
+    }
+
+    private func day(_ year: Int, _ month: Int, _ day: Int) -> Date {
+        utc.date(from: DateComponents(year: year, month: month, day: day, hour: 12)) ?? .distantPast
+    }
+
+    private func dayWheel(locale: Locale? = nil) -> DatePickerValues.DayWheel {
+        DatePickerValues.DayWheel(locale: locale ?? english, calendar: utc, today: day(2026, 11, 17))
+    }
+
+    @Test
+    func dayWheelShowsTheDayOfTheWeekAndIsTurnedWithoutIt() {
+        #Testing::expect(dayWheel().value(on: day(2023, 11, 14)) == "Tue, Nov 14")
+        #Testing::expect(dayWheel().title(on: day(2023, 11, 14)) == "Nov 14")
+    }
+
+    @Test
+    func dayWheelShowsTodayByNameAndIsTurnedToItByDate() {
+        #Testing::expect(dayWheel().value(on: day(2026, 11, 17)) == "Today")
+        #Testing::expect(dayWheel().title(on: day(2026, 11, 17)) == "Nov 17")
+    }
+
+    @Test
+    func dayWheelIsOnTheNearestDateThatReadsTheSame() {
+        let wheel = dayWheel()
+        // 14 November is a Tuesday in 2023 and in 2028.
+        #Testing::expect(wheel.date(showing: "Tue, Nov 14", nearestTo: day(2024, 2, 29)) == day(2023, 11, 14))
+        #Testing::expect(wheel.date(showing: "Tue, Nov 14", nearestTo: day(2028, 1, 1)) == day(2028, 11, 14))
+        #Testing::expect(wheel.date(showing: "Today", nearestTo: day(2024, 2, 29)) == day(2026, 11, 17))
+    }
+
+    @Test
+    func dayWheelValueIsReadWhateverItsPunctuation() {
+        let british = dayWheel(locale: Locale(identifier: "en_GB"))
+        #Testing::expect(british.date(showing: "Tue, 14 Nov", nearestTo: day(2023, 10, 1)) == day(2023, 11, 14))
+    }
+
+    @Test
+    func dayWheelValueThatIsNoDateNearbyIsNotRead() {
+        #Testing::expect(dayWheel().date(showing: "mar. 14 nov.", nearestTo: day(2024, 2, 29)) == nil)
+        #Testing::expect(dayWheel().date(showing: "10 o’clock", nearestTo: day(2024, 2, 29)) == nil)
+    }
+
+    @Test
+    func dayWheelIsTurnedInStepsItCanTake() {
+        let wheel = dayWheel()
+        #Testing::expect(wheel.turns(from: day(2023, 11, 14), to: day(2023, 11, 14)).isEmpty)
+        #Testing::expect(wheel.turns(from: day(2023, 11, 14), to: day(2023, 12, 1)) == [day(2023, 12, 1)])
+        #Testing::expect(
+            wheel.turns(from: day(2023, 11, 14), to: day(2024, 2, 29))
+                == [day(2023, 12, 29), day(2024, 2, 12), day(2024, 2, 29)])
+        #Testing::expect(
+            wheel.turns(from: day(2024, 2, 29), to: day(2023, 12, 31)) == [day(2024, 1, 15), day(2023, 12, 31)])
     }
 }

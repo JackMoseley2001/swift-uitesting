@@ -574,13 +574,20 @@ and close them again.
 |---|---|---|
 | `compact`, the default | Yes | Yes |
 | `graphical` | Yes | No |
-| `wheel` | No | Yes, for a picker that shows a time only |
+| `wheel` | Yes | Yes |
 
 - **The hour is from 0 to 23**, whether or not the picker shows AM and PM.
 - **The month and AM or PM are found by name**, in the language of the device. If the
   test launches the app in another language, pass it:
   `setDate(year: 2026, month: 3, day: 9, locale: Locale(identifier: "fr"))`.
 - **A date outside the picker's range** fails, because its day cannot be selected.
+- **A `wheel` picker that shows a date and a time** has one wheel for the day, such as
+  "Tue, Nov 14", in place of a month, a day and a year. `setDate` turns it in steps of
+  up to 45 days, so the app is given each date on the way to one that is further off.
+  The wheel shows no year, so the picker is taken to be on the nearest date to the
+  one asked for that reads the same. That is right for a date within two years of the
+  picker's own. XCTest can only turn this wheel when the app runs in the language and
+  region of the device, so not in a test that uses `.locale(_:)` or `.language(_:)`.
 
 ### Scrolling to an element
 
