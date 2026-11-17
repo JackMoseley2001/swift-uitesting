@@ -44,6 +44,7 @@ private struct ExampleScreen: View {
         case .launchSettings: LaunchSettingsView()
         case .controls: ControlsView()
         case .animation: AnimationView()
+        case .permission: PermissionView()
         }
     }
 }
