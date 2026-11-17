@@ -40,6 +40,9 @@ public struct AppAlert {
     /// The underlying XCTest element.
     public let element: XCUIElement
 
+    /// The app that presents it.
+    let app: XCUIApplication
+
     /// What to call it in the description of a failure.
     let noun: AlertNoun
 
@@ -83,7 +86,8 @@ public struct AppAlert {
             accessibilityIdentifier: identifier,
             elementOfAnyKind: Kind.elementType == .any
                 ? nil : element.descendants(matching: .any).matching(identifier: identifier).firstMatch,
-            scope: element
+            scope: element,
+            app: app
         )
     }
 
@@ -264,7 +268,7 @@ extension XCUIApplication {
     /// ```
     @MainActor
     public var alert: AppAlert {
-        AppAlert(element: alerts.firstMatch, noun: .alert, dismissRegion: nil)
+        AppAlert(element: alerts.firstMatch, app: self, noun: .alert, dismissRegion: nil)
     }
 
     /// The confirmation dialog or action sheet that the app is showing, or the next one it shows.
@@ -276,6 +280,7 @@ extension XCUIApplication {
     public var dialog: AppAlert {
         AppAlert(
             element: sheets.firstMatch,
+            app: self,
             noun: .dialog,
             dismissRegion: descendants(matching: .any)["PopoverDismissRegion"].firstMatch
         )

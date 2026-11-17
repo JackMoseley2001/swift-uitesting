@@ -1,7 +1,7 @@
 import UITesting
 import XCTest
 
-@UITestSuite(traits: .example(.alerts))
+@UITestSuite(traits: .example(.alerts), .animationsDisabled)
 final class AlertsTests: XCTestCase {
     @UITest
     func readsAnAlert(app: XCUIApplication) throws {
