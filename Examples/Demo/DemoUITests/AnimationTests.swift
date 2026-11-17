@@ -1,6 +1,7 @@
 import UITesting
 import XCTest
 
+// The only suite that runs with animations, because it checks that they run.
 @UITestSuite(traits: .example(.animation))
 final class AnimationTests: XCTestCase {
     @UITest

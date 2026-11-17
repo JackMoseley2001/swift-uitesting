@@ -1,7 +1,7 @@
 import UITesting
 import XCTest
 
-@UITestSuite(traits: .example(.numberList))
+@UITestSuite(traits: .example(.numberList), .animationsDisabled)
 final class ScrollingTests: XCTestCase {
     @UITest
     func aRowFurtherDownDoesNotExistUntilItIsScrolledTo(app: XCUIApplication) throws {

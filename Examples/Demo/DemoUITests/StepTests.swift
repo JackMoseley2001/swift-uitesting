@@ -1,7 +1,7 @@
 import UITesting
 import XCTest
 
-@UITestSuite(traits: .example(.fruitList))
+@UITestSuite(traits: .example(.fruitList), .animationsDisabled)
 final class StepTests: XCTestCase {
     @UITest
     func aTestCanBeWrittenAsNamedSteps(app: XCUIApplication) throws {

@@ -1,7 +1,7 @@
 import UITesting
 import XCTest
 
-@UITestSuite(traits: .example(.profileForm))
+@UITestSuite(traits: .example(.profileForm), .animationsDisabled)
 final class ProfileFormTests: XCTestCase {
     /// A helper needs no `@MainActor` of its own. The suite adds it.
     private func summary(in app: XCUIApplication) -> String {
