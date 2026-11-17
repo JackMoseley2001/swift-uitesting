@@ -28,7 +28,8 @@ extension XCUIElement {
             element: descendants(matching: XCUIElement.ElementType(Kind.elementType))[identifier],
             accessibilityIdentifier: identifier,
             elementOfAnyKind: Kind.elementType == .any ? nil : descendants(matching: .any)[identifier],
-            scope: self
+            scope: self,
+            app: self as? XCUIApplication
         )
     }
 }
@@ -49,7 +50,8 @@ extension XCUIElementQuery {
             element: self[id.accessibilityIdentifier],
             accessibilityIdentifier: id.accessibilityIdentifier,
             elementOfAnyKind: nil,
-            scope: nil
+            scope: nil,
+            app: nil
         )
     }
 }

@@ -1,9 +1,10 @@
 import SwiftUI
 import UITestingCore
 
-/// A switch, a slider, two pickers and a stepper, and a line of text that shows what they are set to.
+/// A switch, a slider, three pickers and a stepper, and a line of text that shows what they are set to.
 struct ControlsView: View {
     static let sizes = ["Small", "Medium", "Large"]
+    static let shapes = ["Circle", "Square", "Triangle"]
     static let colours = ["Red", "Green", "Blue", "Yellow"]
 
     @State private var notifications = false
@@ -11,6 +12,7 @@ struct ControlsView: View {
     @State private var size = "Medium"
     @State private var colour = "Green"
     @State private var quantity = 2
+    @State private var shape = "Circle"
 
     var body: some View {
         ScrollView {
@@ -33,6 +35,12 @@ struct ControlsView: View {
                 .pickerStyle(.wheel)
                 .frame(height: 120)
                 .accessibilityIdentifier(ControlsID.colourPicker)
+
+                Picker("Shape", selection: $shape) {
+                    ForEach(Self.shapes, id: \.self) { Text($0) }
+                }
+                .pickerStyle(.menu)
+                .accessibilityIdentifier(ControlsID.shapeMenu)
 
                 Stepper("Quantity \(quantity)", value: $quantity, in: 0...5)
                     .accessibilityIdentifier(ControlsID.quantityStepper)

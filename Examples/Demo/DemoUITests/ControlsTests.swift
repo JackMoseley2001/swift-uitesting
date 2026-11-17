@@ -72,6 +72,18 @@ final class ControlsTests: XCTestCase {
     }
 
     @UITest
+    func selectsAnOptionInAMenu(app: XCUIApplication) throws {
+        let shape = try app[ControlsID.shapeMenu].scrollIntoView()
+        #expect(shape.selection == "Circle")
+
+        try shape.select("Triangle")
+        #expect(shape.selection == "Triangle")
+
+        try shape.select("Square")
+        #expect(shape.selection == "Square")
+    }
+
+    @UITest
     func aStepperCanBeSteppedPastTheEndOfItsRange(app: XCUIApplication) throws {
         let quantity = try app[ControlsID.quantityStepper].scrollIntoView()
 

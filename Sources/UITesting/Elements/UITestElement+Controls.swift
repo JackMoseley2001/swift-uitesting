@@ -346,6 +346,79 @@ extension UITestElement where Kind: PickerWheelKind {
 }
 #endif
 
+extension UITestElement where Kind == ElementKinds.MenuPicker {
+    /// The option that the control shows as selected, read without waiting, or `nil`
+    /// if it shows none, as a menu of actions does not.
+    public var selection: String? {
+        let text = element.staticTexts.firstMatch
+        if text.exists {
+            return text.label
+        }
+        guard let value = element.value as? String, !value.isEmpty else { return nil }
+        return value
+    }
+
+    /// Opens the menu and selects the option with a label, once the control exists
+    /// and is enabled.
+    ///
+    /// ```swift
+    /// try app[SettingsID.themePicker].select("Dark")
+    /// ```
+    ///
+    /// The options are not inside the control: the menu is shown over the app. So the
+    /// option is the element with this label, in the app the control was looked up
+    /// in, that can be tapped once the menu is open.
+    ///
+    /// - Parameters:
+    ///   - label: The label of the option to select.
+    ///   - timeout: How long to wait for the control, and for the option to show. The
+    ///     default is the test's ``UITestTrait/actionTimeout(_:)``.
+    /// - Throws: ``RequirementFailedError`` if the control is not ready in time, or no
+    ///   option with this label shows. The failure is recorded at the line of the call,
+    ///   and the test ends, with the menu still open.
+    public func select(
+        _ label: String,
+        within timeout: Duration? = nil,
+        filePath: StaticString = #filePath,
+        line: UInt = #line
+    ) throws {
+        let intent = "select \"\(label)\" in"
+        let app = try owningApp(inOrderTo: intent, filePath: filePath, line: line)
+        try wait(toBe: .enabled, inOrderTo: intent, within: timeout, filePath: filePath, line: line)
+        let own = element.frame
+        element.tap()
+
+        let hasLabel = NSPredicate(format: "label == %@", label)
+        let queries = [app.menuItems.matching(hasLabel), app.buttons.matching(hasLabel)]
+        // The menu is in front of the app, so its option is the last element with the
+        // label. The control itself can have the same label, and is not an option.
+        func option() -> XCUIElement? {
+            queries.lazy
+                .flatMap { $0.allElementsBoundByIndex.reversed() }
+                .first { $0.frame != own && $0.isHittable }
+        }
+
+        let polling = ExpectationPolling()
+        let timeout = timeout ?? ActionTimeout.current
+        var found: XCUIElement?
+        _ = polling.wait(timeout: timeout) {
+            found = option()
+            return found != nil
+        }
+        guard let found else {
+            try fail(
+                "Could not select \"\(label)\" in \(accessibilityIdentifier): "
+                    + "no option with this label showed within \(ExpectationFailure.describe(timeout))",
+                filePath: filePath,
+                line: line
+            )
+        }
+        found.tap()
+        // The menu takes a moment to close, and the control is covered until it has.
+        _ = polling.wait(timeout: .seconds(2), until: { element.isHittable })
+    }
+}
+
 extension UITestElement where Kind == ElementKinds.SegmentedControl {
     /// The label of the segment that is selected, read without waiting.
     public var selection: String? {

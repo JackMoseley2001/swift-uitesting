@@ -450,7 +450,7 @@ identifier, one for each element type that XCTest reports. Some common ones:
 | `StaticText` | Text the user cannot edit: a SwiftUI `Text`, a `UILabel`. |
 | `TextField`, `SecureTextField`, `TextView` | A text field, a password field, and a multi-line editor. |
 | `Switch` | A SwiftUI `Toggle` on iOS. On macOS it is a `CheckBox`. |
-| `Slider`, `Stepper`, `Picker`, `DatePicker`, `SegmentedControl` | Controls. A SwiftUI `Picker` is a different kind for each picker style. |
+| `Slider`, `Stepper`, `Picker`, `DatePicker`, `SegmentedControl`, `MenuPicker` | Controls. A SwiftUI `Picker` is a different kind for each picker style: `Picker` for a wheel, `SegmentedControl`, and `MenuPicker` for a menu. |
 | `Image`, `Link`, `Cell`, `Table`, `CollectionView`, `ScrollView` | Content and containers. |
 | `AnyElement` | An element of any kind. |
 
@@ -542,6 +542,7 @@ try app[SettingsID.notificationsSwitch].setOn(true)
 try app[PlayerID.volumeSlider].adjust(to: 0.8)
 try app[BasketID.quantityStepper].increment(times: 2)
 try app[SettingsID.sizePicker].select("Large")
+try app[SettingsID.themePicker].select("Dark")
 try app[ProfileID.countryPicker].select("France")
 ```
 
@@ -551,6 +552,7 @@ try app[ProfileID.countryPicker].select("France")
 | `Slider` | `position`, `adjust(to:tolerance:)` | `adjust(toNormalizedSliderPosition:)` can land several percent away. This drags the thumb, reads where it landed and drags again, until it is within the tolerance, which is 0.02 unless you pass one. |
 | `Stepper` | `increment(times:)`, `decrement(times:)` | Finds the two halves of the stepper, which have no identifiers of their own to look up. If the stepper reports a value, each step is checked, so a step past the end of its range fails. Pass `requiringChange: false` when a step is allowed to change nothing. Read the value with `value`. |
 | `SegmentedControl` | `selection`, `select(_:)` | Finds the segment by its label, and the failure lists the segments if there is none. |
+| `MenuPicker` | `selection`, `select(_:)` | For a SwiftUI `Picker` with the `menu` style, or a `Menu`. The options are not inside the control, because the menu is shown over the app. This opens the menu, waits for the option and taps it. The kind matches a button on iOS and a pop-up button on macOS, which is how XCTest reports the control on each. |
 | `Picker`, `PickerWheel` (iOS) | `selection()`, `select(_:)` | Finds the wheel inside a picker that has the identifier. Pass `inWheel:` for a picker with several wheels. |
 
 Positions of a slider run from 0 at its start to 1 at its end.
