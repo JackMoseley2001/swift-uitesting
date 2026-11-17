@@ -49,6 +49,11 @@ public struct LaunchConfiguration: Sendable, Equatable {
         environment[LaunchEnvironmentKey.payload(Payload.launchKey)] = String(decoding: data, as: UTF8.self)
     }
 
+    /// Asks the app to run without animations, which the app sees as ``LaunchTraits/animationsDisabled``.
+    public mutating func disableAnimations() {
+        environment[LaunchEnvironmentKey.animationsDisabled] = "1"
+    }
+
     /// Marks the launch as coming from a UI test, which the app sees as ``LaunchTraits/isUITesting``.
     package mutating func markAsUITesting() {
         environment[LaunchEnvironmentKey.isUITesting] = "1"

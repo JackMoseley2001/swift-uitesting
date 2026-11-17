@@ -13,6 +13,15 @@ struct UITestTraitTests {
     }
 
     @Test
+    func animationsDisabledTraitAsksTheAppToRunWithoutAnimations() throws {
+        let launch = try LaunchConfiguration(applying: [.animationsDisabled])
+        let launchWithoutTraits = try LaunchConfiguration(applying: [])
+
+        #Testing::expect(LaunchTraits(environment: launch.environment).animationsDisabled)
+        #Testing::expect(!LaunchTraits(environment: launchWithoutTraits.environment).animationsDisabled)
+    }
+
+    @Test
     func traitWithoutAnImplementationChangesNothing() throws {
         let launch = try LaunchConfiguration(applying: [EmptyTrait()])
         let launchWithoutTraits = try LaunchConfiguration(applying: [])

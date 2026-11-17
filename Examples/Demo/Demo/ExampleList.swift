@@ -23,6 +23,8 @@ struct ExampleList: View {
                 ExampleScreen(example: example)
                     .navigationTitle(example.title)
                     .navigationBarTitleDisplayMode(.inline)
+                    // A pushed screen is a hierarchy of its own, so it asks for itself.
+                    .uiTestAnimationsDisabled()
             }
         }
     }
@@ -41,6 +43,7 @@ private struct ExampleScreen: View {
         case .numberList: NumberList()
         case .launchSettings: LaunchSettingsView()
         case .controls: ControlsView()
+        case .animation: AnimationView()
         }
     }
 }

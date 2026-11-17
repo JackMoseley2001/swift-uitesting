@@ -63,4 +63,14 @@ struct LaunchConfigurationTests {
 
         #expect(launch.environment == ["UITESTING_ACTIVE": "1"])
     }
+
+    @Test
+    func disableAnimationsSetsTheRequest() {
+        var launch = LaunchConfiguration()
+
+        launch.disableAnimations()
+
+        #expect(launch.environment == ["UITESTING_ANIMATIONS_DISABLED": "1"])
+        #expect(LaunchTraits(environment: launch.environment).animationsDisabled)
+    }
 }
