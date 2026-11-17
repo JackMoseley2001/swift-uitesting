@@ -713,4 +713,112 @@ struct UITestMacroTests {
             """
         }
     }
+
+    @Test
+    func functionWithArguments() {
+        assertMacro {
+            """
+            @UITestSuite
+            final class FruitTests: XCTestCase {
+                @UITest(arguments: Fruit.all)
+                func selects(_ fruit: Fruit, app: XCUIApplication) throws {
+                }
+            }
+            """
+        } expansion: {
+            """
+            @UITestSuite
+            final class FruitTests: XCTestCase {
+                func selects(_ fruit: Fruit, app: XCUIApplication) throws {
+                }
+
+                @MainActor
+                func test_selects() async throws {
+                    try await UITesting.UITestRunner.run(self, arguments: Fruit.all, named: "fruit") { argument, context in
+                        try self.selects(argument, app: context.app)
+                    }
+                }
+            }
+            """
+        }
+    }
+
+    @Test
+    func functionWithArgumentsAndTraitsThatDoesNotTakeTheApp() {
+        assertMacro {
+            """
+            @UITestSuite
+            final class FruitTests: XCTestCase {
+                @UITest(traits: .manualLaunch, .loggedOut, arguments: ["en", "fr"])
+                func launches(in language: String) async {
+                }
+            }
+            """
+        } expansion: {
+            """
+            @UITestSuite
+            final class FruitTests: XCTestCase {
+                func launches(in language: String) async {
+                }
+
+                @MainActor
+                func test_launches() async throws {
+                    try await UITesting.UITestRunner.run(self, traits: [.manualLaunch, .loggedOut], arguments: ["en", "fr"], named: "language") { argument, _ in
+                        await self.launches(in: argument)
+                    }
+                }
+            }
+            """
+        }
+    }
+
+    @Test
+    func argumentsWithoutAParameterToReceiveThem() {
+        assertMacro {
+            """
+            @UITestSuite
+            final class FruitTests: XCTestCase {
+                @UITest(arguments: Fruit.all)
+                func selects(app: XCUIApplication) {
+                }
+            }
+            """
+        } diagnostics: {
+            """
+            @UITestSuite
+            final class FruitTests: XCTestCase {
+                @UITest(arguments: Fruit.all)
+                                   ┬────────
+                                   ╰─ 🛑 '@UITest' has arguments, but the function has no parameter to receive them; add a parameter of the type of one argument
+                func selects(app: XCUIApplication) {
+                }
+            }
+            """
+        }
+    }
+
+    @Test
+    func argumentsWithTwoParametersToReceiveThem() {
+        assertMacro {
+            """
+            @UITestSuite
+            final class FruitTests: XCTestCase {
+                @UITest(arguments: Fruit.all)
+                func selects(_ fruit: Fruit, count: Int) {
+                }
+            }
+            """
+        } diagnostics: {
+            """
+            @UITestSuite
+            final class FruitTests: XCTestCase {
+                @UITest(arguments: Fruit.all)
+                func selects(_ fruit: Fruit, count: Int) {
+                                                    ┬──
+                                                    ╰─ 🛑 '@UITest' cannot provide a value for parameter 'count'; a UI test with arguments takes one parameter for the argument, as well as 'XCUIApplication' and 'UITestContext' parameters
+                }
+            }
+            """
+        }
+    }
 }

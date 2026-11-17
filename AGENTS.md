@@ -43,7 +43,7 @@ Three targets, with a strict dependency direction:
 
 ### How a test runs
 
-`@UITestSuite` conforms the class to the `UITestSuite` protocol, generates `suiteTraits`, and adds `@MainActor` to the class's methods and computed properties (not to overrides, or members already `nonisolated`/actor-annotated). `@UITest` is a peer macro that adds `test_<name>()`, which calls `UITestRunner.run(self, traits:) { context in self.<name>(...) }`.
+`@UITestSuite` conforms the class to the `UITestSuite` protocol, generates `suiteTraits`, and adds `@MainActor` to the class's methods and computed properties (not to overrides, or members already `nonisolated`/actor-annotated). `@UITest` is a peer macro that adds `test_<name>()`, which calls `UITestRunner.run(self, traits:) { context in self.<name>(...) }`. With `arguments:`, the same single method calls `UITestRunner.run(self, traits:arguments:named:)`, which makes a full run (launch, set-up, tear-down) for each argument inside a step named after it, records a thrown error for one argument and carries on with the rest.
 
 `UITestRunner.run` is the centre of the runtime. In order: every trait's `prepare(_:)` builds the `LaunchConfiguration` (suite traits first) → every `willLaunch` → `app.launch()` unless a `ManualLaunchTrait` is present → every `setUp` → body → `tearDown` in reverse, for traits whose `willLaunch` started. The first error is thrown; later ones are recorded as extra XCTest issues. Per-test settings that code deep in the library needs (action timeout, failure capture, system alert rules) are passed down as task-locals set in `run`, and the runner finds them by inspecting the trait list (e.g. `$0 is ManualLaunchTrait`, `as? any SystemAlertAnswering`) rather than through `UITestTrait` requirements.
 

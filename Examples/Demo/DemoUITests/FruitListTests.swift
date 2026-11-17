@@ -22,6 +22,16 @@ final class FruitListTests: XCTestCase {
         #expect(app[FruitID.selection].label == "Selected Pear")
     }
 
+    @UITest(arguments: Fruit.all)
+    func everyRowSelectsItsItem(_ fruit: Fruit, app: XCUIApplication) throws {
+        // Each fruit gets a launch of its own, so nothing is selected when it starts.
+        #expect(app[FruitID.selection].label == "Nothing selected")
+
+        try app[FruitID.row(fruit.id)].tap()
+
+        #expect(app[FruitID.selection].label == "Selected \(fruit.name)")
+    }
+
     @UITest
     func aQueryCanStillBeChosenByHand(app: XCUIApplication) throws {
         try app.buttons[FruitID.row(Fruit.cherry.id)].tap()

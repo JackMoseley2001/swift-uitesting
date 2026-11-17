@@ -19,6 +19,7 @@ enum MacroName {
 /// The labels of the macros' parameters.
 enum MacroParameter {
     static let traits = "traits"
+    static let arguments = "arguments"
     static let within = "within"
 }
 
@@ -48,6 +49,10 @@ enum RuntimeName {
     static let generatedTestMethodPrefix = "test_"
 
     static let mainActor = "MainActor"
+
+    /// The labels of the runner's parameters for a test that is run once for each of its arguments.
+    static let runnerArguments = "arguments"
+    static let runnerArgumentName = "named"
 
     /// The functions that `#expect` expands into.
     static let qualifiedExpect = "\(module).__expect"

@@ -40,17 +40,34 @@ public struct UITestMacro: PeerMacro {
             isValid = false
         }
 
+        // With `arguments:`, the test is run once for each of them, and the one parameter
+        // that is not the app or the context receives the argument.
+        let argumentsExpression = node.argumentsExpression
+        var argumentParameter: FunctionParameterSyntax?
+        var usesContext = false
+
         var arguments: [String] = []
         for parameter in function.signature.parameterClause.parameters {
-            guard let value = argumentValue(for: parameter) else {
-                context.diagnose(
-                    Diagnostic(node: parameter.type, message: UITestDiagnostic.unsupportedParameter(parameter))
-                )
-                isValid = false
-                continue
-            }
             let label = parameter.firstName.tokenKind == .wildcard ? "" : "\(parameter.firstName.text): "
-            arguments.append(label + value)
+            if let value = argumentValue(for: parameter) {
+                usesContext = true
+                arguments.append(label + value)
+            } else if argumentsExpression != nil, argumentParameter == nil {
+                argumentParameter = parameter
+                arguments.append(label + Self.argumentName)
+            } else {
+                let message =
+                    argumentsExpression == nil
+                    ? UITestDiagnostic.unsupportedParameter(parameter)
+                    : UITestDiagnostic.secondArgumentParameter(parameter)
+                context.diagnose(Diagnostic(node: parameter.type, message: message))
+                isValid = false
+            }
+        }
+
+        if let argumentsExpression, argumentParameter == nil, isValid {
+            context.diagnose(Diagnostic(node: argumentsExpression, message: UITestDiagnostic.noArgumentParameter))
+            isValid = false
         }
 
         // XCTest runs every method that takes no arguments and whose name starts with "test",
@@ -77,7 +94,17 @@ public struct UITestMacro: PeerMacro {
 
         let traits = node.traitExpressions.map(\.trimmedDescription).joined(separator: ", ")
         let traitsArgument = traits.isEmpty ? "" : ", \(MacroParameter.traits): [\(traits)]"
-        let contextParameter = arguments.isEmpty ? "_" : "context"
+        let contextParameter = usesContext ? "context" : "_"
+
+        var argumentsArgument = ""
+        var closureParameters = contextParameter
+        if let argumentsExpression, let argumentParameter {
+            let parameterName = (argumentParameter.secondName ?? argumentParameter.firstName).text
+            argumentsArgument =
+                ", \(RuntimeName.runnerArguments): \(argumentsExpression.trimmedDescription)"
+                + ", \(RuntimeName.runnerArgumentName): \"\(parameterName)\""
+            closureParameters = "\(Self.argumentName), \(contextParameter)"
+        }
 
         // The generated method needs the same availability as the function it calls.
         let availability = function.attributes
@@ -89,13 +116,16 @@ public struct UITestMacro: PeerMacro {
             """
             \(raw: availability)@\(raw: RuntimeName.mainActor)
             func \(raw: RuntimeName.generatedTestMethodPrefix)\(raw: name)() async throws {
-                try await \(raw: RuntimeName.qualifiedRunner).run(self\(raw: traitsArgument)) { \(raw: contextParameter) in
+                try await \(raw: RuntimeName.qualifiedRunner).run(self\(raw: traitsArgument)\(raw: argumentsArgument)) { \(raw: closureParameters) in
                     \(raw: call)
                 }
             }
             """
         ]
     }
+
+    /// The name the generated method gives to the argument of the run it is making.
+    private static let argumentName = "argument"
 
     /// Whether the function is declared where a UI test can run: in a class that is a UI test
     /// suite, or in an extension, where the compiler checks that the type is a suite instead.
@@ -187,6 +217,26 @@ struct UITestDiagnostic: DiagnosticMessage {
             message: """
                 '@\(MacroName.uiTest)' cannot provide a value for parameter '\(name)'; \
                 a UI test can only take '\(RuntimeName.application)' and '\(RuntimeName.context)' parameters
+                """
+        )
+    }
+
+    static let noArgumentParameter = UITestDiagnostic(
+        id: "noArgumentParameter",
+        message: """
+            '@\(MacroName.uiTest)' has arguments, but the function has no parameter to receive them; \
+            add a parameter of the type of one argument
+            """
+    )
+
+    static func secondArgumentParameter(_ parameter: FunctionParameterSyntax) -> UITestDiagnostic {
+        let name = (parameter.secondName ?? parameter.firstName).text
+        return UITestDiagnostic(
+            id: "secondArgumentParameter",
+            message: """
+                '@\(MacroName.uiTest)' cannot provide a value for parameter '\(name)'; \
+                a UI test with arguments takes one parameter for the argument, \
+                as well as '\(RuntimeName.application)' and '\(RuntimeName.context)' parameters
                 """
         )
     }

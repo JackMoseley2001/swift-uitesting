@@ -52,6 +52,8 @@ public enum UITestRunner {
 
         let context = UITestContext(app: app, testCase: suite, launch: launch)
         let capture = FailureAttachmentsTrait.isEnabled(in: traits) ? FailureCapture(app: app, testCase: suite) : nil
+        // A test with arguments is run once for each, so failures of an earlier run are not this run's.
+        let failuresBefore = suite.testRun?.totalFailureCount ?? 0
         let alertRules = systemAlertRules(from: traits)
         let alertMonitor = alertRules.flatMap { answerInterruptingSystemAlerts(in: suite, with: $0) }
         defer {
@@ -89,7 +91,7 @@ public enum UITestRunner {
                                     clearUpAfterFailure()
                                     throw error
                                 }
-                                if (suite.testRun?.totalFailureCount ?? 0) > 0 {
+                                if (suite.testRun?.totalFailureCount ?? 0) > failuresBefore {
                                     capture?.captureOnce()
                                     clearUpAfterFailure()
                                 }
@@ -99,6 +101,92 @@ public enum UITestRunner {
                 }
             }
         }
+    }
+
+    /// Runs a test body once for each of a collection of arguments, launching the app each time.
+    ///
+    /// The ``UITest(traits:arguments:)`` macro calls this for you. Each argument gets a
+    /// run of its own, with every step of ``run(_:traits:body:)``: the app is launched
+    /// fresh, the traits are set up, the body runs with the argument, and the traits
+    /// are torn down. A failure with one argument does not stop the others from running.
+    ///
+    /// Each run is a step named after its argument, so a failure says which argument
+    /// it happened with, such as `[fruit: Pear]`.
+    ///
+    /// - Parameters:
+    ///   - suite: The test case that is running.
+    ///   - traits: The traits for this test, applied after the suite's traits.
+    ///   - arguments: The values to run the test with, in order.
+    ///   - name: What an argument is, such as the name of the parameter that receives it.
+    ///   - filePath: The file of the test, where an error it throws is recorded.
+    ///   - line: The line of the test, where an error it throws is recorded.
+    ///   - body: The test. It receives an argument, and the app in a ``UITestContext``.
+    /// - Throws: `XCTSkip` if a trait skips the test. Any other error is recorded as a
+    ///   failure of the test for its argument, and the remaining arguments are still run.
+    @MainActor
+    public static func run<Suite: UITestSuite, Arguments: Collection>(
+        _ suite: Suite,
+        traits: [any UITestTrait] = [],
+        arguments: Arguments,
+        named name: String? = nil,
+        filePath: StaticString = #filePath,
+        line: UInt = #line,
+        body: @MainActor (Arguments.Element, UITestContext) async throws -> Void
+    ) async throws {
+        try await forEachArgument(
+            arguments,
+            named: name,
+            run: { argument in
+                try await run(suite, traits: traits) { context in
+                    try await body(argument, context)
+                }
+            },
+            recordError: { description, error in
+                // The error is recorded at the test, as XCTest does for an error a test throws.
+                let location = XCTSourceCodeLocation(filePath: "\(filePath)", lineNumber: Int(line))
+                suite.record(
+                    XCTIssue(
+                        type: .thrownError,
+                        compactDescription: description,
+                        sourceCodeContext: XCTSourceCodeContext(location: location),
+                        associatedError: error
+                    )
+                )
+            }
+        )
+    }
+
+    /// Runs an operation once for each argument, as a step named after the argument.
+    ///
+    /// An error thrown for one argument is passed to `recordError`, with a description
+    /// that names the argument, and the remaining arguments are still run. `XCTSkip` is
+    /// thrown on instead, because it skips the whole test.
+    @MainActor
+    static func forEachArgument<Arguments: Collection>(
+        _ arguments: Arguments,
+        named name: String?,
+        run: @MainActor (Arguments.Element) async throws -> Void,
+        recordError: @MainActor (String, any Error) -> Void
+    ) async throws {
+        for argument in arguments {
+            let label = argumentLabel(for: argument, named: name)
+            do {
+                try await step(label) {
+                    try await run(argument)
+                }
+            } catch let skip as XCTSkip {
+                throw skip
+            } catch {
+                recordError(StepPath.describing("\(error)", in: StepPath.current + [label]), error)
+            }
+        }
+    }
+
+    /// Returns the name of the step for one argument, such as "fruit: Pear".
+    static func argumentLabel(for argument: some Any, named name: String?) -> String {
+        let value = String(describing: argument)
+        guard let name, !name.isEmpty, name != "_" else { return value }
+        return "\(name): \(value)"
     }
 
     /// Returns the answers that a test's traits give to system alerts, or `nil` if they give none.
