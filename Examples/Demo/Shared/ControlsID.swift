@@ -6,6 +6,7 @@ enum ControlsID: ElementIDs {
     static var volumeSlider: Slider { element() }
     static var sizePicker: SegmentedControl { element() }
     static var colourPicker: Picker { element() }
+    static var shapeMenu: MenuPicker { element() }
     static var quantityStepper: Stepper { element() }
     static var summary: StaticText { element() }
 }
