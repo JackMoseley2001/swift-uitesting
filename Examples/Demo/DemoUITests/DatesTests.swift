@@ -48,4 +48,35 @@ final class DatesTests: XCTestCase {
 
         #expect(app[DatesID.calendar].label == "2025-12-25")
     }
+
+    @UITest
+    func setsADateOnWheels(app: XCUIApplication) throws {
+        let picker = try app[DatesID.dateWheelPicker].scrollIntoView()
+        #expect(app[DatesID.dateWheel].label == "2023-11-14")
+
+        try picker.setDate(year: 2024, month: 2, day: 29)
+        #expect(app[DatesID.dateWheel].label == "2024-02-29")
+
+        try picker.setDate(year: 2024, month: 2, day: 1)
+        #expect(app[DatesID.dateWheel].label == "2024-02-01")
+    }
+
+    @UITest
+    func setsATimeOnWheelsThatShowADateAsWell(app: XCUIApplication) throws {
+        let picker = try app[DatesID.dateAndTimeWheelPicker].scrollIntoView()
+
+        try picker.setTime(hour: 7, minute: 5)
+
+        #expect(app[DatesID.dateAndTimeWheel].label == "2023-11-14 07:05")
+    }
+
+    @UITest(traits: .locale("en_GB"))
+    func setsATimeOnATwentyFourHourClock(app: XCUIApplication) throws {
+        try app[DatesID.timeWheelPicker].setTime(hour: 7, minute: 5)
+        #expect(app[DatesID.timeWheel].label == "07:05")
+
+        let picker = try app[DatesID.dateAndTimeWheelPicker].scrollIntoView()
+        try picker.setTime(hour: 16, minute: 45)
+        #expect(app[DatesID.dateAndTimeWheel].label == "2023-11-14 16:45")
+    }
 }
