@@ -71,9 +71,10 @@ for the time set with `.actionTimeout(_:)` on the suite or the test.
 
 The element's properties, such as `label` and `exists`, are read without waiting.
 
-Switches, sliders, segmented controls and picker wheels have actions of their own:
-``UITestElement/setOn(_:within:filePath:line:)``,
-``UITestElement/adjust(to:tolerance:within:filePath:line:)`` and `select(_:)`.
+Switches, sliders, steppers, segmented controls and picker wheels have actions of
+their own: ``UITestElement/setOn(_:within:filePath:line:)``,
+``UITestElement/adjust(to:tolerance:within:filePath:line:)``,
+``UITestElement/increment(times:within:filePath:line:)`` and `select(_:)`.
 
 A row further down a list does not exist until the list is scrolled to it. Scroll to
 it with ``UITestElement/scrollIntoView(_:maximumSwipes:filePath:line:)``, which returns

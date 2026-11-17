@@ -23,6 +23,67 @@ struct ControlStateTests {
     }
 
     @Test
+    func stepTakesEachStepWhenTheValueChanges() {
+        var value = 2
+
+        let stuckAt = ControlState.step(
+            times: 3,
+            value: { "\(value)" },
+            tap: { value += 1 },
+            waitForChange: { "\(value)" != $0 }
+        )
+
+        #Testing::expect(stuckAt == nil)
+        #Testing::expect(value == 5)
+    }
+
+    @Test
+    func stepStopsWhenTheValueStaysTheSame() {
+        var value = 4
+        var taps = 0
+
+        let stuckAt = ControlState.step(
+            times: 3,
+            value: { "\(value)" },
+            tap: {
+                taps += 1
+                value = min(value + 1, 5)
+            },
+            waitForChange: { "\(value)" != $0 }
+        )
+
+        #Testing::expect(stuckAt == "5")
+        #Testing::expect(taps == 2)
+    }
+
+    @Test
+    func stepIsTakenOnTrustWhenTheStepperReportsNoValue() {
+        var taps = 0
+
+        let stuckAt = ControlState.step(times: 2, value: { "" }, tap: { taps += 1 }, waitForChange: { _ in false })
+
+        #Testing::expect(stuckAt == nil)
+        #Testing::expect(taps == 2)
+    }
+
+    @Test
+    func stepOfNoTimesDoesNothing() {
+        var taps = 0
+
+        for times in [0, -1] {
+            let stuckAt = ControlState.step(
+                times: times,
+                value: { "1" },
+                tap: { taps += 1 },
+                waitForChange: { _ in true }
+            )
+            #Testing::expect(stuckAt == nil)
+        }
+
+        #Testing::expect(taps == 0)
+    }
+
+    @Test
     func changeDoesNothingWhenAlreadyDone() {
         var attempts = 0
 

@@ -34,6 +34,32 @@ enum ControlState {
         return false
     }
 
+    /// Steps a stepper a number of times, checking that its value changes each time.
+    ///
+    /// A stepper that reports no value cannot be checked, so each step is taken on trust.
+    ///
+    /// - Parameters:
+    ///   - times: How many steps to take.
+    ///   - value: Reads the value the stepper reports, which is empty if it reports none.
+    ///   - tap: Takes one step.
+    ///   - waitForChange: Waits for the value to differ from the one given, and returns whether it does.
+    /// - Returns: `nil` if every step was taken. Otherwise the value the stepper stayed at.
+    static func step(
+        times: Int,
+        value: () -> String,
+        tap: () -> Void,
+        waitForChange: (_ from: String) -> Bool
+    ) -> String? {
+        for _ in 0..<max(times, 0) {
+            let before = value()
+            tap()
+            if !before.isEmpty, !waitForChange(before) {
+                return before
+            }
+        }
+        return nil
+    }
+
     /// Moves a slider to a position by dragging its thumb, checking where it lands.
     ///
     /// Each round reads where the slider is and drags the thumb by the distance that
