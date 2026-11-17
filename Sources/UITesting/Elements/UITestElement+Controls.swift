@@ -166,8 +166,18 @@ extension UITestElement where Kind == ElementKinds.Stepper {
     /// value as it was, such as one past the end of the stepper's range, fails. Read
     /// the value with `value`, as for any element.
     ///
+    /// Pass `requiringChange: false` when a step is allowed to change nothing, such as
+    /// in a test that the stepper stops at the end of its range:
+    ///
+    /// ```swift
+    /// try app[BasketID.quantityStepper].increment(times: 10, requiringChange: false)
+    /// #expect(app[BasketID.quantityStepper].value as? String == "5")
+    /// ```
+    ///
     /// - Parameters:
     ///   - times: How many steps to take. The default is 1.
+    ///   - requiringChange: Whether a step that leaves the value as it was fails. The
+    ///     default is `true`.
     ///   - timeout: How long to wait for the stepper, and for its value to change. The
     ///     default is the test's ``UITestTrait/actionTimeout(_:)``.
     /// - Throws: ``RequirementFailedError`` if the stepper is not ready in time, or its
@@ -175,11 +185,19 @@ extension UITestElement where Kind == ElementKinds.Stepper {
     ///   the test ends.
     public func increment(
         times: Int = 1,
+        requiringChange: Bool = true,
         within timeout: Duration? = nil,
         filePath: StaticString = #filePath,
         line: UInt = #line
     ) throws {
-        try step(.increment, times: times, within: timeout, filePath: filePath, line: line)
+        try step(
+            .increment,
+            times: times,
+            requiringChange: requiringChange,
+            within: timeout,
+            filePath: filePath,
+            line: line
+        )
     }
 
     /// Steps the stepper down, once it exists and is enabled.
@@ -189,10 +207,13 @@ extension UITestElement where Kind == ElementKinds.Stepper {
     /// ```
     ///
     /// If the stepper reports a value, each step is checked: a step that leaves the
-    /// value as it was, such as one past the end of the stepper's range, fails.
+    /// value as it was, such as one past the end of the stepper's range, fails. Pass
+    /// `requiringChange: false` when a step is allowed to change nothing.
     ///
     /// - Parameters:
     ///   - times: How many steps to take. The default is 1.
+    ///   - requiringChange: Whether a step that leaves the value as it was fails. The
+    ///     default is `true`.
     ///   - timeout: How long to wait for the stepper, and for its value to change. The
     ///     default is the test's ``UITestTrait/actionTimeout(_:)``.
     /// - Throws: ``RequirementFailedError`` if the stepper is not ready in time, or its
@@ -200,11 +221,19 @@ extension UITestElement where Kind == ElementKinds.Stepper {
     ///   the test ends.
     public func decrement(
         times: Int = 1,
+        requiringChange: Bool = true,
         within timeout: Duration? = nil,
         filePath: StaticString = #filePath,
         line: UInt = #line
     ) throws {
-        try step(.decrement, times: times, within: timeout, filePath: filePath, line: line)
+        try step(
+            .decrement,
+            times: times,
+            requiringChange: requiringChange,
+            within: timeout,
+            filePath: filePath,
+            line: line
+        )
     }
 
     private enum Step: String {
@@ -215,6 +244,7 @@ extension UITestElement where Kind == ElementKinds.Stepper {
     private func step(
         _ step: Step,
         times: Int,
+        requiringChange: Bool,
         within timeout: Duration?,
         filePath: StaticString,
         line: UInt
@@ -226,6 +256,7 @@ extension UITestElement where Kind == ElementKinds.Stepper {
         let reported = { "\(element.value ?? "")" }
         let stuckAt = ControlState.step(
             times: times,
+            requiringChange: requiringChange,
             value: reported,
             tap: { tapButton(for: step) },
             waitForChange: { before in polling.wait(timeout: settling, until: { reported() != before }) == .met }
@@ -335,7 +366,8 @@ extension UITestElement where Kind == ElementKinds.MenuPicker {
     /// ```
     ///
     /// The options are not inside the control: the menu is shown over the app. So the
-    /// option is the element with this label that can be tapped once the menu is open.
+    /// option is the element with this label, in the app the control was looked up
+    /// in, that can be tapped once the menu is open.
     ///
     /// - Parameters:
     ///   - label: The label of the option to select.
@@ -350,11 +382,12 @@ extension UITestElement where Kind == ElementKinds.MenuPicker {
         filePath: StaticString = #filePath,
         line: UInt = #line
     ) throws {
-        try wait(toBe: .enabled, inOrderTo: "select \"\(label)\" in", within: timeout, filePath: filePath, line: line)
+        let intent = "select \"\(label)\" in"
+        let app = try owningApp(inOrderTo: intent, filePath: filePath, line: line)
+        try wait(toBe: .enabled, inOrderTo: intent, within: timeout, filePath: filePath, line: line)
         let own = element.frame
         element.tap()
 
-        let app = XCUIApplication()
         let hasLabel = NSPredicate(format: "label == %@", label)
         let queries = [app.menuItems.matching(hasLabel), app.buttons.matching(hasLabel)]
         // The menu is in front of the app, so its option is the last element with the

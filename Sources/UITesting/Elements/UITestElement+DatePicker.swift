@@ -39,6 +39,8 @@ extension UITestElement where Kind == ElementKinds.DatePicker {
         let date = "\(year)-\(DatePickerValues.minuteTitle(month))-\(DatePickerValues.minuteTitle(day))"
         let intent = "set \(date) in"
         let summary = "Could not \(intent) \(accessibilityIdentifier)"
+        let app = try owningApp(inOrderTo: intent, filePath: filePath, line: line)
+        let popover = Self.popover(in: app)
         try wait(toBe: .enabled, inOrderTo: intent, within: timeout, filePath: filePath, line: line)
         guard let monthName = DatePickerValues.monthName(month, locale: locale) else {
             try fail("\(summary): there is no month \(month)", filePath: filePath, line: line)
@@ -59,7 +61,7 @@ extension UITestElement where Kind == ElementKinds.DatePicker {
             // The calendar is found by a button that it keeps, because the element
             // has to be found again after the button that shows the years is renamed.
             let nextMonth = "DatePicker.NextMonth"
-            let shown = Self.pickerInFront(containing: .button, identifier: nextMonth) { $0.buttons[nextMonth] }
+            let shown = Self.pickerInFront(in: app, containing: .button, identifier: nextMonth) { $0.buttons[nextMonth] }
             guard let shown else {
                 try fail(
                     "\(summary): no calendar showed after its date was tapped. "
@@ -100,8 +102,8 @@ extension UITestElement where Kind == ElementKinds.DatePicker {
         let isChosen = polling.wait(timeout: .seconds(2), until: { dayButton.isSelected }) == .met
 
         if !isInline {
-            Self.popover.tap()
-            _ = polling.wait(timeout: .seconds(2), until: { !Self.popover.exists })
+            popover.tap()
+            _ = polling.wait(timeout: .seconds(2), until: { !popover.exists })
         }
         guard isChosen else {
             try fail("\(summary): the day was not selected after tapping it", filePath: filePath, line: line)
@@ -139,6 +141,8 @@ extension UITestElement where Kind == ElementKinds.DatePicker {
         let time = "\(DatePickerValues.minuteTitle(hour)):\(DatePickerValues.minuteTitle(minute))"
         let intent = "set \(time) in"
         let summary = "Could not \(intent) \(accessibilityIdentifier)"
+        let app = try owningApp(inOrderTo: intent, filePath: filePath, line: line)
+        let popover = Self.popover(in: app)
         try wait(toBe: .enabled, inOrderTo: intent, within: timeout, filePath: filePath, line: line)
 
         let polling = ExpectationPolling()
@@ -151,7 +155,7 @@ extension UITestElement where Kind == ElementKinds.DatePicker {
         if !isInline {
             let buttons = element.buttons
             (buttons.count > 1 ? buttons.element(boundBy: buttons.count - 1) : buttons.firstMatch).tap()
-            let shown = Self.pickerInFront(containing: .pickerWheel, identifier: nil) { $0.pickerWheels.firstMatch }
+            let shown = Self.pickerInFront(in: app, containing: .pickerWheel, identifier: nil) { $0.pickerWheels.firstMatch }
             guard let shown else {
                 try fail(
                     "\(summary): no wheels showed after its time was tapped. "
@@ -165,7 +169,7 @@ extension UITestElement where Kind == ElementKinds.DatePicker {
         func values() -> [String] { wheels.allElementsBoundByIndex.map { "\($0.value ?? "")" } }
 
         guard let positions = DatePickerValues.timeWheels(values: values()) else {
-            if !isInline { Self.popover.tap() }
+            if !isInline { popover.tap() }
             try fail(
                 "\(summary): the picker's wheels are not those of a time. They show: "
                     + values().joined(separator: ", "),
@@ -192,8 +196,8 @@ extension UITestElement where Kind == ElementKinds.DatePicker {
 
         let end = values()
         if !isInline {
-            Self.popover.tap()
-            _ = polling.wait(timeout: .seconds(2), until: { !Self.popover.exists })
+            popover.tap()
+            _ = polling.wait(timeout: .seconds(2), until: { !popover.exists })
         }
         let isSet =
             DatePickerValues.leadingNumber(in: end[positions.hour]) == onClock
@@ -207,7 +211,7 @@ extension UITestElement where Kind == ElementKinds.DatePicker {
         }
     }
 
-    /// Waits for a date picker to show over the app, and returns it.
+    /// Waits for a date picker to show over an app, and returns it.
     ///
     /// Other pickers on the screen can have a calendar or wheels of their own. The one
     /// in front is the one whose part can be tapped, because the others are covered.
@@ -217,12 +221,14 @@ extension UITestElement where Kind == ElementKinds.DatePicker {
     ///   - identifier: The identifier of that element, if it has to have one.
     ///   - part: Returns the element inside a picker that shows whether it is in front.
     private static func pickerInFront(
+        in app: XCUIApplication,
         containing type: XCUIElement.ElementType,
         identifier: String?,
         within timeout: Duration = .seconds(3),
         part: (XCUIElement) -> XCUIElement
     ) -> XCUIElement? {
-        let pickers = XCUIApplication().datePickers.containing(type, identifier: identifier)
+        let pickers = app.datePickers.containing(type, identifier: identifier)
+        let popover = popover(in: app)
         var found: XCUIElement?
         _ = ExpectationPolling().wait(timeout: timeout) {
             guard popover.exists else { return false }
@@ -233,8 +239,8 @@ extension UITestElement where Kind == ElementKinds.DatePicker {
     }
 
     /// The area around a calendar or wheels shown over the app, which closes them when tapped.
-    private static var popover: XCUIElement {
-        XCUIApplication().descendants(matching: .any)["PopoverDismissRegion"].firstMatch
+    private static func popover(in app: XCUIApplication) -> XCUIElement {
+        app.descendants(matching: .any)["PopoverDismissRegion"].firstMatch
     }
 }
 #endif
