@@ -644,6 +644,20 @@ Things to know:
 - **Elements found by a string.** `app.buttons["save"]` is a plain `XCUIElement`, with
   XCTest's own actions.
 
+### Pull to refresh
+
+```swift
+try app[InboxID.list].pullToRefresh()
+#expect(app[InboxID.row(1234)].exists, within: .seconds(5))
+```
+
+`pullToRefresh` waits for the list or scroll view, and drags it down from near its top.
+
+- **It returns when the drag is done, not when the refresh is.** Wait for what the
+  refresh brings with an expectation that has a timeout.
+- **The content has to be at its top.** Otherwise the drag scrolls the content back up,
+  as it does for a person.
+
 ### Swipe actions on a row
 
 ```swift
