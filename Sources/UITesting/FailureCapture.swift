@@ -45,6 +45,21 @@ enum RunningTest {
     /// The capture for the running test, if the test attaches anything on failure.
     @TaskLocal static var failureCapture: FailureCapture?
 
+    /// The answers the running test gives to system alerts, if it gives any.
+    @TaskLocal static var systemAlertRules: SystemAlertRules?
+
+    /// Answers a system alert that is showing, if the running test's traits say how.
+    ///
+    /// Does nothing off the main thread, where the UI testing APIs cannot be used.
+    static func answerSystemAlerts() {
+        #if os(iOS)
+            guard let rules = systemAlertRules, Thread.isMainThread else { return }
+            MainActor.assumeIsolated {
+                _ = SystemAlert.current.answer(with: rules)
+            }
+        #endif
+    }
+
     /// Makes the running test's capture from code that is not isolated to the main actor.
     ///
     /// Does nothing off the main thread, where the UI testing APIs cannot be used.

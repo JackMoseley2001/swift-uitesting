@@ -29,6 +29,10 @@ struct ExpectationPolling {
     /// Suspends the current task for the given duration, and throws if the task is cancelled.
     var suspend: (Duration) async throws -> Void = { try await Task.sleep(for: $0) }
 
+    /// Runs after each evaluation of the condition that was false, before the wait
+    /// goes on. This is where system alerts are answered for a test that asked for that.
+    var betweenEvaluations: () -> Void = { RunningTest.answerSystemAlerts() }
+
     /// Evaluates the condition once, or, with a timeout, repeatedly until it is true
     /// or the timeout has passed.
     ///
@@ -48,6 +52,7 @@ struct ExpectationPolling {
             guard remaining > .zero else {
                 return .timedOut(timeout)
             }
+            betweenEvaluations()
             sleep(min(interval, remaining))
         }
     }
@@ -72,6 +77,7 @@ struct ExpectationPolling {
             guard remaining > .zero else {
                 return .timedOut(timeout)
             }
+            betweenEvaluations()
             do {
                 try await suspend(min(interval, remaining))
             } catch {
