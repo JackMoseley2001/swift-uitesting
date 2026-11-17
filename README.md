@@ -549,7 +549,7 @@ try app[ProfileID.countryPicker].select("France")
 |---|---|---|
 | `Switch`, `Toggle` | `isOn`, `setOn(_:)`, `toggle()` | `XCUIElement` reports the state as the string `"1"` or `"0"`. `setOn(_:)` does nothing if the switch is already in that state, and checks that it changed. |
 | `Slider` | `position`, `adjust(to:tolerance:)` | `adjust(toNormalizedSliderPosition:)` can land several percent away. This drags the thumb, reads where it landed and drags again, until it is within the tolerance, which is 0.02 unless you pass one. |
-| `Stepper` | `increment(times:)`, `decrement(times:)` | Finds the two halves of the stepper, which have no identifiers of their own to look up. If the stepper reports a value, each step is checked, so a step past the end of its range fails. Read the value with `value`. |
+| `Stepper` | `increment(times:)`, `decrement(times:)` | Finds the two halves of the stepper, which have no identifiers of their own to look up. If the stepper reports a value, each step is checked, so a step past the end of its range fails. Pass `requiringChange: false` when a step is allowed to change nothing. Read the value with `value`. |
 | `SegmentedControl` | `selection`, `select(_:)` | Finds the segment by its label, and the failure lists the segments if there is none. |
 | `Picker`, `PickerWheel` (iOS) | `selection()`, `select(_:)` | Finds the wheel inside a picker that has the identifier. Pass `inWheel:` for a picker with several wheels. |
 

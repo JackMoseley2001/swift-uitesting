@@ -72,6 +72,17 @@ final class ControlsTests: XCTestCase {
     }
 
     @UITest
+    func aStepperCanBeSteppedPastTheEndOfItsRange(app: XCUIApplication) throws {
+        let quantity = try app[ControlsID.quantityStepper].scrollIntoView()
+
+        try quantity.increment(times: 5, requiringChange: false)
+        #expect(quantity.value as? String == "5")
+
+        try quantity.decrement(times: 7, requiringChange: false)
+        #expect(quantity.value as? String == "0")
+    }
+
+    @UITest
     func picksAValueOnAWheel(app: XCUIApplication) throws {
         let colour = app[ControlsID.colourPicker]
         #expect(colour.selection() == "Green")
