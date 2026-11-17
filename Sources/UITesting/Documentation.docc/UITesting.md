@@ -76,6 +76,11 @@ their own: ``UITestElement/setOn(_:within:filePath:line:)``,
 ``UITestElement/adjust(to:tolerance:within:filePath:line:)``,
 ``UITestElement/increment(times:within:filePath:line:)`` and `select(_:)`.
 
+On iOS, a date picker is set with
+``UITestElement/setDate(year:month:day:locale:within:filePath:line:)`` and
+``UITestElement/setTime(hour:minute:locale:within:filePath:line:)``, which open its
+calendar or its wheels if they have to.
+
 A row further down a list does not exist until the list is scrolled to it. Scroll to
 it with ``UITestElement/scrollIntoView(_:maximumSwipes:filePath:line:)``, which returns
 the element so that an action can follow.
