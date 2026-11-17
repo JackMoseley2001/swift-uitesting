@@ -96,6 +96,18 @@ field holds.
 To press Return in a single-line field, use
 ``UITestElement/submit(within:filePath:line:)``.
 
+### Answer alerts and dialogs
+
+An alert or confirmation dialog that the app presents is reached through the app, with
+``XCTest/XCUIApplication/alert`` and ``XCTest/XCUIApplication/dialog``:
+
+```swift
+try app.alert.tap("Delete")
+try app.dialog.dismiss()
+```
+
+See ``AppAlert``.
+
 ### Answer system alerts
 
 A permission alert belongs to the system and not to the app, so the app's identifiers
@@ -269,6 +281,7 @@ extension UITestTrait where Self == DismissSystemAlerts {
 
 - ``UITestElement``
 - ``ScrollDirection``
+- ``AppAlert``
 - ``SystemAlert``
 - ``SystemAlertsTrait``
 - ``SystemAlertAnswer``

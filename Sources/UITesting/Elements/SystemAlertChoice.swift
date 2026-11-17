@@ -55,10 +55,12 @@ enum SystemAlertChoice {
     ///   - button: The button the test asked for.
     ///   - title: The title of the alert, used in the description of a failure.
     ///   - buttons: The alert's buttons, in order.
+    ///   - noun: What to call the alert in the description of a failure.
     static func position(
         of button: SystemAlertButton,
         inAlertTitled title: String,
-        withButtons buttons: [SystemAlertButtonInfo]
+        withButtons buttons: [SystemAlertButtonInfo],
+        noun: AlertNoun = .systemAlert
     ) -> Result<Int, SystemAlertChoiceError> {
         let position: Int? =
             switch button {
@@ -77,28 +79,54 @@ enum SystemAlertChoice {
 
         let reason =
             switch button {
-            case .label: "the alert has no button with this label"
-            case .index: "the alert has \(buttons.count) \(buttons.count == 1 ? "button" : "buttons")"
-            case .allow, .deny: "the alert does not say which of its buttons that is"
+            case .label: "the \(noun.short) has no button with this label"
+            case .index: "the \(noun.short) has \(buttons.count) \(buttons.count == 1 ? "button" : "buttons")"
+            case .allow, .deny: "the \(noun.short) does not say which of its buttons that is"
             }
         let listed = buttons.map { "\"\($0.label)\"" }.joined(separator: ", ")
         return .failure(
             SystemAlertChoiceError(
-                message: "Could not tap \(button.description) in the system alert \"\(title)\": \(reason). "
+                message: "Could not tap \(button.description) in the \(noun.full) \"\(title)\": \(reason). "
                     + "Its buttons are: \(listed)"
             )
         )
     }
 
     /// Describes a system alert that did not appear.
-    static func noAlert(inOrderTo intent: String, after timeout: Duration) -> String {
-        "Could not \(intent): no system alert appeared within \(ExpectationFailure.describe(timeout))"
+    static func noAlert(
+        inOrderTo intent: String,
+        after timeout: Duration,
+        noun: AlertNoun = .systemAlert
+    ) -> String {
+        "Could not \(intent): no \(noun.full) appeared within \(ExpectationFailure.describe(timeout))"
     }
 
     /// Describes a system alert that did not go away.
-    static func alertStayed(titled title: String, after timeout: Duration) -> String {
-        "The system alert \"\(title)\" was still showing after \(ExpectationFailure.describe(timeout))"
+    static func alertStayed(
+        titled title: String,
+        after timeout: Duration,
+        noun: AlertNoun = .systemAlert
+    ) -> String {
+        "The \(noun.full) \"\(title)\" was still showing after \(ExpectationFailure.describe(timeout))"
     }
+}
+
+/// What to call an alert in the description of a failure.
+struct AlertNoun: Equatable, Sendable {
+    /// The name in full, such as "system alert".
+    var full: String
+
+    /// The name for a second mention, such as "alert".
+    var short: String
+
+    /// An alert that the system shows over the app.
+    static let systemAlert = AlertNoun(full: "system alert", short: "alert")
+
+    /// An alert that the app presents.
+    static let alert = AlertNoun(full: "alert", short: "alert")
+
+    /// A confirmation dialog or action sheet that the app presents.
+    static let dialog = AlertNoun(full: "dialog", short: "dialog")
 }
 
 /// Why a system alert has no button that a test asked for.
