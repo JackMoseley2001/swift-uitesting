@@ -229,8 +229,9 @@ struct Landscape: UITestTrait {
 | `tearDown(_:)` | After the test, whether it passed or failed, in reverse order. |
 
 Each step runs for every trait before the next step starts. `tearDown(_:)` is called
-for a trait only if its `setUp(_:)` was called, so if a trait fails before that point,
-work that another trait did in `willLaunch(_:)` is not undone.
+for every trait whose `willLaunch(_:)` was called. If a trait's `willLaunch(_:)`
+throws, the app is not launched and no trait is set up, but that trait and the ones
+before it are still torn down, so what they did before the launch can be undone.
 
 To use a trait with leading-dot syntax, add a static member:
 

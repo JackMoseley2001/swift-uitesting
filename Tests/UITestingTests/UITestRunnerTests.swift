@@ -99,7 +99,7 @@ final class UITestRunnerTests {
         #Testing::expect(
             events == [
                 "willLaunch a", "willLaunch b", "willLaunch c", "launch",
-                "setUp a", "setUp b", "tearDown b", "tearDown a",
+                "setUp a", "setUp b", "tearDown c", "tearDown b", "tearDown a",
             ]
         )
     }
@@ -112,7 +112,7 @@ final class UITestRunnerTests {
     }
 
     @Test
-    func preLaunchErrorStopsTheLaunchAndTearsNothingDown() async {
+    func preLaunchErrorStopsTheLaunchAndTearsDownTheStepsThatStarted() async {
         let error = await thrownError {
             try await run(steps: ["a", "b", "c"], failingWillLaunch: "b") {
                 events.append("body")
@@ -120,8 +120,19 @@ final class UITestRunnerTests {
         }
 
         #Testing::expect(error == TestError(message: "willLaunch b"))
-        #Testing::expect(events == ["willLaunch a", "willLaunch b"])
+        #Testing::expect(events == ["willLaunch a", "willLaunch b", "tearDown b", "tearDown a"])
         #Testing::expect(additionalErrors.isEmpty)
+    }
+
+    @Test
+    func tearDownErrorIsRecordedWhenPreLaunchWorkAlsoThrows() async {
+        let error = await thrownError {
+            try await run(steps: ["a", "b"], failingWillLaunch: "b", failingTearDown: "a")
+        }
+
+        #Testing::expect(error == TestError(message: "willLaunch b"))
+        #Testing::expect(events == ["willLaunch a", "willLaunch b", "tearDown b", "tearDown a"])
+        #Testing::expect(additionalErrors == [TestError(message: "tearDown a")])
     }
 
     @Test
