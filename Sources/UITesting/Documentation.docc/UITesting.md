@@ -85,6 +85,9 @@ A row further down a list does not exist until the list is scrolled to it. Scrol
 it with ``UITestElement/scrollIntoView(_:maximumSwipes:filePath:line:)``, which returns
 the element so that an action can follow.
 
+To use a swipe action of a row in a list, call
+`swipeAction(_:edge:)` on the row with the action's label, or with an identifier.
+
 ### Enter text
 
 Elements whose identifier is declared as a text field, secure text field, search field
@@ -281,6 +284,7 @@ extension UITestTrait where Self == DismissSystemAlerts {
 
 - ``UITestElement``
 - ``ScrollDirection``
+- ``SwipeActionEdge``
 - ``AppAlert``
 - ``SystemAlert``
 - ``SystemAlertsTrait``
