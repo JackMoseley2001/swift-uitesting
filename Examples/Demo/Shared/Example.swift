@@ -13,6 +13,7 @@ enum Example: String, CaseIterable, Identifiable, LaunchPayload {
     case launchSettings
     case controls
     case animation
+    case alerts
     case dates
     case permission
 
@@ -28,6 +29,7 @@ enum Example: String, CaseIterable, Identifiable, LaunchPayload {
         case .launchSettings: "Launch settings"
         case .controls: "Controls"
         case .animation: "Animation"
+        case .alerts: "Alerts"
         case .dates: "Dates"
         case .permission: "Permission"
         }
