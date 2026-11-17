@@ -79,7 +79,8 @@ their own: ``UITestElement/setOn(_:within:filePath:line:)``,
 On iOS, a date picker is set with
 ``UITestElement/setDate(year:month:day:locale:within:filePath:line:)`` and
 ``UITestElement/setTime(hour:minute:locale:within:filePath:line:)``, which open its
-calendar or its wheels if they have to.
+calendar or its wheels if they have to. A picker with the wheel style that shows a date
+and a time has no wheel for the year, so only its time can be set.
 
 A row further down a list does not exist until the list is scrolled to it. Scroll to
 it with ``UITestElement/scrollIntoView(_:maximumSwipes:filePath:line:)``, which returns

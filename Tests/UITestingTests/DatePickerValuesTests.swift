@@ -7,6 +7,7 @@ import Testing
 struct DatePickerValuesTests {
     private let english = Locale(identifier: "en_US")
     private let french = Locale(identifier: "fr_FR")
+    private let periods = ["AM", "PM"]
 
     @Test
     func monthNameIsInTheLanguageOfThePicker() {
@@ -62,13 +63,13 @@ struct DatePickerValuesTests {
     @Test
     func timeWheelsAreToldApartByTheirValues() throws {
         let english = ["10 o’clock", "13 minutes", "PM"]
-        let twelveHour = try #Testing::require(DatePickerValues.timeWheels(values: english))
+        let twelveHour = try #Testing::require(DatePickerValues.timeWheels(values: english, periodTitles: periods))
         #Testing::expect(twelveHour == (0, 1, 2))
 
-        let periodFirst = try #Testing::require(DatePickerValues.timeWheels(values: ["오후", "10", "13"]))
+        let periodFirst = try #Testing::require(DatePickerValues.timeWheels(values: ["오후", "10", "13"], periodTitles: ["오전", "오후"]))
         #Testing::expect(periodFirst == (1, 2, 0))
 
-        let twentyFourHour = try #Testing::require(DatePickerValues.timeWheels(values: ["22", "13"]))
+        let twentyFourHour = try #Testing::require(DatePickerValues.timeWheels(values: ["22", "13"], periodTitles: periods))
         #Testing::expect(twentyFourHour.hour == 0)
         #Testing::expect(twentyFourHour.minute == 1)
         #Testing::expect(twentyFourHour.period == nil)
@@ -76,9 +77,55 @@ struct DatePickerValuesTests {
 
     @Test
     func wheelsThatAreNotATimeAreNotTaken() {
-        #Testing::expect(DatePickerValues.timeWheels(values: ["November", "14", "2023"]) == nil)
-        #Testing::expect(DatePickerValues.timeWheels(values: ["November", "2023"]) == nil)
-        #Testing::expect(DatePickerValues.timeWheels(values: []) == nil)
+        #Testing::expect(DatePickerValues.timeWheels(values: ["November", "14", "2023"], periodTitles: periods) == nil)
+        #Testing::expect(DatePickerValues.timeWheels(values: ["November", "2023"], periodTitles: periods) == nil)
+        #Testing::expect(DatePickerValues.timeWheels(values: [], periodTitles: periods) == nil)
+    }
+
+    @Test
+    func wheelForTheDayIsLeftOutOfTheTimeWheels() throws {
+        let twelveHour = ["Tue, Nov 14", "10 o’clock", "13 minutes", "PM"]
+        let withPeriod = try #Testing::require(DatePickerValues.timeWheels(values: twelveHour, periodTitles: periods))
+        #Testing::expect(withPeriod == (1, 2, 3))
+
+        let today = try #Testing::require(
+            DatePickerValues.timeWheels(values: ["Today", "22", "13"], periodTitles: periods))
+        #Testing::expect(today.hour == 1)
+        #Testing::expect(today.minute == 2)
+        #Testing::expect(today.period == nil)
+
+        let numbered = try #Testing::require(
+            DatePickerValues.timeWheels(values: ["14 nov.", "22", "13"], periodTitles: periods))
+        #Testing::expect(numbered.hour == 1)
+        #Testing::expect(numbered.period == nil)
+    }
+
+    @Test
+    func periodTitlesAreThoseOfTheLanguage() {
+        #Testing::expect(DatePickerValues.periodTitles(locale: english) == ["AM", "PM"])
+    }
+
+    @Test
+    func dateWheelsAreToldApartByTheirValues() throws {
+        let monthFirst = try #Testing::require(
+            DatePickerValues.monthDayAndYearWheels(values: ["November", "14", "2023"]))
+        #Testing::expect(monthFirst == (0, 1, 2))
+
+        let dayFirst = try #Testing::require(
+            DatePickerValues.monthDayAndYearWheels(values: ["14", "November", "2023"]))
+        #Testing::expect(dayFirst == (1, 0, 2))
+
+        let yearFirst = try #Testing::require(
+            DatePickerValues.monthDayAndYearWheels(values: ["2023", "November", "14"]))
+        #Testing::expect(yearFirst == (1, 2, 0))
+    }
+
+    @Test
+    func wheelsThatAreNotADateAreNotTaken() {
+        #Testing::expect(DatePickerValues.monthDayAndYearWheels(values: ["10 o’clock", "13 minutes", "PM"]) == nil)
+        #Testing::expect(DatePickerValues.monthDayAndYearWheels(values: ["November", "2023"]) == nil)
+        #Testing::expect(DatePickerValues.monthDayAndYearWheels(values: ["Tue, Nov 14", "22", "13"]) == nil)
+        #Testing::expect(DatePickerValues.monthDayAndYearWheels(values: ["November", "14", "15"]) == nil)
     }
 
     @Test

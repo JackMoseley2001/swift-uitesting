@@ -44,13 +44,37 @@ enum DatePickerValues {
         Int(value.prefix { $0.isNumber })
     }
 
-    /// Returns which of a time picker's wheels is which, from the values they show.
+    /// Returns the titles that the wheel for AM and PM can show.
+    static func periodTitles(locale: Locale) -> [String] {
+        [periodTitle(forHour: 0, locale: locale), periodTitle(forHour: 12, locale: locale)]
+    }
+
+    /// Returns which of a picker's wheels set the time, from the values they show.
     ///
     /// The wheel for AM and PM is the one whose value has no number. The hour comes
     /// before the minute, and both have to be numbers that an hour and a minute can be.
     ///
+    /// A picker with the wheel style that shows a date as well has a wheel for the day
+    /// before the others, which is left out. With three wheels, the first is the day
+    /// if it is not AM or PM and the other two are the hour and the minute.
+    ///
+    /// - Parameters:
+    ///   - values: The value of each wheel, in order.
+    ///   - periodTitles: The titles that the wheel for AM and PM can show.
     /// - Returns: The positions of the wheels, or `nil` if the values are not those of a time picker.
-    static func timeWheels(values: [String]) -> (hour: Int, minute: Int, period: Int?)? {
+    static func timeWheels(
+        values: [String],
+        periodTitles: [String]
+    ) -> (hour: Int, minute: Int, period: Int?)? {
+        var skipped = 0
+        if values.count == 4 {
+            skipped = 1
+        } else if values.count == 3, !periodTitles.contains(values[0]),
+            values.dropFirst().allSatisfy({ leadingNumber(in: $0) != nil })
+        {
+            skipped = 1
+        }
+        let values = Array(values.dropFirst(skipped))
         let numbered = values.indices.filter { leadingNumber(in: values[$0]) != nil }
         let others = values.indices.filter { leadingNumber(in: values[$0]) == nil }
         guard numbered.count == 2, others.count <= 1, values.count <= 3 else { return nil }
@@ -58,7 +82,25 @@ enum DatePickerValues {
             let hour = leadingNumber(in: values[numbered[0]]), (0...23).contains(hour),
             let minute = leadingNumber(in: values[numbered[1]]), (0...59).contains(minute)
         else { return nil }
-        return (numbered[0], numbered[1], others.first)
+        return (numbered[0] + skipped, numbered[1] + skipped, others.first.map { $0 + skipped })
+    }
+
+    /// Returns which of a date picker's three wheels is the month, the day and the year.
+    ///
+    /// The month is the one whose value has no number, the year is the number that is
+    /// too large to be a day, and the day is the other.
+    ///
+    /// - Returns: The positions of the wheels, or `nil` if the values are not a month, a day and a year.
+    static func monthDayAndYearWheels(values: [String]) -> (month: Int, day: Int, year: Int)? {
+        guard values.count == 3 else { return nil }
+        let numbers = values.map(leadingNumber(in:))
+        guard
+            let month = numbers.firstIndex(of: nil),
+            let day = numbers.firstIndex(where: { $0.map((1...31).contains) ?? false }),
+            let year = numbers.firstIndex(where: { ($0 ?? 0) > 31 }),
+            Set([month, day, year]).count == 3
+        else { return nil }
+        return (month, day, year)
     }
 
     /// Returns which of a calendar's two wheels is the year and which the month.
