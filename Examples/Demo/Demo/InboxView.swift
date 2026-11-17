@@ -1,8 +1,8 @@
 import SwiftUI
 import UITestingCore
 
-/// A list of messages with swipe actions on each row, and a line of text that says
-/// which action was used last.
+/// A list of messages with swipe actions on each row, which can be pulled down to
+/// fetch one more, and a line of text that says which action was used last.
 struct InboxView: View {
     struct Message: Identifiable {
         let id: Int
@@ -37,6 +37,14 @@ struct InboxView: View {
                         Button("Read") { lastAction = "Read \(message.subject)" }
                     }
             }
+            .refreshable {
+                // Long enough for a UI test to have to wait for the new message.
+                try? await Task.sleep(for: .seconds(1))
+                let id = (messages.map(\.id).max() ?? 0) + 1
+                messages.append(Message(id: id, subject: "Update \(id)"))
+                lastAction = "Refreshed"
+            }
+            .accessibilityIdentifier(InboxID.list)
         }
     }
 }

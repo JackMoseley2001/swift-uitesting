@@ -28,6 +28,25 @@ final class InboxTests: XCTestCase {
     }
 
     @UITest
+    func pullsTheListToRefreshIt(app: XCUIApplication) throws {
+        #expect(!app[InboxID.row(4)].exists)
+
+        try app[InboxID.list].pullToRefresh()
+
+        #expect(app[InboxID.lastAction].label == "Refreshed", within: .seconds(5))
+        #expect(app[InboxID.row(4)].label == "Update 4")
+    }
+
+    @UITest
+    func refreshesTwice(app: XCUIApplication) throws {
+        try app[InboxID.list].pullToRefresh()
+        try app[InboxID.row(4)].waitToAppear()
+
+        try app[InboxID.list].pullToRefresh()
+        try app[InboxID.row(5)].waitToAppear()
+    }
+
+    @UITest
     func deletesSeveralRowsOneAfterAnother(app: XCUIApplication) throws {
         for id in [3, 1] {
             try app[InboxID.row(id)].swipeAction("Delete")
