@@ -66,6 +66,18 @@
 /// `InboxID.row(1234)` is `"InboxID.row(1234)"`, and `InboxID.deleteButton(row: 1234)`
 /// is `"InboxID.deleteButton(row: 1234)"`.
 ///
+/// When a UI test needs every row, to count them or to check their order, declare
+/// the rows as a family with ``family(name:)``. A family is called in the same way
+/// and gives the same identifiers:
+///
+/// ```swift
+/// static var row: Cell.Family<Int> { family() }
+///
+/// // In a UI test
+/// try app[InboxID.row(1234)].tap()
+/// #expect(app[all: InboxID.row].count == 3)
+/// ```
+///
 /// ## Matching identifiers the app already has
 ///
 /// Create the identifier from the string the app uses:

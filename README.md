@@ -720,6 +720,73 @@ try app[InboxID.row(1234)].tap()
 
 `InboxID.row(1234)` is `"InboxID.row(1234)"`.
 
+A function identifies one row at a time. For a test to ask for every row, to count
+them or to check their order, declare the rows as a family. A family is a computed
+property, whose type says what kind of element each row is and what type of value
+tells one row from another:
+
+```swift
+enum InboxID: ElementIDs {
+    static var list: CollectionView { element() }
+    static var row: Cell.Family<Int> { family() }
+    static func deleteButton(row: Int) -> Button { element(row) }
+}
+```
+
+A family is called the way the function is, and gives the same string, so the app and
+the tests that find one row stay as they are:
+
+```swift
+// In the app
+MessageRow(message)
+    .accessibilityIdentifier(InboxID.row(message.id))   // "InboxID.row(1234)"
+
+// In a UI test
+try app[InboxID.row(1234)].tap()
+```
+
+A test finds every element of the family with `all:`:
+
+```swift
+#expect(app[all: InboxID.row].count == 3)
+#expect(app[all: InboxID.row].map(\.label) == ["Ada", "Grace", "Linus"])
+try app[all: InboxID.row][0].tap()
+```
+
+| Member | Gives |
+|---|---|
+| `count`, `isEmpty` | How many elements of the family there are. |
+| `elements` | The elements, in the order XCTest reports them, which for a list is normally the order they are in on screen. Loop over this. |
+| `map` | A value from each element, in the same order. |
+| `[0]` | The element at a position, counting from zero. |
+
+`app[all:]` looks everywhere in the app. `app[InboxID.list][all: InboxID.row]` looks
+only inside another element.
+
+- **Nothing waits.** `count` and the rest say what the app shows at the moment they
+  are read. To wait, pass a timeout:
+  `#expect(app[all: InboxID.row].count == 3, within: .seconds(5))`.
+- **A list that loads its rows as it is scrolled has only some of them.** A SwiftUI
+  `List` or `LazyVStack`, like a table or a collection view, only creates the rows
+  near the ones on screen. The count is of the rows that are loaded, not of the data
+  behind the list.
+- **Each element keeps to its row.** An element is the one that was at its position
+  when the test asked for it. From then on it is found by its own identifier, as
+  `app[InboxID.row(1234)]` finds it, so it is the same row after the list changes,
+  and its actions wait and fail in the same way. Reading that identifier takes one
+  more request to the app for each element.
+- **A position that has no element yet** gives an element whose actions wait for
+  one: `try app[all: InboxID.row][3].tap()` waits for a fourth row. If none comes,
+  the failure names the element by its family and position, `InboxID.row(…)[3]`.
+- **The kind matters**, as it does for one identifier. If the count is zero while
+  the rows are on screen, the rows are probably a different kind of element from the
+  one the family declares.
+- **A function is still enough** when tests only ever look for one element at a time,
+  and is how to write an identifier that takes more than one argument. A family takes
+  one value. A function with one argument can become a family without any identifier
+  changing. If the argument has a label, pass the function's name:
+  `family(name: "deleteButton(row:)")`.
+
 Things to know:
 
 - **Computed properties, not `let`.** Write each identifier as a computed property or a
