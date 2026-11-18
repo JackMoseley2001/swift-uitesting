@@ -22,6 +22,29 @@ enum ElementName {
         })
     }
 
+    /// Returns whether a member's name is the one that a stored property of a type gives.
+    ///
+    /// `#function` in the initialiser of a stored property is not the name of the
+    /// property. It is the name of the type that declares it, without the types it is
+    /// nested in or its generic arguments: `static let title: StaticText = element()`
+    /// in `LoginScreen.ID` gives `ID`. A computed property gives its own name, and a
+    /// function gives its name followed by brackets, so neither is mistaken for one
+    /// unless a computed property has the same name as its type.
+    static func isFromStoredProperty(_ member: String, in type: Any.Type) -> Bool {
+        member == TypeName.unqualified(type)
+    }
+
+    /// Returns the explanation to stop with when an identifier is declared as a stored property.
+    static func storedPropertyMessage(member: String, in type: Any.Type) -> String {
+        """
+        An identifier in \(TypeName.withoutModule(type)) was given the name "\(member)", which is the \
+        name of the group and not of one of its members. That is what a stored property gives, such \
+        as `static let title: StaticText = element()`: it cannot work out its own name, so every \
+        stored identifier in the group would be the same string. Declare each one as a computed \
+        property instead: `static var title: StaticText { element() }`.
+        """
+    }
+
     private static func list(_ values: [String]) -> String {
         values.isEmpty ? "" : "(\(values.joined(separator: ", ")))"
     }

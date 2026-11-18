@@ -12,6 +12,14 @@ enum TypeName {
         return components.joined(separator: ".")
     }
 
+    /// Returns the name of a type on its own, without its module, the types it is nested
+    /// in, or its generic arguments.
+    ///
+    /// `LoginScreen.ID` gives `ID`, and `Box<Int>` gives `Box`.
+    static func unqualified(_ type: Any.Type) -> String {
+        String(String(describing: type).prefix { $0 != "<" })
+    }
+
     /// Splits a qualified type name at each full stop that is not inside brackets.
     private static func components(of qualifiedName: String) -> [Substring] {
         var components: [Substring] = []

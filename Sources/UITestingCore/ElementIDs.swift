@@ -78,7 +78,9 @@
 ///
 /// - Important: Declare each identifier as a computed property or a function, as
 ///   above. A stored property, such as `static let title: StaticText = element()`,
-///   cannot work out its own name.
+///   cannot work out its own name, so every one in the group would get the same
+///   identifier. A debug build stops when it reaches one, and says how to fix it.
+///   A release build does not check, and never stops for this.
 public protocol ElementIDs {
     /// The prefix that keeps this group's identifiers apart from every other group's.
     ///
@@ -115,16 +117,28 @@ extension ElementIDs {
     /// Each value is described the way `print` shows it. Use values whose description
     /// does not change between runs, such as integers, strings and UUIDs.
     ///
+    /// - Important: Do not call it from a stored property, such as
+    ///   `static let title: StaticText = element()`. A stored property gives the name
+    ///   of the group's type in place of its own, so every one in the group would get
+    ///   the same identifier. A debug build stops there, with a message that names
+    ///   the group and says how to fix it. A release build does not check, and never
+    ///   stops for this.
+    ///
     /// - Parameters:
     ///   - values: The values that tell this element apart from the others the
     ///     function identifies. Pass the function's arguments, in order.
     ///   - name: The name of the identifier. The default is the name of the member
     ///     that this is called from. Pass your own to keep an identifier stable when
-    ///     the member is renamed.
+    ///     the member is renamed. A name that is the same as the name of the group's
+    ///     type is what a stored property gives, so a debug build stops for it too.
     public static func element<Kind: ElementKind>(
         _ values: Any...,
         name: String = #function
     ) -> ElementID<Kind> {
+        assert(
+            !ElementName.isFromStoredProperty(name, in: Self.self),
+            ElementName.storedPropertyMessage(member: name, in: Self.self)
+        )
         let name = ElementName.make(member: name, values: values)
         guard let namespace else { return ElementID(name) }
         return ElementID("\(namespace).\(name)")
