@@ -37,6 +37,19 @@ enum ElementReference: Equatable {
         }
     }
 
+    /// Says why the app that the element belongs to is not known, for an action that
+    /// needs what the app shows outside the element.
+    var reasonForUnknownApp: String {
+        switch self {
+        case .identifier:
+            "the element was looked up in a query, "
+                + "so the app it belongs to is not known. Look it up in the app, as in app[id]"
+        case .label:
+            "the element was looked up in an element that is not the app and was not found in it, "
+                + "so the app it belongs to is not known. Look it up in the app, or in an element found in the app"
+        }
+    }
+
     /// Says that the lookup matched several elements, where it has to match one.
     ///
     /// - Parameter count: How many elements matched.

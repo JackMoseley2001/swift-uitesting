@@ -89,6 +89,22 @@ struct ElementReferenceTests {
     }
 
     @Test
+    func unknownAppSaysWhereToLookTheElementUp() {
+        #Testing::expect(
+            ElementReference.identifier("DatesID.datePicker").reasonForUnknownApp == """
+                the element was looked up in a query, so the app it belongs to is not known. \
+                Look it up in the app, as in app[id]
+                """
+        )
+        #Testing::expect(
+            ElementReference.label("Due", kind: "datePicker").reasonForUnknownApp == """
+                the element was looked up in an element that is not the app and was not found in it, \
+                so the app it belongs to is not known. Look it up in the app, or in an element found in the app
+                """
+        )
+    }
+
+    @Test
     func elementFoundByALabelThatIsReadyPasses() {
         #Testing::expect(failure(requirement: .enabled, exists: { true }, matchCount: { 1 }) == nil)
         #Testing::expect(failure(requirement: .exists, exists: { true }, matchCount: { 1 }) == nil)

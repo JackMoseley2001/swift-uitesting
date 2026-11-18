@@ -90,8 +90,7 @@ public struct UITestElement<Kind: ElementKind> {
     func owningApp(inOrderTo intent: String, filePath: StaticString, line: UInt) throws -> XCUIApplication {
         if let app { return app }
         try fail(
-            "Could not \(intent) \(reference.name): the element was looked up in a query, "
-                + "so the app it belongs to is not known. Look it up in the app, as in app[id]",
+            "Could not \(intent) \(reference.name): \(reference.reasonForUnknownApp)",
             filePath: filePath,
             line: line
         )
