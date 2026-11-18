@@ -13,6 +13,17 @@ final class ScrollingTests: XCTestCase {
     }
 
     @UITest
+    func onlyTheRowsThatAreLoadedAreCounted(app: XCUIApplication) throws {
+        try app[NumberID.row(1)].waitToAppear()
+
+        // The list has 60 numbers, and creates rows for the ones near the screen.
+        let loaded = app[all: NumberID.row].count
+
+        #expect(loaded > 0)
+        #expect(loaded < 60)
+    }
+
+    @UITest
     func scrollsToTheLastRow(app: XCUIApplication) throws {
         try app[NumberID.row(60)].scrollIntoView().tap()
 
