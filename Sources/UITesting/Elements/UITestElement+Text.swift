@@ -80,7 +80,7 @@ extension UITestElement where Kind: TextEntryKind {
             type: { element.typeText($0) }
         )
         guard isEmpty else {
-            let failure = "Could not clear \(accessibilityIdentifier): it still held \"\(text)\" after deleting"
+            let failure = "Could not clear \(reference.name): it still held \"\(text)\" after deleting"
             ExpectationReporter.report(message: failure, filePath: filePath, line: line)
             throw RequirementFailedError(message: failure)
         }

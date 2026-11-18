@@ -65,7 +65,7 @@ extension UITestElement {
     ) throws {
         let failure = ElementWait.failure(
             intent: intent,
-            identifier: accessibilityIdentifier,
+            element: reference,
             kind: Kind.elementType == .any ? "element" : Kind.elementType.rawValue,
             requirement: requirement,
             timeout: timeout ?? ActionTimeout.current,
@@ -77,7 +77,8 @@ extension UITestElement {
                     let type = other.elementType
                     let name = UITestingCore.ElementType.allCases.first { XCUIElement.ElementType($0) == type }
                     return name?.rawValue ?? "\(type.rawValue)"
-                }
+                },
+                matchCount: labelMatch.map { match in { match.matches.count } }
             )
         )
         if let failure {

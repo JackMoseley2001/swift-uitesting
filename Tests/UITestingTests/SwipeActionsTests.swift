@@ -26,6 +26,30 @@ struct SwipeActionsTests {
     }
 
     @Test
+    func rowFoundByItsLabelIsNotOneOfItsActions() {
+        let buttons = [(label: "Invoice", identifier: ""), (label: "Delete", identifier: "delete")]
+
+        #Testing::expect(SwipeActions.labels(ofButtons: buttons, rowLabel: "Invoice") == ["Delete"])
+    }
+
+    @Test
+    func missingActionOfARowFoundByItsLabelNamesTheRow() {
+        let message = SwipeActions.missing(
+            action: "\"Archive\"",
+            row: ElementReference.label("Invoice", kind: "cell").name,
+            edge: .trailing,
+            shown: ["Delete"]
+        )
+
+        #Testing::expect(
+            message == """
+                Could not use the swipe action "Archive" on the cell labelled "Invoice": \
+                its trailing side has no such action. Its actions are: "Delete"
+                """
+        )
+    }
+
+    @Test
     func missingActionListsTheActionsThereAre() {
         let message = SwipeActions.missing(
             action: "\"Archive\"",

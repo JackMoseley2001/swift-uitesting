@@ -54,7 +54,7 @@ extension UITestElement where Kind: SwitchKind {
         )
         guard changed else {
             try fail(
-                "Could not turn \(name) \(accessibilityIdentifier): "
+                "Could not turn \(name) \(reference.name): "
                     + "the switch was still \(isOn ? "off" : "on") after tapping it",
                 filePath: filePath,
                 line: line
@@ -130,7 +130,7 @@ extension UITestElement where Kind == ElementKinds.Slider {
             } else {
                 "the slider does not report its position"
             }
-        try fail("Could not move \(accessibilityIdentifier) to \(wanted): \(reason)", filePath: filePath, line: line)
+        try fail("Could not move \(reference.name) to \(wanted): \(reason)", filePath: filePath, line: line)
     }
 }
 
@@ -263,7 +263,7 @@ extension UITestElement where Kind == ElementKinds.Stepper {
         )
         if let stuckAt {
             try fail(
-                "Could not \(step.rawValue) \(accessibilityIdentifier): "
+                "Could not \(step.rawValue) \(reference.name): "
                     + "its value was still \(stuckAt) after tapping it",
                 filePath: filePath,
                 line: line
@@ -407,7 +407,7 @@ extension UITestElement where Kind == ElementKinds.MenuPicker {
         }
         guard let found else {
             try fail(
-                "Could not select \"\(label)\" in \(accessibilityIdentifier): "
+                "Could not select \"\(label)\" in \(reference.name): "
                     + "no option with this label showed within \(ExpectationFailure.describe(timeout))",
                 filePath: filePath,
                 line: line
@@ -450,7 +450,7 @@ extension UITestElement where Kind == ElementKinds.SegmentedControl {
         guard segment.exists else {
             let labels = element.buttons.allElementsBoundByIndex.map(\.label).joined(separator: ", ")
             try fail(
-                "Could not select \"\(label)\" in \(accessibilityIdentifier): "
+                "Could not select \"\(label)\" in \(reference.name): "
                     + "no segment has this label. Its segments are: \(labels)",
                 filePath: filePath,
                 line: line

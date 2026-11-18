@@ -51,7 +51,7 @@ extension UITestElement where Kind == ElementKinds.DatePicker {
     ) throws {
         let date = "\(year)-\(DatePickerValues.minuteTitle(month))-\(DatePickerValues.minuteTitle(day))"
         let intent = "set \(date) in"
-        let summary = "Could not \(intent) \(accessibilityIdentifier)"
+        let summary = "Could not \(intent) \(reference.name)"
         let app = try owningApp(inOrderTo: intent, filePath: filePath, line: line)
         let popover = Self.popover(in: app)
         try wait(toBe: .enabled, inOrderTo: intent, within: timeout, filePath: filePath, line: line)
@@ -160,7 +160,7 @@ extension UITestElement where Kind == ElementKinds.DatePicker {
     ) throws {
         let time = "\(DatePickerValues.minuteTitle(hour)):\(DatePickerValues.minuteTitle(minute))"
         let intent = "set \(time) in"
-        let summary = "Could not \(intent) \(accessibilityIdentifier)"
+        let summary = "Could not \(intent) \(reference.name)"
         let app = try owningApp(inOrderTo: intent, filePath: filePath, line: line)
         let popover = Self.popover(in: app)
         try wait(toBe: .enabled, inOrderTo: intent, within: timeout, filePath: filePath, line: line)
