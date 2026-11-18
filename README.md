@@ -722,7 +722,9 @@ Things to know:
 - **Computed properties, not `let`.** Write each identifier as a computed property or a
   function, as above. A stored property such as
   `static let title: StaticText = element()` cannot work out its own name, and every
-  one in the group would get the same identifier.
+  one in the group would get the same identifier. A debug build stops when it reaches
+  one, with a message that names the group and says how to fix it. A release build
+  does not check, and never stops for this.
 - **Arguments.** Each argument is described the way `print` shows it. Use ones whose
   description does not change between runs, such as integers, strings and UUIDs.
 - **Identifiers the app already has.** Create the identifier from the exact string:
