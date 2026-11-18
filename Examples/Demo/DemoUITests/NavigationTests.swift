@@ -4,10 +4,11 @@ import XCTest
 @UITestSuite(traits: .animationsDisabled)
 final class NavigationTests: XCTestCase {
     @UITest
-    func theAppOpensOnTheListOfExamples(app: XCUIApplication) {
+    func theAppOpensOnTheListOfExamples(app: XCUIApplication) throws {
         #expect(app.navigationBars["Examples"].exists)
+        // The list is longer than the screen, and has no row until it is scrolled to.
         for example in Example.allCases {
-            #expect(app[ExampleID.row(example)].exists)
+            try app[ExampleID.row(example)].scrollIntoView()
         }
     }
 
