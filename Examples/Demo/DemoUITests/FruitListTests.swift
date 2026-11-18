@@ -16,6 +16,33 @@ final class FruitListTests: XCTestCase {
     }
 
     @UITest
+    func theRowsCanBeCounted(app: XCUIApplication) {
+        #expect(app[all: FruitID.row].count == Fruit.all.count)
+        #expect(!app[all: FruitID.row].isEmpty)
+    }
+
+    @UITest
+    func theRowsAreInTheOrderTheyAreShownIn(app: XCUIApplication) {
+        #expect(app[all: FruitID.row].map(\.label) == ["Apple", "Pear", "Cherry"])
+    }
+
+    @UITest
+    func aRowIsFoundByItsPosition(app: XCUIApplication) throws {
+        try app[all: FruitID.row][1].tap()
+
+        #expect(app[FruitID.selection].label == "Selected Pear")
+    }
+
+    @UITest
+    func everyRowCanBeUsedInTurn(app: XCUIApplication) throws {
+        for (row, fruit) in zip(app[all: FruitID.row].elements, Fruit.all) {
+            try row.tap()
+
+            #expect(app[FruitID.selection].label == "Selected \(fruit.name)")
+        }
+    }
+
+    @UITest
     func tappingARowSelectsItsItem(app: XCUIApplication) throws {
         try app[FruitID.row(Fruit.pear.id)].tap()
 

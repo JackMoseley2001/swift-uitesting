@@ -47,6 +47,34 @@ final class InboxTests: XCTestCase {
     }
 
     @UITest
+    func countsTheRowsInsideTheList(app: XCUIApplication) {
+        #expect(app[InboxID.list][all: InboxID.row].count == 3)
+        #expect(app[InboxID.list][all: InboxID.row].map(\.label) == ["Welcome", "Invoice", "Reminder"])
+    }
+
+    @UITest
+    func waitsForTheNumberOfRowsToChange(app: XCUIApplication) throws {
+        try app[InboxID.list].pullToRefresh()
+
+        // The new message arrives a second after the pull.
+        #expect(app[all: InboxID.row].count == 4, within: .seconds(5))
+        #expect(app[all: InboxID.row].map(\.label) == ["Welcome", "Invoice", "Reminder", "Update 4"])
+    }
+
+    @UITest
+    func anElementKeepsToItsRowWhenTheListChanges(app: XCUIApplication) throws {
+        let first = app[all: InboxID.row][0]
+        #expect(first.label == "Welcome")
+
+        try first.swipeAction("Delete")
+
+        // Another row is first now, and this is still the one that was deleted.
+        try first.waitToDisappear()
+        #expect(app[all: InboxID.row].count == 2)
+        #expect(app[all: InboxID.row][0].label == "Invoice")
+    }
+
+    @UITest
     func deletesSeveralRowsOneAfterAnother(app: XCUIApplication) throws {
         for id in [3, 1] {
             try app[InboxID.row(id)].swipeAction("Delete")
