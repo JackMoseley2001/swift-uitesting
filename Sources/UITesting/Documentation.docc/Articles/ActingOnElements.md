@@ -64,7 +64,8 @@ final class InboxTests: XCTestCase {
 - **Waits block.** An action blocks while it waits, in an `async` test too, in the same
   way as `waitForExistence(timeout:)`.
 - **Elements found by a string.** `app.buttons["save"]` is a plain `XCUIElement`, with
-  XCTest's own actions.
+  XCTest's own actions. For actions that wait on an element that has no identifier,
+  find it by its label, as in `app.button("Save")`. See <doc:FindingElements>.
 
 ## Topics
 

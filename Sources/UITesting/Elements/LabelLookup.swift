@@ -17,8 +17,8 @@ extension XCUIElement {
     /// The most common kinds have a shorter form, such as `app.button("Continue")`.
     ///
     /// The label has to be the whole of the element's label, in the same case. The
-    /// element's identifier, value and placeholder are not looked at, as they are by
-    /// `app.links["Terms"]`.
+    /// element's identifier, title, value and placeholder are not looked at, as they
+    /// are by `app.links["Terms"]`.
     ///
     /// Use it on the app to look everywhere, or on another element to look only
     /// inside it. If several elements of the kind have the label, an action on the
@@ -160,7 +160,7 @@ extension UITestElement {
     /// The most common kinds have a shorter form, such as ``button(_:)``.
     ///
     /// The label has to be the whole of the element's label, in the same case. The
-    /// element's identifier, value and placeholder are not looked at.
+    /// element's identifier, title, value and placeholder are not looked at.
     ///
     /// If several elements of the kind inside this one have the label, an action on
     /// the result ends the test and says how many there were.
@@ -271,8 +271,8 @@ extension UITestElement {
     ///   - scope: The element to look inside.
     ///   - app: The app that `scope` is, or was looked up in, if that is known.
     init(labeled label: String, in scope: XCUIElement, app: XCUIApplication?) {
-        // The string subscript of a query also matches identifiers, values and
-        // placeholders, so the label is matched with a predicate.
+        // The string subscript of a query also matches identifiers, titles, values
+        // and placeholders, so the label is matched with a predicate.
         let hasLabel = NSPredicate(format: "label == %@", label)
         let matches = scope.descendants(matching: XCUIElement.ElementType(Kind.elementType)).matching(hasLabel)
         self.init(
