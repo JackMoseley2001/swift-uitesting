@@ -27,11 +27,26 @@ enum SwipeActions {
         return labels
     }
 
+    /// Returns the labels of the actions of a row that was found by its label, from
+    /// the labels and identifiers of the buttons beside the row.
+    ///
+    /// A row that is itself a button is the one with the row's label, and is not an action.
+    static func labels(
+        ofButtons buttons: [(label: String, identifier: String)],
+        rowLabel: String
+    ) -> [String] {
+        var labels: [String] = []
+        for button in buttons where button.label != rowLabel && !labels.contains(button.label) {
+            labels.append(button.label)
+        }
+        return labels
+    }
+
     /// Describes a swipe that did not show the action a test asked for.
     ///
     /// - Parameters:
     ///   - action: How the action was asked for, such as `"Delete"` or an identifier.
-    ///   - row: The identifier of the row.
+    ///   - row: What to call the row, which is its identifier if it was found by one.
     ///   - edge: The side that was swiped to.
     ///   - shown: The labels of the actions that the swipe did show.
     static func missing(action: String, row: String, edge: SwipeActionEdge, shown: [String]) -> String {

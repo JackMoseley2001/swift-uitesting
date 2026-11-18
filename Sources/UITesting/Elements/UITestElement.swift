@@ -8,6 +8,9 @@ import XCTest
 /// try app[LoginID.signInButton].tap()
 /// ```
 ///
+/// An element that the app cannot give an identifier, such as one in a web view, is
+/// found by its kind and its label instead, as in `app.button("Continue")`.
+///
 /// XCTest's own `tap()` fails at once if the element is not there yet. The actions on
 /// this type wait first, for as long as the test's ``UITestTrait/actionTimeout(_:)``
 /// allows, and end the test with a message that says what went wrong if the element
@@ -39,9 +42,12 @@ public struct UITestElement<Kind: ElementKind> {
     public let element: XCUIElement
 
     /// The accessibility identifier the element was looked up by.
+    ///
+    /// This is an empty string for an element that was looked up by its label.
     public let accessibilityIdentifier: String
 
-    /// The element with the same identifier whatever its kind, used to explain why a lookup found nothing.
+    /// The element with the same identifier, or the same label, whatever its kind, used
+    /// to explain why a lookup found nothing.
     let elementOfAnyKind: XCUIElement?
 
     /// The element this one was looked up in, which is where scrolling to it happens.
@@ -51,6 +57,9 @@ public struct UITestElement<Kind: ElementKind> {
     /// element that was. This is where to find what the app shows outside the
     /// element, such as the options of a menu.
     let app: XCUIApplication?
+
+    /// What the element was looked up by, when that was its label and not an identifier.
+    var labelMatch: LabelMatch? = nil
 
     /// Reads a property of the underlying `XCUIElement`, without waiting.
     public subscript<Value>(dynamicMember keyPath: KeyPath<XCUIElement, Value>) -> Value {
@@ -81,8 +90,7 @@ public struct UITestElement<Kind: ElementKind> {
     func owningApp(inOrderTo intent: String, filePath: StaticString, line: UInt) throws -> XCUIApplication {
         if let app { return app }
         try fail(
-            "Could not \(intent) \(accessibilityIdentifier): the element was looked up in a query, "
-                + "so the app it belongs to is not known. Look it up in the app, as in app[id]",
+            "Could not \(intent) \(reference.name): \(reference.reasonForUnknownApp)",
             filePath: filePath,
             line: line
         )

@@ -89,8 +89,14 @@ extension UITestElement {
         if Kind.elementType == .cell {
             cell = element
         } else {
-            let type = XCUIElement.ElementType(Kind.elementType)
-            let holding = container.cells.containing(type, identifier: accessibilityIdentifier).firstMatch
+            let holding: XCUIElement
+            if let labelMatch {
+                let hasLabel = NSPredicate(format: "label == %@", labelMatch.label)
+                holding = container.cells.containing(hasLabel).firstMatch
+            } else {
+                let type = XCUIElement.ElementType(Kind.elementType)
+                holding = container.cells.containing(type, identifier: accessibilityIdentifier).firstMatch
+            }
             cell = holding.exists ? holding : element
         }
 
@@ -119,9 +125,14 @@ extension UITestElement {
             let buttons = container.buttons.allElementsBoundByIndex
                 .filter(isBesideRow)
                 .map { (label: $0.label, identifier: $0.identifier) }
-            let shown = SwipeActions.labels(ofButtons: buttons, rowIdentifier: accessibilityIdentifier)
+            let shown =
+                if let labelMatch {
+                    SwipeActions.labels(ofButtons: buttons, rowLabel: labelMatch.label)
+                } else {
+                    SwipeActions.labels(ofButtons: buttons, rowIdentifier: accessibilityIdentifier)
+                }
             try fail(
-                SwipeActions.missing(action: name, row: accessibilityIdentifier, edge: edge, shown: shown),
+                SwipeActions.missing(action: name, row: reference.name, edge: edge, shown: shown),
                 filePath: filePath,
                 line: line
             )

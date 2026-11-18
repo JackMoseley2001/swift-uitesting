@@ -54,11 +54,10 @@ extension UITestElement {
         )
         guard found else {
             let kind = Kind.elementType == .any ? "element" : Kind.elementType.rawValue
-            var failure = "Could not scroll to \(accessibilityIdentifier): no \(kind) with this identifier "
+            var failure = "Could not scroll to \(reference.name): no \(kind) with this \(reference.attribute) "
                 + "came into view after scrolling \(direction) and then \(direction.opposite)"
             if let other = elementOfAnyKind, other.exists, !element.exists {
-                failure += "\nAn element of another kind has this identifier. "
-                    + "Is the identifier declared as the wrong kind?"
+                failure += "\n" + reference.hint(forElementOfType: nil)
             }
             ExpectationReporter.report(message: failure, filePath: filePath, line: line)
             throw RequirementFailedError(message: failure)
