@@ -85,4 +85,31 @@ struct LaunchTraitsTests {
             #expect(LaunchTraits.current.environment == ProcessInfo.processInfo.environment)
         }
     #endif
+
+    @Test
+    func nowIsTheDateTheTestFixed() {
+        var launch = LaunchConfiguration()
+        let date = Date(timeIntervalSince1970: 1_773_480_600.25)
+        launch.setNow(date)
+
+        let traits = LaunchTraits(environment: launch.environment)
+
+        #expect(traits.fixedNow == date)
+        #expect(traits.now == date)
+    }
+
+    @Test
+    func nowIsTheClockWhenNoDateWasFixed() {
+        let before = Date()
+        let traits = LaunchTraits()
+
+        #expect(traits.fixedNow == nil)
+        #expect(traits.now >= before)
+        #expect(traits.now <= Date())
+    }
+
+    @Test
+    func fixedNowThatIsNotANumberIsIgnored() {
+        #expect(LaunchTraits(environment: ["UITESTING_NOW": "tomorrow"]).fixedNow == nil)
+    }
 }

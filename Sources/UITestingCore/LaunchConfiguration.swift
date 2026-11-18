@@ -54,6 +54,23 @@ public struct LaunchConfiguration: Sendable, Equatable {
         environment[LaunchEnvironmentKey.animationsDisabled] = "1"
     }
 
+    /// Launches the app in a time zone, which the app sees as `TimeZone.current`.
+    ///
+    /// The system reads the time zone of a process from its environment, so the app
+    /// needs no code for this.
+    ///
+    /// - Parameter timeZone: The time zone the app runs in.
+    public mutating func setTimeZone(_ timeZone: TimeZone) {
+        environment[LaunchEnvironmentKey.timeZone] = timeZone.identifier
+    }
+
+    /// Asks the app to treat a date as the current one, which the app sees as ``LaunchTraits/now``.
+    ///
+    /// - Parameter date: The date the app should use in place of the clock.
+    public mutating func setNow(_ date: Date) {
+        environment[LaunchEnvironmentKey.now] = "\(date.timeIntervalSince1970)"
+    }
+
     /// Marks the launch as coming from a UI test, which the app sees as ``LaunchTraits/isUITesting``.
     package mutating func markAsUITesting() {
         environment[LaunchEnvironmentKey.isUITesting] = "1"

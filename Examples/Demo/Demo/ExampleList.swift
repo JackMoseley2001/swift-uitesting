@@ -50,6 +50,7 @@ private struct ExampleScreen: View {
         case .dates: DatesView()
         case .permission: PermissionView()
         case .lifecycle: LifecycleView()
+        case .location: LocationView()
         }
     }
 }

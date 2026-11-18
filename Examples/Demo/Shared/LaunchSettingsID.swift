@@ -7,4 +7,7 @@ enum LaunchSettingsID: ElementIDs {
     static var betaFeatures: StaticText { element() }
     static var orientation: StaticText { element() }
     static var textSize: StaticText { element() }
+    static var timeZone: StaticText { element() }
+    static var now: StaticText { element() }
+    static var today: StaticText { element() }
 }

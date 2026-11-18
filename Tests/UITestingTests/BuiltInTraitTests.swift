@@ -152,4 +152,77 @@ struct BuiltInTraitTests {
 
         #Testing::expect(launch == (try LaunchConfiguration(applying: [])))
     }
+
+    @Test
+    func timeZoneIsPassedWhereTheSystemReadsIt() throws {
+        let launch = try LaunchConfiguration(applying: [.timeZone("Asia/Tokyo")])
+
+        #Testing::expect(launch.environment["TZ"] == "Asia/Tokyo")
+    }
+
+    @Test
+    func laterTimeZoneReplacesAnEarlierOne() throws {
+        let launch = try LaunchConfiguration(applying: [.timeZone("Asia/Tokyo"), .timeZone("Europe/London")])
+
+        #Testing::expect(launch.environment["TZ"] == "Europe/London")
+    }
+
+    @Test
+    func timeZoneThatDoesNotExistFailsTheLaunch() {
+        #Testing::expect(
+            throws: LaunchSettingError(message: "There is no time zone with the identifier \"Mars/Olympus\"")
+        ) {
+            try LaunchConfiguration(applying: [.timeZone("Mars/Olympus")])
+        }
+    }
+
+    @Test
+    func nowIsReadBackByTheApp() throws {
+        let date = Date(timeIntervalSince1970: 1_773_480_600)
+        let launch = try LaunchConfiguration(applying: [.now(date)])
+
+        #Testing::expect(LaunchTraits(environment: launch.environment).now == date)
+    }
+
+    @Test
+    func nowCanBeWrittenInISO8601() throws {
+        let utc = try LaunchConfiguration(applying: [.now("2026-03-14T09:30:00Z")])
+        let offset = try LaunchConfiguration(applying: [.now("2026-03-14T18:30:00+09:00")])
+        let fraction = try LaunchConfiguration(applying: [.now("2026-03-14T09:30:00.500Z")])
+
+        let date = Date(timeIntervalSince1970: 1_773_480_600)
+        #Testing::expect(LaunchTraits(environment: utc.environment).now == date)
+        #Testing::expect(LaunchTraits(environment: offset.environment).now == date)
+        #Testing::expect(LaunchTraits(environment: fraction.environment).now == date.addingTimeInterval(0.5))
+    }
+
+    @Test
+    func nowThatIsNotADateFailsTheLaunch() {
+        #Testing::expect(throws: LaunchSettingError.self) {
+            try LaunchConfiguration(applying: [.now("14 March 2026")])
+        }
+        #Testing::expect(throws: LaunchSettingError.self) {
+            // No time zone, so it is not one moment.
+            try LaunchConfiguration(applying: [.now("2026-03-14T09:30:00")])
+        }
+    }
+
+    @Test
+    func locationDoesNotChangeTheLaunchConfiguration() throws {
+        guard #available(macOS 13.3, iOS 16.4, tvOS 16.4, watchOS 9.4, *) else { return }
+        let launch = try LaunchConfiguration(applying: [.location(latitude: 51.5074, longitude: -0.1278)])
+
+        #Testing::expect(launch == (try LaunchConfiguration(applying: [])))
+    }
+
+    @Test
+    func locationThatIsNotOnTheEarthFailsTheLaunch() {
+        guard #available(macOS 13.3, iOS 16.4, tvOS 16.4, watchOS 9.4, *) else { return }
+        #Testing::expect(throws: LaunchSettingError.self) {
+            try LaunchConfiguration(applying: [.location(latitude: 91, longitude: 0)])
+        }
+        #Testing::expect(throws: LaunchSettingError.self) {
+            try LaunchConfiguration(applying: [.location(latitude: 0, longitude: -180.5)])
+        }
+    }
 }

@@ -15,6 +15,7 @@ let traits = LaunchTraits.current
 traits.isUITesting                          // true when a UI test launched the app
 traits.hasArgument("--skip-onboarding")     // a launch argument
 traits[AuthState.self]                      // a payload, or nil if none was sent
+traits.now                                  // the date the test fixed, or the date on the clock
 ```
 
 In SwiftUI, the same value is in the environment, and previews can override it:
@@ -35,6 +36,20 @@ struct PromoBanner: View {
         .environment(\.launchTraits, LaunchTraits(arguments: ["--show-promo-banner"]))
 }
 ```
+
+## Reading the date
+
+A test can fix the date with the `now(_:)` trait of the UITesting library, because
+XCTest cannot change the clock of the device. ``LaunchTraits/now`` is that date, or
+the date on the clock when no test fixed one, so the app reads it wherever it would
+create a `Date()`:
+
+```swift
+let isOverdue = task.dueDate < LaunchTraits.current.now
+```
+
+``LaunchTraits/fixedNow`` is `nil` when no test fixed a date. The time zone that a
+test chooses needs no code: the app sees it as `TimeZone.current`.
 
 ## Things to know
 

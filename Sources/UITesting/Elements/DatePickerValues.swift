@@ -145,7 +145,7 @@ enum DatePickerValues {
 
         /// Returns the value the wheel has when it is on a date.
         func value(on date: Date) -> String {
-            isToday(date) ? relativeTitle(date) : formatted(date, template: "EEEMMMd")
+            isToday(date) ? todayTitle : formatted(date, template: "EEEMMMd")
         }
 
         /// Returns whether a value that the wheel shows is the one for a date.
@@ -214,7 +214,11 @@ enum DatePickerValues {
             return formatter.string(from: date)
         }
 
-        private func relativeTitle(_ date: Date) -> String {
+        /// The word for today in the language of the picker.
+        ///
+        /// A date formatter only gives the word for the day that the clock says it
+        /// is, so that is the day formatted, whichever day ``today`` is.
+        private var todayTitle: String {
             let formatter = DateFormatter()
             formatter.locale = locale
             formatter.calendar = calendar
@@ -222,7 +226,7 @@ enum DatePickerValues {
             formatter.dateStyle = .medium
             formatter.timeStyle = .none
             formatter.doesRelativeDateFormatting = true
-            return formatter.string(from: date)
+            return formatter.string(from: .now)
         }
     }
 }

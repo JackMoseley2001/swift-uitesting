@@ -221,7 +221,10 @@ A trait is a reusable piece of configuration or behaviour. These are built in:
 | `.locale("fr_FR")` | Launches the app in a locale. |
 | `.userDefault("key", true)` | Overrides a `UserDefaults` value for the launch. Takes a `Bool`, `Int`, `Double` or `String`. |
 | `.dynamicTypeSize(.accessibility3)` | Launches the app with a Dynamic Type size. The device's setting is not changed. |
+| `.timeZone("Asia/Tokyo")` | Launches the app in a time zone. The device's setting is not changed. |
+| `.now("2026-03-14T09:30:00Z")` | Asks the app to treat a date as the current one. The app reads it from `LaunchTraits.current.now`. |
 | `.orientation(.landscapeLeft)` | Rotates the device for the test, and puts it back afterwards. iOS only. |
+| `.location(latitude: 51.5074, longitude: -0.1278)` | Puts the device at a location for the test, and puts it back afterwards. |
 | `.systemAlerts(.allow, for: .microphone)` | Answers the system's permission alerts for the test. See [System alerts](#system-alerts). |
 | `.resetAuthorization(for: .photos)` | Makes the app forget a permission before it launches, so the system asks again. |
 | `.manualLaunch` | Leaves launching the app to the test. See [Launching and relaunching](#launching-and-relaunching). |
@@ -234,6 +237,51 @@ A trait is a reusable piece of configuration or behaviour. These are built in:
 
 Traits are applied in the order they are written, the suite's before the test's, so a
 test can override its suite.
+
+### Fixing the date
+
+XCTest cannot change the clock of the device, so `.now(_:)` sends a date to the app
+and the app reads it. `LaunchTraits.current.now`, from UITestingCore, is the date of
+the test, or the date on the clock when no test fixed one:
+
+```swift
+// In the app, wherever it would create a Date()
+let isOverdue = task.dueDate < LaunchTraits.current.now
+```
+
+```swift
+@UITest(traits: .now("2026-03-14T09:30:00Z"), .timeZone("Europe/London"))
+func showsTheTaskAsOverdue(app: XCUIApplication) {
+    #expect(app[TaskID.status].label == "Overdue")
+}
+```
+
+The date is written in ISO 8601 format and has to say which time zone it is in, with
+`Z` or an offset such as `+09:00`. `.now(_:)` takes a `Date` as well. The date does
+not move while the app runs. Which day it is depends on the time zone of the app, so
+a test of dates usually gives `.timeZone(_:)` too.
+
+### Choosing where the device is
+
+`.location(latitude:longitude:)` puts the device at a location before the app is
+launched, and puts the previous one back when the test finishes. This is the
+location that the system reports, so the app gets it
+from Core Location with no extra code.
+
+```swift
+@UITest(
+    traits: .location(latitude: 51.5074, longitude: -0.1278),
+    .systemAlerts(.button("Allow While Using App"), for: .location)
+)
+func showsTheNearestShop(app: XCUIApplication) throws {
+    try app[ShopsID.findButton].tap()
+
+    #expect(app[ShopsID.nearest].label == "Covent Garden", within: .seconds(10))
+}
+```
+
+The app still needs permission to read the location. See [System alerts](#system-alerts)
+for answering the alert. The trait needs iOS 16.4, macOS 13.3, tvOS 16.4 or watchOS 9.4.
 
 ### Writing your own
 
@@ -546,6 +594,7 @@ let traits = LaunchTraits.current
 traits.isUITesting                          // true when a UI test launched the app
 traits.hasArgument("--skip-onboarding")     // a launch argument
 traits[AuthState.self]                      // a payload, or nil if none was sent
+traits.now                                  // the date the test fixed, or the date on the clock
 ```
 
 In SwiftUI, the same value is in the environment, and previews can override it:

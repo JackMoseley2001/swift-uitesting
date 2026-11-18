@@ -6,6 +6,13 @@ package enum LaunchEnvironmentKey {
     /// The variable that is set to `"1"` when the UI test asks the app to run without animations.
     package static let animationsDisabled = "UITESTING_ANIMATIONS_DISABLED"
 
+    /// The variable that holds the date the UI test asks the app to treat as now, as
+    /// a number of seconds since 1970.
+    package static let now = "UITESTING_NOW"
+
+    /// The variable that the system reads the time zone of a process from.
+    package static let timeZone = "TZ"
+
     /// The variable that holds the port on which the UI test waits for the app to connect.
     package static let messagePort = "UITESTING_MESSAGE_PORT"
 
