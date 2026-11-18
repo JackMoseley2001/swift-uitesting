@@ -18,6 +18,7 @@ enum Example: String, CaseIterable, Identifiable, LaunchPayload {
     case dates
     case permission
     case lifecycle
+    case location
 
     var id: Self { self }
 
@@ -36,6 +37,7 @@ enum Example: String, CaseIterable, Identifiable, LaunchPayload {
         case .dates: "Dates"
         case .permission: "Permission"
         case .lifecycle: "Lifecycle"
+        case .location: "Location"
         }
     }
 }

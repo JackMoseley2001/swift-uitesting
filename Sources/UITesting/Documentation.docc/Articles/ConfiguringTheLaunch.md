@@ -46,11 +46,57 @@ These need no code in the app, because the system reads them for it.
 | `.locale("fr_FR")` | Sets the app's region and formatting conventions. |
 | `.dynamicTypeSize(.accessibility3)` | Launches the app with a Dynamic Type size, as if it were the text size chosen in Settings. The device's own setting is not changed. It has an effect on platforms whose apps are built with UIKit, such as iOS. |
 | `.userDefault("key", true)` | Overrides a value that the app reads from `UserDefaults.standard`. Takes a `Bool`, `Int`, `Double` or `String`. The override lasts for that launch only and is not saved. |
+| `.timeZone("Asia/Tokyo")` | Launches the app in a time zone, which it sees as `TimeZone.current`. The device's own setting is not changed. The test fails before the launch if there is no such time zone. |
 
 ```swift
 @UITest(traits: .language("fr"), .dynamicTypeSize(.accessibility3), .userDefault("hasSeenOnboarding", true))
 func titleStillFitsAtLargeSizes(app: XCUIApplication) { /* ... */ }
 ```
+
+## Fixing the date
+
+XCTest cannot change the clock of the device, so `.now(_:)` sends a date to the app
+and the app reads it. `LaunchTraits.current.now`, from UITestingCore, is the date of
+the test, or the date on the clock when no test fixed one:
+
+```swift
+// In the app, wherever it would create a Date()
+let isOverdue = task.dueDate < LaunchTraits.current.now
+```
+
+```swift
+@UITest(traits: .now("2026-03-14T09:30:00Z"), .timeZone("Europe/London"))
+func showsTheTaskAsOverdue(app: XCUIApplication) {
+    #expect(app[TaskID.status].label == "Overdue")
+}
+```
+
+The date is written in ISO 8601 format and has to say which time zone it is in, with
+`Z` or an offset such as `+09:00`. `.now(_:)` takes a `Date` as well. The date does
+not move while the app runs. Which day it is depends on the time zone of the app, so
+a test of dates usually gives `.timeZone(_:)` too.
+
+## Choosing where the device is
+
+`.location(latitude:longitude:)` puts the device at a location before the app is
+launched, and puts the previous one back when the test finishes. This is the
+location that the system reports, so the app gets it
+from Core Location with no extra code.
+
+```swift
+@UITest(
+    traits: .location(latitude: 51.5074, longitude: -0.1278),
+    .systemAlerts(.button("Allow While Using App"), for: .location)
+)
+func showsTheNearestShop(app: XCUIApplication) throws {
+    try app[ShopsID.findButton].tap()
+
+    #expect(app[ShopsID.nearest].label == "Covent Garden", within: .seconds(10))
+}
+```
+
+The app still needs permission to read the location. See <doc:SystemAlerts> for
+answering the alert. The trait needs iOS 16.4, macOS 13.3, tvOS 16.4 or watchOS 9.4.
 
 ## Rotating the device
 
@@ -82,5 +128,9 @@ wait for them. The app has to act on the request: in SwiftUI, with
 - ``UITestTrait/language(_:)``
 - ``UITestTrait/locale(_:)``
 - ``UITestTrait/dynamicTypeSize(_:)``
+- ``UITestTrait/timeZone(_:)``
+- ``UITestTrait/now(_:)-(Date)``
+- ``UITestTrait/now(_:)-(String)``
+- ``UITestTrait/location(latitude:longitude:)``
 - ``UITestTrait/orientation(_:)``
 - ``UITestTrait/animationsDisabled``

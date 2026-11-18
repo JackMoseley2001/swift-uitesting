@@ -270,6 +270,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Demo-Info.plist";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "The demo asks for the location so that UI tests can choose where the device is.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "The demo asks for the microphone so that UI tests can answer the alert.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -292,6 +293,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Demo-Info.plist";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "The demo asks for the location so that UI tests can choose where the device is.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "The demo asks for the microphone so that UI tests can answer the alert.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

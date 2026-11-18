@@ -19,6 +19,18 @@ struct LaunchSettingsView: View {
                 )
                 row("Orientation", verticalSizeClass == .compact ? "landscape" : "portrait", LaunchSettingsID.orientation)
                 row("Text size", "\(dynamicTypeSize)", LaunchSettingsID.textSize)
+                row("Time zone", TimeZone.current.identifier, LaunchSettingsID.timeZone)
+                row(
+                    "Now",
+                    LaunchTraits.current.fixedNow.map { $0.formatted(.iso8601) } ?? "the clock",
+                    LaunchSettingsID.now
+                )
+                // The day in the time zone of the app, which is where the two settings meet.
+                row(
+                    "Today",
+                    LaunchTraits.current.now.formatted(Date.ISO8601FormatStyle(timeZone: .current).year().month().day()),
+                    LaunchSettingsID.today
+                )
             }
             .font(.footnote)
             .padding()

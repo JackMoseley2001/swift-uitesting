@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 import UITestingCore
 
@@ -72,5 +73,23 @@ struct LaunchConfigurationTests {
 
         #expect(launch.environment == ["UITESTING_ANIMATIONS_DISABLED": "1"])
         #expect(LaunchTraits(environment: launch.environment).animationsDisabled)
+    }
+
+    @Test
+    func setTimeZoneStoresTheIdentifierWhereTheSystemReadsIt() throws {
+        var launch = LaunchConfiguration()
+
+        launch.setTimeZone(try #require(TimeZone(identifier: "Asia/Tokyo")))
+
+        #expect(launch.environment == ["TZ": "Asia/Tokyo"])
+    }
+
+    @Test
+    func setNowStoresTheSecondsSince1970() {
+        var launch = LaunchConfiguration()
+
+        launch.setNow(Date(timeIntervalSince1970: 1_773_480_600.25))
+
+        #expect(launch.environment == ["UITESTING_NOW": "1773480600.25"])
     }
 }

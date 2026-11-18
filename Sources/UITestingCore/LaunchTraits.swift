@@ -73,6 +73,30 @@ public struct LaunchTraits: Sendable {
         environment[LaunchEnvironmentKey.animationsDisabled] == "1"
     }
 
+    /// The date that the UI test asked the app to treat as now, or `nil` if it did not ask.
+    ///
+    /// A test sets it with the `now(_:)` trait. Use ``now`` to get a date either way.
+    public var fixedNow: Date? {
+        environment[LaunchEnvironmentKey.now]
+            .flatMap(TimeInterval.init)
+            .map(Date.init(timeIntervalSince1970:))
+    }
+
+    /// The date to treat as now: the one the UI test fixed, or the date on the clock
+    /// if it did not fix one.
+    ///
+    /// Read this wherever the app would otherwise create a `Date()`, so that a test
+    /// can decide what the app shows for today:
+    ///
+    /// ```swift
+    /// let isOverdue = task.dueDate < LaunchTraits.current.now
+    /// ```
+    ///
+    /// The fixed date does not move while the app runs.
+    public var now: Date {
+        fixedNow ?? Date()
+    }
+
     public func hasArgument(_ argument: String) -> Bool {
         arguments.contains(argument)
     }

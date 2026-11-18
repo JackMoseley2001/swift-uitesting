@@ -44,6 +44,27 @@ final class LaunchSettingsTests: XCTestCase {
         #expect(app[LaunchSettingsID.textSize].label == "accessibility3")
     }
 
+    @UITest(traits: .timeZone("Asia/Tokyo"))
+    func timeZoneIsPassedToTheApp(app: XCUIApplication) {
+        #expect(app[LaunchSettingsID.timeZone].label == "Asia/Tokyo")
+    }
+
+    @UITest
+    func clockIsUsedWhenNoDateIsFixed(app: XCUIApplication) {
+        #expect(app[LaunchSettingsID.now].label == "the clock")
+    }
+
+    @UITest(traits: .now("2026-03-14T20:30:00Z"), .timeZone("America/Los_Angeles"))
+    func fixedDateIsReadByTheApp(app: XCUIApplication) {
+        #expect(app[LaunchSettingsID.now].label == "2026-03-14T20:30:00Z")
+        #expect(app[LaunchSettingsID.today].label == "2026-03-14")
+    }
+
+    @UITest(traits: .now("2026-03-14T20:30:00Z"), .timeZone("Asia/Tokyo"))
+    func fixedDateIsADifferentDayInAnotherTimeZone(app: XCUIApplication) {
+        #expect(app[LaunchSettingsID.today].label == "2026-03-15")
+    }
+
     @UITest(traits: .disabled("Shows that a disabled test is skipped"))
     func disabledTestIsSkipped(app: XCUIApplication) {
         XCTFail("A disabled test should not run")
