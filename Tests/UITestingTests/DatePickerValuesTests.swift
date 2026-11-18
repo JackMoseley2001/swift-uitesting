@@ -193,14 +193,188 @@ struct DatePickerValuesTests {
     }
 
     @Test
-    func dayWheelIsTurnedInStepsItCanTake() {
+    func pickerIsInTheLocaleOfTheDeviceWhenTheLaunchChoosesNone() {
+        #Testing::expect(DatePickerValues.locale(launchArguments: [], device: english) == english)
+        #Testing::expect(DatePickerValues.locale(launchArguments: ["--flag", "-AppleLocale"], device: english) == english)
+    }
+
+    @Test
+    func pickerHasTheRegionOfTheLaunchAndTheLanguageOfTheDevice() {
+        let locale = DatePickerValues.locale(launchArguments: ["--flag", "-AppleLocale", "fr_FR"], device: english)
+
+        #Testing::expect(locale.region == "FR")
+        #Testing::expect(locale.language.languageCode == "en")
+        #Testing::expect(DatePickerValues.monthName(3, locale: locale) == "March")
+    }
+
+    @Test
+    func pickerHasTheLanguageOfTheLaunch() {
+        let language = DatePickerValues.locale(launchArguments: ["-AppleLanguages", "(fr)"], device: english)
+        #Testing::expect(language.region == "US")
+        #Testing::expect(DatePickerValues.monthName(3, locale: language) == "mars")
+
+        let both = DatePickerValues.locale(
+            launchArguments: ["-AppleLanguages", "(\"de\", en)", "-AppleLocale", "fr_FR"], device: english)
+        #Testing::expect(both.region == "FR")
+        #Testing::expect(DatePickerValues.monthName(3, locale: both) == "März")
+    }
+
+    @Test
+    func laterLaunchArgumentReplacesAnEarlierOne() {
+        let locale = DatePickerValues.locale(
+            launchArguments: ["-AppleLocale", "fr_FR", "-AppleLocale", "en_GB"], device: english)
+
+        #Testing::expect(locale.region == "GB")
+        #Testing::expect(
+            DatePickerValues.DayWheel(locale: locale, calendar: utc, today: day(2026, 11, 17))
+                .title(on: day(2023, 11, 14)) == "14 Nov")
+    }
+
+    @Test
+    func daysAreCountedBetweenDates() {
         let wheel = dayWheel()
-        #Testing::expect(wheel.turns(from: day(2023, 11, 14), to: day(2023, 11, 14)).isEmpty)
-        #Testing::expect(wheel.turns(from: day(2023, 11, 14), to: day(2023, 12, 1)) == [day(2023, 12, 1)])
+        #Testing::expect(wheel.days(from: day(2023, 11, 14), to: day(2023, 11, 14)) == 0)
+        #Testing::expect(wheel.days(from: day(2023, 11, 14), to: day(2024, 2, 29)) == 107)
+        #Testing::expect(wheel.days(from: day(2024, 2, 29), to: day(2023, 12, 31)) == -60)
+    }
+
+    @Test
+    func wheelIsDraggedAsFarAsThereIsRoom() {
+        let reach = DatePickerValues.WheelReach(above: 650, below: 100)
+
+        // Later rows are reached by dragging up, and there is room for 20 rows of 32 points.
+        #Testing::expect(reach.move(by: 107) == .drag(rows: 20, points: 640))
+        #Testing::expect(reach.move(by: 8) == .drag(rows: 8, points: 256))
+        // Earlier rows are reached by dragging down, where there is room for 3.
+        #Testing::expect(reach.move(by: -60) == .drag(rows: -3, points: -96))
+    }
+
+    @Test
+    func rowsNearTheMiddleAreTapped() {
+        let reach = DatePickerValues.WheelReach(above: 650, below: 100)
+
+        #Testing::expect(reach.move(by: 0) == nil)
+        #Testing::expect(reach.move(by: 1) == .tap(rows: 1))
+        #Testing::expect(reach.move(by: -2) == .tap(rows: -2))
+    }
+
+    @Test
+    func wheelWithNoRoomToDragIsTurnedByTaps() {
+        let reach = DatePickerValues.WheelReach(above: 650, below: 70)
+
+        #Testing::expect(reach.move(by: -60) == .tap(rows: -2))
+    }
+
+    @Test
+    func rowHeightIsCorrectedFromHowFarADragTurnedTheWheel() {
+        var reach = DatePickerValues.WheelReach(above: 650, below: 100)
+
+        reach.learn(from: .drag(rows: 20, points: 640), turned: 16)
+        #Testing::expect(reach.rowHeight == 40)
+
+        // A tap, a wheel that did not turn and one that went the other way say nothing.
+        reach.learn(from: .tap(rows: 2), turned: 1)
+        reach.learn(from: .drag(rows: 10, points: 400), turned: 0)
+        reach.learn(from: .drag(rows: 10, points: 400), turned: -3)
+        #Testing::expect(reach.rowHeight == 40)
+
+        // A wheel that was flung does not make a row smaller than it can be.
+        reach.learn(from: .drag(rows: 3, points: 120), turned: 30)
+        #Testing::expect(reach.rowHeight == 20)
+    }
+
+    /// A wheel that tests turn, which records the moves made on it.
+    private final class Wheel {
+        var date: Date
+        var moves: [DatePickerValues.WheelMove] = []
+        /// How many rows the wheel turns for each row a drag is meant to turn it.
+        var slip = 1.0
+        /// The last date the wheel can be turned to.
+        var last: Date?
+
+        init(on date: Date) { self.date = date }
+
+        func perform(_ move: DatePickerValues.WheelMove, calendar: Calendar) {
+            moves.append(move)
+            var rows = move.rows
+            if case .drag = move { rows = Int((Double(rows) * slip).rounded()) }
+            var next = calendar.date(byAdding: .day, value: rows, to: date) ?? date
+            if let last, next > last { next = last }
+            date = next
+        }
+    }
+
+    @Test
+    func dayWheelIsTurnedUntilItIsOnTheDate() {
+        let wheel = Wheel(on: day(2023, 11, 14))
+        let reach = DatePickerValues.WheelReach(above: 650, below: 100)
+
+        let end = dayWheel().turn(from: wheel.date, to: day(2024, 2, 29), reach: reach) { _ in
+            wheel.date
+        } perform: {
+            wheel.perform($0, calendar: utc)
+        }
+
+        #Testing::expect(end == day(2024, 2, 29))
         #Testing::expect(
-            wheel.turns(from: day(2023, 11, 14), to: day(2024, 2, 29))
-                == [day(2023, 12, 29), day(2024, 2, 12), day(2024, 2, 29)])
-        #Testing::expect(
-            wheel.turns(from: day(2024, 2, 29), to: day(2023, 12, 31)) == [day(2024, 1, 15), day(2023, 12, 31)])
+            wheel.moves == [
+                .drag(rows: 20, points: 640), .drag(rows: 20, points: 640), .drag(rows: 20, points: 640),
+                .drag(rows: 20, points: 640), .drag(rows: 20, points: 640), .drag(rows: 7, points: 224),
+            ])
+    }
+
+    @Test
+    func dayWheelThatTurnsLessThanItWasDraggedStillArrives() {
+        let wheel = Wheel(on: day(2023, 11, 14))
+        wheel.slip = 0.8
+        let reach = DatePickerValues.WheelReach(above: 650, below: 650)
+
+        let forward = dayWheel().turn(from: wheel.date, to: day(2024, 2, 29), reach: reach) { _ in
+            wheel.date
+        } perform: {
+            wheel.perform($0, calendar: utc)
+        }
+        #Testing::expect(forward == day(2024, 2, 29))
+
+        wheel.slip = 1.7
+        let back = dayWheel().turn(from: wheel.date, to: day(2023, 12, 31), reach: reach) { _ in
+            wheel.date
+        } perform: {
+            wheel.perform($0, calendar: utc)
+        }
+        #Testing::expect(back == day(2023, 12, 31))
+    }
+
+    @Test
+    func dayWheelThatWillNotTurnAnyFurtherIsLeftWhereItStops() {
+        let wheel = Wheel(on: day(2023, 11, 14))
+        wheel.last = day(2023, 11, 30)
+        let reach = DatePickerValues.WheelReach(above: 650, below: 100)
+
+        let end = dayWheel().turn(from: wheel.date, to: day(2024, 2, 29), reach: reach) { _ in
+            wheel.date
+        } perform: {
+            wheel.perform($0, calendar: utc)
+        }
+
+        #Testing::expect(end == day(2023, 11, 30))
+        // One drag reaches the last date, and three more leave the wheel where it is.
+        #Testing::expect(wheel.moves.count == 4)
+    }
+
+    @Test
+    func dayWheelThatShowsNoDateIsLeftAlone() {
+        var moves = 0
+
+        let end = dayWheel().turn(
+            from: day(2023, 11, 14), to: day(2024, 2, 29), reach: .init(above: 650, below: 100)
+        ) { _ in
+            nil
+        } perform: { _ in
+            moves += 1
+        }
+
+        #Testing::expect(end == day(2023, 11, 14))
+        #Testing::expect(moves == 1)
     }
 }

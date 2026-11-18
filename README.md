@@ -923,17 +923,21 @@ and close them again.
 | `wheel` | Yes | Yes |
 
 - **The hour is from 0 to 23**, whether or not the picker shows AM and PM.
-- **The month and AM or PM are found by name**, in the language of the device. If the
-  test launches the app in another language, pass it:
-  `setDate(year: 2026, month: 3, day: 9, locale: Locale(identifier: "fr"))`.
+- **The month and AM or PM are found by name**, in the locale the test launched the
+  app in: the region of `.locale(_:)` and the language of `.language(_:)`, and those
+  of the device where the test chose none. An app only shows a language that it is
+  localised for, so if its pickers are in another, pass it:
+  `setDate(year: 2026, month: 3, day: 9, locale: Locale(identifier: "en_FR"))`.
 - **A date outside the picker's range** fails, because its day cannot be selected.
 - **A `wheel` picker that shows a date and a time** has one wheel for the day, such as
-  "Tue, Nov 14", in place of a month, a day and a year. `setDate` turns it in steps of
-  up to 45 days, so the app is given each date on the way to one that is further off.
-  The wheel shows no year, so the picker is taken to be on the nearest date to the
-  one asked for that reads the same. That is right for a date within two years of the
-  picker's own. XCTest can only turn this wheel when the app runs in the language and
-  region of the device, so not in a test that uses `.locale(_:)` or `.language(_:)`.
+  "Tue, Nov 14", in place of a month, a day and a year. `setDate` turns it with a
+  finger, by dragging it and tapping its rows, because XCTest cannot turn it to a
+  value in every region. A date that is far off takes several drags, so the app is
+  given each date on the way, and it takes longer: about a second for every seven
+  days when there is room to drag, and more when the wheel is next to the edge of
+  the screen that it is dragged towards. The wheel shows no year, so the picker is
+  taken to be on the nearest date to the one asked for that reads the same. That is
+  right for a date within two years of the picker's own.
 
 ### Scrolling to an element
 

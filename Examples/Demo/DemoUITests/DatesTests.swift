@@ -92,4 +92,30 @@ final class DatesTests: XCTestCase {
         try picker.setTime(hour: 16, minute: 45)
         #expect(app[DatesID.dateAndTimeWheel].label == "2023-11-14 16:45")
     }
+
+    // The pickers are in the locale of the app, which the calls take from the trait.
+    @UITest(traits: .locale("en_GB"))
+    func setsADateOnWheelsInAnotherRegion(app: XCUIApplication) throws {
+        let picker = try app[DatesID.dateAndTimeWheelPicker].scrollIntoView()
+
+        try picker.setDate(year: 2023, month: 12, day: 25)
+
+        #expect(app[DatesID.dateAndTimeWheel].label == "2023-12-25 22:13")
+    }
+
+    // The demo is in English only, so its pickers keep their English words here.
+    @UITest(traits: .locale("fr_FR"))
+    func setsADateAndATimeInTheRegionOfAnotherLanguage(app: XCUIApplication) throws {
+        try app[DatesID.datePicker].setDate(year: 2026, month: 3, day: 9)
+        #expect(app[DatesID.date].label == "2026-03-09")
+
+        let wheels = try app[DatesID.dateWheelPicker].scrollIntoView()
+        try wheels.setDate(year: 2024, month: 2, day: 29)
+        #expect(app[DatesID.dateWheel].label == "2024-02-29")
+
+        let picker = try app[DatesID.dateAndTimeWheelPicker].scrollIntoView()
+        try picker.setDate(year: 2023, month: 11, day: 3)
+        try picker.setTime(hour: 7, minute: 5)
+        #expect(app[DatesID.dateAndTimeWheel].label == "2023-11-03 07:05")
+    }
 }

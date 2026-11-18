@@ -2,6 +2,43 @@ import Foundation
 
 /// The parts of setting a date picker that do not need a running app.
 enum DatePickerValues {
+    /// Returns the locale that an app shows its date pickers in, from the arguments it
+    /// is launched with.
+    ///
+    /// A picker takes its region and its formats from the app's locale, which is the
+    /// value after the last `-AppleLocale`, and its words from the app's language,
+    /// which is the first value after the last `-AppleLanguages`. These are what the
+    /// `locale(_:)` and `language(_:)` traits add. Whichever the arguments do not
+    /// choose is that of the device.
+    ///
+    /// An app only shows a language that it is localised for, so the language can be
+    /// wrong for an app that is not.
+    ///
+    /// - Parameters:
+    ///   - launchArguments: The arguments the app is launched with.
+    ///   - device: The locale of the device.
+    static func locale(launchArguments: [String], device: Locale = .current) -> Locale {
+        func value(after flag: String) -> String? {
+            guard let index = launchArguments.lastIndex(of: flag), launchArguments.indices.contains(index + 1)
+            else { return nil }
+            return launchArguments[index + 1]
+        }
+        let region = value(after: "-AppleLocale").map(Locale.init(identifier:))
+        let language = value(after: "-AppleLanguages")
+            .flatMap { $0.split(separator: ",").first }
+            .map { $0.filter { $0.isLetter || $0.isNumber || $0 == "-" || $0 == "_" } }
+            .flatMap { $0.isEmpty ? nil : Locale(identifier: $0) }
+        guard region != nil || language != nil else { return device }
+
+        // The language is taken without its region, which would replace the locale's.
+        var components = Locale.Components(locale: region ?? device)
+        let words = (language ?? device).language
+        components.languageComponents = Locale.Language.Components(
+            languageCode: words.languageCode, script: words.script, region: nil)
+        components.region = (region ?? device).region
+        return Locale(components: components)
+    }
+
     /// Returns the name of a month as the month wheel of a date picker shows it.
     ///
     /// - Parameters:
@@ -127,10 +164,6 @@ enum DatePickerValues {
         /// The date that the wheel shows as "Today".
         var today: Date
 
-        /// How far the wheel can be turned at once. It takes a day up to 49 days
-        /// either side of the one it is on.
-        static let longestTurn = 45
-
         /// How far from the date asked for the wheel's own date is looked for. A day
         /// of the month falls on the same day of the week again after five years or
         /// more, so there is one match at most within this many days either side.
@@ -185,21 +218,61 @@ enum DatePickerValues {
             return nil
         }
 
-        /// Returns the dates to turn the wheel to, in order, to get from one date to another.
-        func turns(from start: Date, to target: Date) -> [Date] {
-            let days = calendar.dateComponents([.day], from: start, to: target).day ?? 0
-            guard days != 0 else { return [] }
-            var turns: [Date] = []
-            var remaining = days
-            while remaining != 0 {
-                let step = max(-Self.longestTurn, min(Self.longestTurn, remaining))
-                remaining -= step
-                if let date = calendar.date(byAdding: .day, value: days - remaining, to: start) {
-                    turns.append(date)
-                }
-            }
-            return turns
+        /// Returns how many days after one date another is. It is negative if the
+        /// other date is earlier.
+        func days(from start: Date, to target: Date) -> Int {
+            let from = calendar.startOfDay(for: start)
+            let to = calendar.startOfDay(for: target)
+            return calendar.dateComponents([.day], from: from, to: to).day ?? 0
         }
+
+        /// Turns the wheel from one date to another with moves of a finger, reading
+        /// the wheel after each move to find out how far it went.
+        ///
+        /// A drag does not always turn the wheel by the number of rows it was meant
+        /// to, so the next move is worked out from where the wheel is, and the height
+        /// of a row is corrected from how far each drag turned it.
+        ///
+        /// - Parameters:
+        ///   - start: The date the wheel is on.
+        ///   - target: The date to turn it to.
+        ///   - reach: How far a finger can move from the middle of the wheel.
+        ///   - read: Returns the date the wheel is on, given the date it was meant
+        ///     to reach, or `nil` if what it shows is not a date.
+        ///   - perform: Makes a move on the wheel.
+        /// - Returns: The date the wheel ended on, which is `target` unless the wheel
+        ///   would not turn any further.
+        func turn(
+            from start: Date,
+            to target: Date,
+            reach: WheelReach,
+            read: (_ expected: Date) -> Date?,
+            perform: (WheelMove) -> Void
+        ) -> Date {
+            var reach = reach
+            var current = start
+            var stalls = 0
+            for _ in 0..<Self.mostMoves {
+                let remaining = days(from: current, to: target)
+                guard remaining != 0, let move = reach.move(by: remaining) else { break }
+                perform(move)
+                let expected = calendar.date(byAdding: .day, value: move.rows, to: current) ?? target
+                guard let landed = read(expected) else { break }
+                let turned = days(from: current, to: landed)
+                reach.learn(from: move, turned: turned)
+                stalls = turned == 0 ? stalls + 1 : 0
+                current = landed
+                if stalls == Self.mostStalls { break }
+            }
+            return current
+        }
+
+        /// How many moves are made before giving up on a wheel.
+        static let mostMoves = 80
+
+        /// How many moves in a row can leave the wheel where it was. A wheel that
+        /// does not turn is at the first or the last date its picker allows.
+        static let mostStalls = 3
 
         private func isToday(_ date: Date) -> Bool {
             calendar.isDate(date, inSameDayAs: today)
@@ -227,6 +300,72 @@ enum DatePickerValues {
             formatter.timeStyle = .none
             formatter.doesRelativeDateFormatting = true
             return formatter.string(from: .now)
+        }
+    }
+
+    /// One move of a finger that turns a wheel.
+    enum WheelMove: Equatable {
+        /// A tap on a row near the middle of the wheel, which turns the wheel to it.
+        /// The row is this many below the middle, or above it if negative.
+        case tap(rows: Int)
+
+        /// A slow drag from the middle of the wheel, this many points up the screen,
+        /// or down it if negative, meant to turn the wheel by a number of rows.
+        case drag(rows: Int, points: Double)
+
+        /// How many rows the move is meant to turn the wheel by. Later rows are positive.
+        var rows: Int {
+            switch self {
+            case .tap(let rows), .drag(let rows, _): rows
+            }
+        }
+    }
+
+    /// How far a finger can move from the middle of a wheel, and how far that turns it.
+    struct WheelReach: Equatable {
+        /// How far a finger can be dragged up the screen from the middle of the wheel, in points.
+        var above: Double
+
+        /// How far a finger can be dragged down the screen from the middle of the wheel, in points.
+        var below: Double
+
+        /// The height of a row of the wheel, in points.
+        var rowHeight: Double = 32
+
+        /// How many rows either side of the middle can be tapped.
+        static let rowsToTap = 2
+
+        /// The heights that a row is taken to be able to have.
+        static let rowHeights = 20.0...60.0
+
+        /// Returns the move that turns the wheel by a number of rows, or as near to
+        /// that as one move can.
+        ///
+        /// Later rows are below the middle, so they are reached by dragging up.
+        ///
+        /// - Parameter rows: How many rows to turn the wheel by. Later rows are positive.
+        /// - Returns: The move, or `nil` if there is nothing to turn.
+        func move(by rows: Int) -> WheelMove? {
+            guard rows != 0 else { return nil }
+            let direction = rows > 0 ? 1 : -1
+            let room = rows > 0 ? above : below
+            let withinReach = Int(room / rowHeight)
+            guard abs(rows) > Self.rowsToTap, withinReach > Self.rowsToTap else {
+                return .tap(rows: direction * min(abs(rows), Self.rowsToTap))
+            }
+            let dragged = min(abs(rows), withinReach)
+            return .drag(rows: direction * dragged, points: Double(direction * dragged) * rowHeight)
+        }
+
+        /// Corrects the height of a row from how far a drag turned the wheel.
+        ///
+        /// - Parameters:
+        ///   - move: The move that was made.
+        ///   - turned: How many rows the wheel turned by.
+        mutating func learn(from move: WheelMove, turned: Int) {
+            guard case .drag(let rows, _) = move, turned != 0, (turned > 0) == (rows > 0) else { return }
+            let height = rowHeight * Double(abs(rows)) / Double(abs(turned))
+            rowHeight = min(max(height, Self.rowHeights.lowerBound), Self.rowHeights.upperBound)
         }
     }
 }

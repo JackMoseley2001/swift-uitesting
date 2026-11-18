@@ -19,22 +19,25 @@ extension UITestElement where Kind == ElementKinds.DatePicker {
     /// for the year, the month and the day.
     ///
     /// A picker with the `wheel` style that shows a time as well has a single wheel
-    /// for the day, which shows it as "Tue, Nov 14". It takes a day up to 49 days from
-    /// the one it is on, so it is turned in several steps to a date that is further
-    /// away, and the app is given each date on the way. The wheel does not show the
-    /// year, so the picker is taken to be on the date nearest to the one asked for
-    /// that reads the same. That is right for a date within two years of the picker's
-    /// own, and can be wrong for one further away.
-    /// XCTest can only turn that wheel when the app runs in the language and region of
-    /// the device.
+    /// for the day, which shows it as "Tue, Nov 14". That wheel is turned with a
+    /// finger, by dragging it and tapping its rows, because XCTest cannot turn it to a
+    /// value in every region. A date that is far away takes several drags, and the app
+    /// is given each date on the way. A drag goes as far as the edge of the screen, so
+    /// the wheel turns faster when it is not next to the edge it is dragged towards.
+    /// The wheel does not show the year, so the picker is taken to be on the date
+    /// nearest to the one asked for that reads the same. That is right for a date
+    /// within two years of the picker's own, and can be wrong for one further away.
     ///
     /// - Parameters:
     ///   - year: The year.
     ///   - month: The month, from 1 for January to 12.
     ///   - day: The day of the month.
-    ///   - locale: The language the picker is shown in, which is where the name of the
-    ///     month comes from. The default is the language of the device. Pass one if the
-    ///     test launches the app in another language.
+    ///   - locale: The language and region the picker is shown in, which is where the
+    ///     name of the month comes from. The default is the one the test launched the
+    ///     app in: the region of ``UITestTrait/locale(_:)`` and the language of
+    ///     ``UITestTrait/language(_:)``, and those of the device where the test chose
+    ///     none. Pass one if the app shows its pickers in another, as it does when
+    ///     the test chooses a language that the app is not localised for.
     ///   - timeout: How long to wait for the picker, and for its calendar to show. The
     ///     default is the test's ``UITestTrait/actionTimeout(_:)``.
     /// - Throws: ``RequirementFailedError`` if the picker is not ready in time, has
@@ -44,7 +47,7 @@ extension UITestElement where Kind == ElementKinds.DatePicker {
         year: Int,
         month: Int,
         day: Int,
-        locale: Locale = .current,
+        locale: Locale? = nil,
         within timeout: Duration? = nil,
         filePath: StaticString = #filePath,
         line: UInt = #line
@@ -54,6 +57,7 @@ extension UITestElement where Kind == ElementKinds.DatePicker {
         let summary = "Could not \(intent) \(reference.name)"
         let app = try owningApp(inOrderTo: intent, filePath: filePath, line: line)
         let popover = Self.popover(in: app)
+        let locale = locale ?? DatePickerValues.locale(launchArguments: app.launchArguments)
         try wait(toBe: .enabled, inOrderTo: intent, within: timeout, filePath: filePath, line: line)
         guard let monthName = DatePickerValues.monthName(month, locale: locale) else {
             try fail("\(summary): there is no month \(month)", filePath: filePath, line: line)
@@ -69,7 +73,8 @@ extension UITestElement where Kind == ElementKinds.DatePicker {
         let isInline = element.buttons[showYears].exists
         if !isInline, element.pickerWheels.count > 0 {
             try setDateOnWheels(
-                year: year, month: month, day: day, locale: locale, summary: summary, filePath: filePath, line: line)
+                in: app, year: year, month: month, day: day, locale: locale, summary: summary, filePath: filePath,
+                line: line)
             return
         }
         var calendar = element
@@ -143,8 +148,9 @@ extension UITestElement where Kind == ElementKinds.DatePicker {
     /// - Parameters:
     ///   - hour: The hour, from 0 to 23, whether or not the picker shows AM and PM.
     ///   - minute: The minute.
-    ///   - locale: The language the picker is shown in, which is where the names for AM
-    ///     and PM come from. The default is the language of the device.
+    ///   - locale: The language and region the picker is shown in, which is where the
+    ///     names for AM and PM come from. The default is the one the test launched the
+    ///     app in, as for ``setDate(year:month:day:locale:within:filePath:line:)``.
     ///   - timeout: How long to wait for the picker, and for its wheels to show. The
     ///     default is the test's ``UITestTrait/actionTimeout(_:)``.
     /// - Throws: ``RequirementFailedError`` if the picker is not ready in time, has no
@@ -153,7 +159,7 @@ extension UITestElement where Kind == ElementKinds.DatePicker {
     public func setTime(
         hour: Int,
         minute: Int,
-        locale: Locale = .current,
+        locale: Locale? = nil,
         within timeout: Duration? = nil,
         filePath: StaticString = #filePath,
         line: UInt = #line
@@ -163,6 +169,7 @@ extension UITestElement where Kind == ElementKinds.DatePicker {
         let summary = "Could not \(intent) \(reference.name)"
         let app = try owningApp(inOrderTo: intent, filePath: filePath, line: line)
         let popover = Self.popover(in: app)
+        let locale = locale ?? DatePickerValues.locale(launchArguments: app.launchArguments)
         try wait(toBe: .enabled, inOrderTo: intent, within: timeout, filePath: filePath, line: line)
 
         let polling = ExpectationPolling()
@@ -236,6 +243,7 @@ extension UITestElement where Kind == ElementKinds.DatePicker {
 
     /// Sets the date of a picker with the wheel style, which has its wheels inside it.
     private func setDateOnWheels(
+        in app: XCUIApplication,
         year: Int,
         month: Int,
         day: Int,
@@ -302,19 +310,48 @@ extension UITestElement where Kind == ElementKinds.DatePicker {
             )
         }
         let wheel = wheels.element(boundBy: 0)
-        for date in dayWheel.turns(from: shown, to: target) {
-            wheel.adjust(toPickerWheelValue: dayWheel.title(on: date))
-            let expected = dayWheel.value(on: date)
-            let isTurned = ExpectationPolling().wait(timeout: .seconds(2)) {
-                dayWheel.shows(values().first ?? "", on: date)
+        // XCTest's own call to turn a wheel cannot tell which value this wheel is on
+        // in some regions, and ends the test when it cannot. So the wheel is turned
+        // with a finger, as a person turns it.
+        let middle = wheel.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+        let screen = app.frame
+        let edge = 30.0
+        let reach = DatePickerValues.WheelReach(
+            above: max(0, wheel.frame.midY - screen.minY - edge),
+            below: max(0, screen.maxY - wheel.frame.midY - edge)
+        )
+        func value() -> String { "\(wheel.value ?? "")" }
+        func settledValue() -> String {
+            var last = value()
+            _ = ExpectationPolling(interval: .milliseconds(100)).wait(timeout: .seconds(3)) {
+                Thread.sleep(forTimeInterval: 0.1)
+                let next = value()
+                defer { last = next }
+                return next == last
             }
-            guard isTurned == .met else {
-                try fail(
-                    failure("the wheel for the day did not turn to \"\(expected)\""),
-                    filePath: filePath,
-                    line: line
+            return last
+        }
+        let end = dayWheel.turn(from: shown, to: target, reach: reach) { expected in
+            dayWheel.date(showing: settledValue(), nearestTo: expected)
+        } perform: { move in
+            switch move {
+            case .tap(let rows):
+                middle.withOffset(CGVector(dx: 0, dy: Double(rows) * reach.rowHeight)).tap()
+            case .drag(_, let points):
+                middle.press(
+                    forDuration: 0.05,
+                    thenDragTo: middle.withOffset(CGVector(dx: 0, dy: -points)),
+                    withVelocity: 400,
+                    thenHoldForDuration: 0.3
                 )
             }
+        }
+        guard dayWheel.days(from: end, to: target) == 0 else {
+            try fail(
+                failure("the wheel for the day did not turn to \"\(dayWheel.value(on: target))\""),
+                filePath: filePath,
+                line: line
+            )
         }
     }
 
