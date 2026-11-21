@@ -76,7 +76,7 @@ public protocol UITestTrait: Sendable {
     /// If this throws, the app is not launched and the test fails.
     ///
     /// This is called once, before the first launch. It is not called again by
-    /// ``UITestContext/relaunch(with:)``. In a test with the
+    /// ``UITestContext/relaunch(with:within:)``. In a test with the
     /// ``UITestTrait/manualLaunch`` trait, it is called before the test body.
     ///
     /// If this throws, `tearDown(_:)` is still called for this trait and for the

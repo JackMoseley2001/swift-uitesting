@@ -1484,7 +1484,7 @@ from an iOS one, and the library takes up the differences:
 | The title of a screen is in the navigation bar, and so is the button to go back. | The title is in the title bar of the window, and the button is in its toolbar. | `app.navigationTitle` and `app.goBack()` use whichever it is. |
 | A stepper reports its value as text. | It reports its value as a number. | `value` of a `Stepper` is the same text on both. |
 | Content is scrolled by a drag. | Content is scrolled by the scroll wheel. | `scrollIntoView()` turns the wheel on macOS. |
-| The app starts with nothing on screen from before. | The app opens the windows it had when it last ran. | The app is launched with `-ApplePersistenceIgnoreState YES`, and the test starts once the first window is there. |
+| The app starts with nothing on screen from before. | The app opens the windows it had when it last ran. | The app is launched with `-ApplePersistenceIgnoreState YES`, and the test starts once the first window is there. The wait is as long as the test's `.actionTimeout`, or the `within:` of `relaunch` and `open`. |
 
 ```swift
 enum SettingsID: ElementIDs {

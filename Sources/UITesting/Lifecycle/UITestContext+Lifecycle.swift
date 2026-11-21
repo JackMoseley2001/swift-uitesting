@@ -53,8 +53,8 @@ extension UITestContext {
     /// Ends the app.
     ///
     /// Use this to check what the app does when it starts from nothing, such as
-    /// opening a link with ``open(_:)``. To end the app and launch it again in one
-    /// step, call ``relaunch(with:)``.
+    /// opening a link with ``open(_:within:)``. To end the app and launch it again in one
+    /// step, call ``relaunch(with:within:)``.
     public func terminate() {
         app.terminate()
     }
@@ -78,14 +78,18 @@ extension UITestContext {
     /// it. That is your app for a URL scheme only it declares, and for a universal
     /// link whose domain is associated with it on the device that runs the test.
     ///
-    /// - Parameter url: The link to open.
+    /// - Parameters:
+    ///   - url: The link to open.
+    ///   - timeout: On macOS, how long to wait for the app's first window, which is
+    ///     not on the screen yet when a link has launched the app. The default is the test's
+    ///     ``UITestTrait/actionTimeout(_:)``. The other platforms do not wait.
     @available(iOS 16.4, macOS 13.3, tvOS 16.4, watchOS 9.4, *)
-    public func open(_ url: URL) {
+    public func open(_ url: URL, within timeout: Duration? = nil) {
         switch LinkOpening(appState: app.runState) {
         case .throughTheSystem: XCUIDevice.shared.system.open(url)
         case .byLaunchingTheApp:
             app.open(url)
-            app.waitForFirstWindow()
+            app.waitForFirstWindow(within: timeout)
         }
     }
 
@@ -98,17 +102,24 @@ extension UITestContext {
     /// try context.relaunch(opening: URL(string: "shop://orders/42")!)
     /// ```
     ///
-    /// The traits are used in the same way as in ``relaunch(with:)``.
+    /// The traits are used in the same way as in ``relaunch(with:within:)``.
     ///
     /// - Parameters:
     ///   - url: The link the app is launched with.
     ///   - traits: Traits to apply on top of the test's traits for this launch.
+    ///   - timeout: On macOS, how long to wait for the app's first window, which is
+    ///     not on the screen yet when the app has launched. The default is the test's
+    ///     ``UITestTrait/actionTimeout(_:)``. The other platforms do not wait.
     /// - Throws: An error thrown by a trait while it configures the launch.
     @available(iOS 16.4, macOS 13.3, tvOS 16.4, watchOS 9.4, *)
-    public func relaunch(opening url: URL, with traits: any UITestTrait...) throws {
+    public func relaunch(
+        opening url: URL,
+        with traits: any UITestTrait...,
+        within timeout: Duration? = nil
+    ) throws {
         app.configure(with: try launch.applying(traits))
         app.open(url)
-        app.waitForFirstWindow()
+        app.waitForFirstWindow(within: timeout)
     }
 }
 

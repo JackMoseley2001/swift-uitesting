@@ -14,7 +14,7 @@ public struct UITestContext {
 
     /// The configuration that the test's traits produced, which the app is launched with.
     ///
-    /// ``relaunch(with:)`` does not change this value.
+    /// ``relaunch(with:within:)`` does not change this value.
     public let launch: LaunchConfiguration
 
     /// Launches the app again, ending it first if it is running.
@@ -53,12 +53,16 @@ public struct UITestContext {
     /// In a test with the ``UITestTrait/manualLaunch`` trait, this can also be the
     /// call that launches the app for the first time.
     ///
-    /// - Parameter traits: Traits to apply on top of the test's traits for this launch.
+    /// - Parameters:
+    ///   - traits: Traits to apply on top of the test's traits for this launch.
+    ///   - timeout: On macOS, how long to wait for the app's first window, which is
+    ///     not on the screen yet when the app has launched. The default is the test's
+    ///     ``UITestTrait/actionTimeout(_:)``. The other platforms do not wait.
     /// - Throws: An error thrown by a trait while it configures the launch.
-    public func relaunch(with traits: any UITestTrait...) throws {
+    public func relaunch(with traits: any UITestTrait..., within timeout: Duration? = nil) throws {
         app.configure(with: try launch.applying(traits))
         app.launch()
-        app.waitForFirstWindow()
+        app.waitForFirstWindow(within: timeout)
     }
 }
 
@@ -66,11 +70,14 @@ extension XCUIApplication {
     /// Waits for the app's first window after a launch, on macOS.
     ///
     /// A Mac app is launched before its window is on the screen, so a test that reads
-    /// an element at once would find nothing. An app that opens no window is not
-    /// waited for long.
-    func waitForFirstWindow() {
+    /// an element at once would find nothing. An app that opens no window is waited
+    /// for until the time is up, and the test carries on.
+    ///
+    /// - Parameter timeout: How long to wait. The default is the test's
+    ///   ``UITestTrait/actionTimeout(_:)``.
+    func waitForFirstWindow(within timeout: Duration? = nil) {
         #if os(macOS)
-        _ = windows.firstMatch.waitForExistence(timeout: 5)
+        _ = windows.firstMatch.waitForExistence(timeout: (timeout ?? ActionTimeout.current).timeInterval)
         #endif
     }
 

@@ -69,5 +69,5 @@ Things to know:
 
 ### Links
 
-- ``UITestContext/open(_:)``
-- ``UITestContext/relaunch(opening:with:)``
+- ``UITestContext/open(_:within:)``
+- ``UITestContext/relaunch(opening:with:within:)``
