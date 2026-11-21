@@ -21,20 +21,24 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # One version of iOS from each major version that a runner image has a simulator
-        # for, each with an Xcode from the same image. No image has an iOS 16 or iOS 17
-        # simulator, and downloading one takes several gigabytes on every run.
+        # One version of iOS from each major version that a runner image has simulators
+        # for, with an Xcode and an iPhone that the same image has for it. No image has
+        # an iOS 16 or iOS 17 simulator.
         include:
           - ios: "18.5"
             xcode: "16.4"
             runner: macos-15
+            destination: platform=iOS Simulator,name=iPhone 16,OS=18.5
           - ios: "26.5"
             xcode: "26.6"
             runner: macos-26
+            destination: platform=iOS Simulator,name=iPhone 17,OS=26.5
           - ios: "27"
             xcode: "27.1"
             runner: xcode-27
             destination: platform=iOS Simulator,name=iPhone 17
+    env:
+      DESTINATION: ${{ matrix.destination }}
     steps:
       - name: Check out
         uses: actions/checkout@v7
@@ -45,21 +49,7 @@ jobs:
       - name: Show toolchain
         run: xcodebuild -version
 
-      - name: Choose a simulator
-        id: simulator
-        env:
-          DESTINATION: ${{ matrix.destination }}
-        run: |
-          if [ -z "$DESTINATION" ]; then
-            simulator="$(scripts/make-simulator.sh "${{ matrix.ios }}")"
-            DESTINATION="platform=iOS Simulator,id=$simulator"
-          fi
-          echo "Testing on $DESTINATION"
-          echo "destination=$DESTINATION" >> "$GITHUB_OUTPUT"
-
       - name: Build
-        env:
-          DESTINATION: ${{ steps.simulator.outputs.destination }}
         run: |
           set -o pipefail
           xcodebuild build-for-testing \
@@ -70,8 +60,6 @@ jobs:
             | xcbeautify --renderer github-actions
 
       - name: Run UI tests
-        env:
-          DESTINATION: ${{ steps.simulator.outputs.destination }}
         run: |
           set -o pipefail
           # A simulator on a freshly started runner is sometimes not ready when the tests
