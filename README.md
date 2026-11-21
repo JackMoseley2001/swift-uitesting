@@ -1434,6 +1434,28 @@ catalog. In Xcode, choose Product > Build Documentation. The catalogs have:
   the app and waiting for it, talking to the app during a test, and writing a custom
   trait.
 
+The Documentation workflow builds both catalogs into one website, with a first page
+that lists the two libraries and the tutorials, and publishes it to GitHub Pages when
+`main` changes. To build the same site on a Mac:
+
+```bash
+Scripts/build-docs.sh
+```
+
+The site is written to `.build/documentation/site`. It expects to be served under
+`/swift-uitesting`, as it is on GitHub Pages. For a copy to look at locally, build it
+for the root of a server and serve it:
+
+```bash
+HOSTING_BASE_PATH="" Scripts/build-docs.sh
+```
+
+```bash
+python3 -m http.server --directory .build/documentation/site
+```
+
+Then open `http://localhost:8000/`.
+
 ## Developing the package
 
 Run the package's tests on a Mac with:
@@ -1449,4 +1471,5 @@ The `UITestingTests` target needs Swift 6.3 or later, because its files import b
 `Testing` and `UITesting`. The libraries and the other test targets build with Swift 6.0.
 
 Two workflows run on every pull request: one runs the package's tests, and the other
-builds the demo and runs its UI tests on a simulator.
+builds the demo and runs its UI tests on a simulator. A third builds the documentation
+website and publishes it when `main` changes.
