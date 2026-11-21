@@ -13,12 +13,23 @@ struct PermissionView: View {
 
             Button("Ask for the microphone") {
                 Task {
-                    let isAllowed = await AVAudioApplication.requestRecordPermission()
-                    status = isAllowed ? "Allowed" : "Denied"
+                    status = await isMicrophoneAllowed() ? "Allowed" : "Denied"
                 }
             }
             .accessibilityIdentifier(PermissionID.askButton)
         }
         .padding()
+    }
+}
+
+/// Asks for the microphone, which shows the system's alert the first time.
+private func isMicrophoneAllowed() async -> Bool {
+    if #available(iOS 17.0, *) {
+        return await AVAudioApplication.requestRecordPermission()
+    }
+    return await withCheckedContinuation { continuation in
+        AVAudioSession.sharedInstance().requestRecordPermission { isAllowed in
+            continuation.resume(returning: isAllowed)
+        }
     }
 }

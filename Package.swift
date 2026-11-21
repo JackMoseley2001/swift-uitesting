@@ -47,10 +47,6 @@ let package = Package(
             dependencies: ["UITestingCore"]
         ),
         .testTarget(
-            name: "UITestingTests",
-            dependencies: ["UITesting"]
-        ),
-        .testTarget(
             name: "UITestingMacrosTests",
             dependencies: [
                 "UITestingMacros",

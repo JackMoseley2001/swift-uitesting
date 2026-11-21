@@ -3,9 +3,11 @@ name: Demo UI Tests
 on:
   pull_request:
     types: [opened, synchronize, reopened]
+  push:
+    branches: [main]
 
 concurrency:
-  group: demo-${{ github.event.pull_request.number }}
+  group: demo-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -13,12 +15,36 @@ permissions:
 
 jobs:
   ui-test:
-    name: Demo UI tests (Xcode 27)
-    runs-on: xcode-27
-    timeout-minutes: 15
+    name: Demo UI tests (iOS ${{ matrix.ios }})
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        # One version of iOS from each major version that a runner image has simulators
+        # for, with an Xcode and an iPhone that the same image has for it. No image has
+        # an iOS 16 or iOS 17 simulator.
+        include:
+          - ios: "18.5"
+            xcode: "16.4"
+            runner: macos-15
+            destination: platform=iOS Simulator,name=iPhone 16,OS=18.5
+          - ios: "26.5"
+            xcode: "26.6"
+            runner: macos-26
+            destination: platform=iOS Simulator,name=iPhone 17,OS=26.5
+          - ios: "27"
+            xcode: "27.1"
+            runner: xcode-27
+            destination: platform=iOS Simulator,name=iPhone 17
+    env:
+      DESTINATION: ${{ matrix.destination }}
     steps:
       - name: Check out
         uses: actions/checkout@v7
+
+      - name: Select Xcode
+        run: xcodes select "${{ matrix.xcode }}"
 
       - name: Show toolchain
         run: xcodebuild -version
@@ -29,7 +55,7 @@ jobs:
           xcodebuild build-for-testing \
             -project Examples/Demo/Demo.xcodeproj \
             -scheme Demo \
-            -destination "platform=iOS Simulator,name=iPhone 17" \
+            -destination "$DESTINATION" \
             -skipMacroValidation \
             | xcbeautify --renderer github-actions
 
@@ -42,7 +68,7 @@ jobs:
             if xcodebuild test-without-building \
               -project Examples/Demo/Demo.xcodeproj \
               -scheme Demo \
-              -destination "platform=iOS Simulator,name=iPhone 17" \
+              -destination "$DESTINATION" \
               -skipMacroValidation \
               2>&1 | tee xcodebuild.log | xcbeautify --renderer github-actions; then
               exit 0

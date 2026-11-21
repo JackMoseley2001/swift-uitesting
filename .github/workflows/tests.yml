@@ -3,9 +3,11 @@ name: Tests
 on:
   pull_request:
     types: [opened, synchronize, reopened]
+  push:
+    branches: [main]
 
 concurrency:
-  group: tests-${{ github.event.pull_request.number }}
+  group: tests-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -13,11 +15,26 @@ permissions:
 
 jobs:
   test:
-    name: Test (Xcode 27)
-    runs-on: xcode-27
+    name: Test (Xcode ${{ matrix.xcode }})
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        # The latest Xcode of each major version that the package supports.
+        include:
+          - xcode: "16.4"
+            runner: macos-15
+          - xcode: "26.6"
+            runner: macos-26
+          - xcode: "27.2"
+            runner: xcode-27
     steps:
       - name: Check out
         uses: actions/checkout@v7
+
+      - name: Select Xcode
+        run: xcodes select "${{ matrix.xcode }}"
 
       - name: Show toolchain
         run: |
@@ -25,4 +42,12 @@ jobs:
           swift --version
 
       - name: Run tests
-        run: swift test --disable-experimental-prebuilts
+        run: |
+          # With the prebuilt swift-syntax that SwiftPM downloads for macros, the macro
+          # test bundle fails to link. SwiftPM has had prebuilts, and the option that
+          # turns them off, since Swift 6.1.
+          options=()
+          if swift test --help | grep -q -- "--disable-experimental-prebuilts"; then
+            options+=(--disable-experimental-prebuilts)
+          fi
+          swift test ${options[@]+"${options[@]}"}
