@@ -1,5 +1,11 @@
 # swift-uitesting
 
+[![Tests](https://github.com/JackMoseley2001/swift-uitesting/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/JackMoseley2001/swift-uitesting/actions/workflows/tests.yml?query=branch%3Amain)
+[![Demo UI Tests](https://github.com/JackMoseley2001/swift-uitesting/actions/workflows/demo.yml/badge.svg?branch=main)](https://github.com/JackMoseley2001/swift-uitesting/actions/workflows/demo.yml?query=branch%3Amain)
+![Swift 6.0 or later](https://img.shields.io/badge/Swift-6.0%2B-F05138?logo=swift&logoColor=white)
+![Xcode 16 or later](https://img.shields.io/badge/Xcode-16%2B-147EFB?logo=xcode&logoColor=white)
+![Platforms: iOS 16, macOS 13, tvOS 16, watchOS 9, visionOS 1](https://img.shields.io/badge/platforms-iOS%2016%20%7C%20macOS%2013%20%7C%20tvOS%2016%20%7C%20watchOS%209%20%7C%20visionOS%201-lightgrey)
+
 Macros and traits that make XCUITest suites read like Swift Testing.
 
 ```swift
@@ -41,8 +47,19 @@ This is pre-release software. There is no tagged version yet, and the API may ch
 - Swift 6.0 or later (Xcode 16 or later).
 - iOS 16, macOS 13, tvOS 16, watchOS 9 or visionOS 1.
 
-The package is built and tested in CI with Xcode 27, and its UI tests run on an iOS
-simulator. Other platforms and older versions of Xcode are not tested.
+CI covers that range on every pull request and on `main`:
+
+| What runs | With |
+|---|---|
+| The package's tests | Xcode 16.0, 16.4, 26.0, 26.6 and 27.1 |
+| The demo's UI tests, on an iPhone simulator | iOS 16.4, 17.5, 18.5, 26.5 and 27 |
+
+The first and last Xcode of each major version are used. Xcode 27 only runs simulators
+from iOS 17, so iOS 16.4, 17.5 and 18.5 are tested with Xcode 16.4. With Swift 6.0 to
+6.2 (Xcode 16.0 to 26.3), the package's tests leave out one target that needs Swift 6.3.
+
+Platforms other than iOS are built for but not tested, and the features that are marked
+as needing iOS 16.4 are not available on iOS 16.0 to 16.3.
 
 ## Installation
 
