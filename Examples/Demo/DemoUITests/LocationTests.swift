@@ -1,6 +1,8 @@
 import UITesting
 import XCTest
 
+// The test allows the location by answering the alert of the system, which the library does on iOS only.
+#if os(iOS)
 @UITestSuite(
     traits: .example(.location),
     .systemAlerts(.button("Allow While Using App"), for: .location),
@@ -21,3 +23,4 @@ final class LocationTests: XCTestCase {
         #expect(app[LocationID.coordinates].label == "-33.8688, 151.2093", within: .seconds(10))
     }
 }
+#endif

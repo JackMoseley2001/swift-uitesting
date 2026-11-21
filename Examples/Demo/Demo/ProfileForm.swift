@@ -27,7 +27,7 @@ struct ProfileForm: View {
 
                 TextEditor(text: $notes)
                     .frame(height: 80)
-                    .border(.separator)
+                    .border(.quaternary)
                     .autocorrectionDisabled()
                     .accessibilityIdentifier(ProfileID.notesField)
 

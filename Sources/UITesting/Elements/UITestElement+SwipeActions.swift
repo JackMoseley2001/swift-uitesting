@@ -139,7 +139,7 @@ extension UITestElement {
                 line: line
             )
         }
-        action.tap()
+        action.tapOrClick()
     }
 }
 #endif

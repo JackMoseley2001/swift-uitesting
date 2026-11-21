@@ -3,6 +3,8 @@ import XCTest
 
 @UITestSuite(traits: .example(.lifecycle), .animationsDisabled)
 final class LifecycleTests: XCTestCase {
+    // The library sends the app to the background on iOS only.
+    #if os(iOS)
     @UITest
     func appKeepsRunningInTheBackground(context: UITestContext) throws {
         let app = context.app
@@ -13,7 +15,10 @@ final class LifecycleTests: XCTestCase {
 
         #expect(app[LifecycleID.backgroundCount].label == "1")
     }
+    #endif
 
+    // The library sends the app to the background on iOS only.
+    #if os(iOS)
     @UITest
     func terminatedAppStartsAgainWithTheTestsTraits(context: UITestContext) throws {
         let app = context.app
@@ -29,7 +34,10 @@ final class LifecycleTests: XCTestCase {
         // showing because it started with the suite's example.
         #expect(app[LifecycleID.backgroundCount].label == "0")
     }
+    #endif
 
+    // The library sends the app to the background on iOS only.
+    #if os(iOS)
     @UITest
     func runningAppReceivesALink(context: UITestContext) throws {
         let app = context.app
@@ -40,6 +48,7 @@ final class LifecycleTests: XCTestCase {
         #expect(app[LifecycleID.openedLink].label == "uitestingdemo://orders/42")
         #expect(app[LifecycleID.backgroundCount].label == "1")
     }
+    #endif
 
     @UITest
     func linkLaunchesAnAppThatIsNotRunning(context: UITestContext) {
@@ -51,6 +60,8 @@ final class LifecycleTests: XCTestCase {
         #expect(app[LifecycleID.openedLink].label == "uitestingdemo://orders/7")
     }
 
+    // The library sends the app to the background on iOS only.
+    #if os(iOS)
     @UITest
     func relaunchingWithALinkStartsTheAppAgain(context: UITestContext) throws {
         let app = context.app
@@ -63,4 +74,5 @@ final class LifecycleTests: XCTestCase {
         #expect(app[LifecycleID.openedLink].label == "uitestingdemo://orders/3")
         #expect(app[LifecycleID.backgroundCount].label == "0")
     }
+    #endif
 }

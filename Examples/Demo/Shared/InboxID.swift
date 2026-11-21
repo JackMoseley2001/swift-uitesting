@@ -6,7 +6,7 @@ import UITestingCore
 /// only ever found one at a time, so a function is enough for them.
 enum InboxID: ElementIDs {
     static var lastAction: StaticText { element() }
-    static var list: CollectionView { element() }
+    static var list: List { element() }
     static var row: StaticText.Family<Int> { family() }
     static func deleteButton(_ id: Int) -> Button { element(id) }
 }

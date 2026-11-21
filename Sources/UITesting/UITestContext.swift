@@ -58,13 +58,32 @@ public struct UITestContext {
     public func relaunch(with traits: any UITestTrait...) throws {
         app.configure(with: try launch.applying(traits))
         app.launch()
+        app.waitForFirstWindow()
     }
 }
 
 extension XCUIApplication {
+    /// Waits for the app's first window after a launch, on macOS.
+    ///
+    /// A Mac app is launched before its window is on the screen, so a test that reads
+    /// an element at once would find nothing. An app that opens no window is not
+    /// waited for long.
+    func waitForFirstWindow() {
+        #if os(macOS)
+        _ = windows.firstMatch.waitForExistence(timeout: 5)
+        #endif
+    }
+
     /// Sets the arguments and environment that the app is launched with next.
     func configure(with launch: LaunchConfiguration) {
         launchArguments = launch.arguments
+        #if os(macOS)
+        // A Mac app opens the windows it had when it last ran. An app that a test ended
+        // can fail to open any, and a test should start from the same place every time.
+        // This goes first, because after an argument of the test's that starts with a
+        // hyphen, the system would read it as that argument's value.
+        launchArguments = ["-ApplePersistenceIgnoreState", "YES"] + launchArguments
+        #endif
         launchEnvironment = launch.environment
     }
 }

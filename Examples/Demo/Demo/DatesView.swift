@@ -29,6 +29,8 @@ struct DatesView: View {
                 Text("\(Self.day(dateAndTime)) \(Self.time(dateAndTime))")
                     .accessibilityIdentifier(DatesID.dateAndTime)
 
+                // Only iOS has date pickers with wheels.
+                #if os(iOS)
                 DatePicker("Time", selection: $timeWheel, displayedComponents: [.hourAndMinute])
                     .datePickerStyle(.wheel)
                     .labelsHidden()
@@ -36,6 +38,7 @@ struct DatesView: View {
                     .accessibilityIdentifier(DatesID.timeWheelPicker)
                 Text(Self.time(timeWheel))
                     .accessibilityIdentifier(DatesID.timeWheel)
+                #endif
 
                 DatePicker("Calendar", selection: $calendar, displayedComponents: [.date])
                     .datePickerStyle(.graphical)
@@ -43,6 +46,7 @@ struct DatesView: View {
                 Text(Self.day(calendar))
                     .accessibilityIdentifier(DatesID.calendar)
 
+                #if os(iOS)
                 DatePicker("Date", selection: $dateWheel, displayedComponents: [.date])
                     .datePickerStyle(.wheel)
                     .labelsHidden()
@@ -58,6 +62,7 @@ struct DatesView: View {
                     .accessibilityIdentifier(DatesID.dateAndTimeWheelPicker)
                 Text("\(Self.day(dateAndTimeWheel)) \(Self.time(dateAndTimeWheel))")
                     .accessibilityIdentifier(DatesID.dateAndTimeWheel)
+                #endif
             }
             .font(.footnote)
             .padding()

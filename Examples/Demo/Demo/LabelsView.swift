@@ -17,7 +17,9 @@ struct LabelsView: View {
 
                 TextField("Email", text: $email)
                     .textFieldStyle(.roundedBorder)
+                    #if os(iOS)
                     .textInputAutocapitalization(.never)
+                    #endif
                     .autocorrectionDisabled()
                     // The label is what a test finds the field by. It is set here so that
                     // it does not depend on how SwiftUI describes a field that shows

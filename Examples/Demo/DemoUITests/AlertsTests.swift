@@ -45,6 +45,8 @@ final class AlertsTests: XCTestCase {
         #expect(app[AlertsID.outcome].label == "Discarded")
     }
 
+    // A dialog closes when tapped outside only where it is shown as a popover, which is not on macOS.
+    #if !os(macOS)
     @UITest
     func dismissesADialog(app: XCUIApplication) throws {
         try app[AlertsID.shareButton].tap()
@@ -54,4 +56,5 @@ final class AlertsTests: XCTestCase {
         #expect(!app.dialog.isShowing)
         #expect(app[AlertsID.outcome].label == "Not shared", within: .seconds(2))
     }
+    #endif
 }

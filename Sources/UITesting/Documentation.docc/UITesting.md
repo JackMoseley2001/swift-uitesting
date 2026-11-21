@@ -72,6 +72,7 @@ a first suite and a trait of your own step by step.
 - <doc:EnteringText>
 - <doc:Controls>
 - <doc:ScrollingAndSwiping>
+- <doc:TestingAMacApp>
 
 ### Alerts
 

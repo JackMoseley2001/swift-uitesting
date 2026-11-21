@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   ui-test:
-    name: Demo UI tests (iOS ${{ matrix.ios }})
+    name: Demo UI tests (${{ matrix.platform }})
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 20
     strategy:
@@ -23,20 +23,24 @@ jobs:
       matrix:
         # One version of iOS from each major version that a runner image has simulators
         # for, with an Xcode and an iPhone that the same image has for it. No image has
-        # an iOS 16 or iOS 17 simulator.
+        # an iOS 16 or iOS 17 simulator. macOS is the Mac that the job runs on.
         include:
-          - ios: "18.5"
+          - platform: iOS 18.5
             xcode: "16.4"
             runner: macos-15
             destination: platform=iOS Simulator,name=iPhone 16,OS=18.5
-          - ios: "26.5"
+          - platform: iOS 26.5
             xcode: "26.6"
             runner: macos-26
             destination: platform=iOS Simulator,name=iPhone 17,OS=26.5
-          - ios: "27"
+          - platform: iOS 27
             xcode: "27.1"
             runner: xcode-27
             destination: platform=iOS Simulator,name=iPhone 17
+          - platform: macOS
+            xcode: "27.1"
+            runner: xcode-27
+            destination: platform=macOS
     env:
       DESTINATION: ${{ matrix.destination }}
     steps:

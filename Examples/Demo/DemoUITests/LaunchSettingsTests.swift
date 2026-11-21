@@ -34,15 +34,21 @@ final class LaunchSettingsTests: XCTestCase {
         #expect(app[LaunchSettingsID.betaFeatures].label == "on")
     }
 
+    // Only a device with iOS can be rotated.
+    #if os(iOS)
     @UITest(traits: .orientation(.landscapeLeft))
     func deviceIsRotated(app: XCUIApplication) {
         #expect(app[LaunchSettingsID.orientation].label == "landscape", within: .seconds(5))
     }
+    #endif
 
+    // A Mac app has no Dynamic Type.
+    #if !os(macOS)
     @UITest(traits: .dynamicTypeSize(.accessibility3))
     func dynamicTypeSizeIsPassedToTheApp(app: XCUIApplication) {
         #expect(app[LaunchSettingsID.textSize].label == "accessibility3")
     }
+    #endif
 
     @UITest(traits: .timeZone("Asia/Tokyo"))
     func timeZoneIsPassedToTheApp(app: XCUIApplication) {

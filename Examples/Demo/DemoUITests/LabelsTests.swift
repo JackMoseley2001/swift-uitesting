@@ -27,8 +27,8 @@ final class LabelsTests: XCTestCase {
 
     @UITest
     func looksInsideAnElementForOneOfTwoButtonsWithTheSameLabel(app: XCUIApplication) throws {
-        let home = app.element(ElementKinds.Other.self, labeled: "Home address")
-        let work = app.element(ElementKinds.Other.self, labeled: "Work address")
+        let home = app.element(Container.self, labeled: "Home address")
+        let work = app.element(Container.self, labeled: "Work address")
 
         try work.button("Remove").tap()
 
@@ -39,7 +39,7 @@ final class LabelsTests: XCTestCase {
 
     @UITest
     func aLabelThatOneButtonHasNeedsNoElementToLookIn(app: XCUIApplication) throws {
-        try app.element(ElementKinds.Other.self, labeled: "Home address").button("Remove").tap()
+        try app.element(Container.self, labeled: "Home address").button("Remove").tap()
         try app.staticText("1 Orchard Lane").waitToDisappear()
 
         try app.button("Remove").tap()
@@ -63,3 +63,10 @@ final class LabelsTests: XCTestCase {
         #expect(app.staticText("2 Station Road").exists)
     }
 }
+
+/// The kind of an element that only holds others, which XCTest reports as a group on macOS.
+#if os(macOS)
+private typealias Container = ElementKinds.Group
+#else
+private typealias Container = ElementKinds.Other
+#endif

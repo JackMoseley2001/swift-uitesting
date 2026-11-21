@@ -49,9 +49,9 @@ identifier, one for each element type that XCTest reports. Some common ones:
 | `Button` | Buttons, including a SwiftUI `NavigationLink`. |
 | `StaticText` | Text the user cannot edit: a SwiftUI `Text`, a `UILabel`. |
 | `TextField`, `SecureTextField`, `TextView` | A text field, a password field, and a multi-line editor. |
-| `Switch` | A SwiftUI `Toggle` on iOS. On macOS it is a `CheckBox`. |
-| `Slider`, `Stepper`, `Picker`, `DatePicker`, `SegmentedControl`, `MenuPicker` | Controls. A SwiftUI `Picker` is a different kind for each picker style: `Picker` for a wheel, `SegmentedControl`, and `MenuPicker` for a menu. |
-| `Image`, `Link`, `Cell`, `Table`, `CollectionView`, `ScrollView` | Content and containers. |
+| `Switch`, `CheckBox` | A SwiftUI `Toggle` is a `Switch` on iOS and a `CheckBox` on macOS. |
+| `Slider`, `Stepper`, `Picker`, `DatePicker`, `SegmentedControl`, `SegmentedPicker`, `MenuPicker` | Controls. A SwiftUI `Picker` is a different kind for each picker style: `Picker` for a wheel, `SegmentedPicker` for segments, and `MenuPicker` for a menu. `SegmentedPicker` and `MenuPicker` match what XCTest reports on iOS and on macOS, which differ. |
+| `Image`, `Link`, `Cell`, `Table`, `CollectionView`, `Outline`, `List`, `ScrollView` | Content and containers. A SwiftUI `List` is a `CollectionView` on recent versions of iOS and an `Outline` on macOS, and `List` matches whichever it is. |
 | `AnyElement` | An element of any kind. |
 
 The kind is what XCTest sees, which is not always what the SwiftUI view is called. If
@@ -194,4 +194,5 @@ only inside another element.
 - ``TextEntryKind``
 - ``SingleLineTextEntryKind``
 - ``SwitchKind``
+- ``SegmentedKind``
 - ``PickerWheelKind``

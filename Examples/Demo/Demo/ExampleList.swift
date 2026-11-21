@@ -22,7 +22,9 @@ struct ExampleList: View {
             .navigationDestination(for: Example.self) { example in
                 ExampleScreen(example: example)
                     .navigationTitle(example.title)
+                    #if os(iOS)
                     .navigationBarTitleDisplayMode(.inline)
+                    #endif
                     // A pushed screen is a hierarchy of its own, so it asks for itself.
                     .uiTestAnimationsDisabled()
             }

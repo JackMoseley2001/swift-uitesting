@@ -27,9 +27,12 @@ private func isMicrophoneAllowed() async -> Bool {
     if #available(iOS 17.0, *) {
         return await AVAudioApplication.requestRecordPermission()
     }
+    // Only iOS has an audio session, and only iOS is built for a version this old.
+    #if os(iOS)
     return await withCheckedContinuation { continuation in
         AVAudioSession.sharedInstance().requestRecordPermission { isAllowed in
             continuation.resume(returning: isAllowed)
         }
     }
+    #endif
 }

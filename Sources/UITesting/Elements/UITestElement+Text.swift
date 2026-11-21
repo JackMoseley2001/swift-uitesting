@@ -34,8 +34,8 @@ extension UITestElement where Kind: TextEntryKind {
         filePath: StaticString = #filePath,
         line: UInt = #line
     ) throws {
-        try wait(toBe: .enabled, inOrderTo: "type into", within: timeout, filePath: filePath, line: line)
-        element.tap()
+        try wait(toBe: readiness, inOrderTo: "type into", within: timeout, filePath: filePath, line: line)
+        element.tapOrClick()
         element.typeText(text)
     }
 
@@ -72,8 +72,8 @@ extension UITestElement where Kind: TextEntryKind {
         filePath: StaticString = #filePath,
         line: UInt = #line
     ) throws {
-        try wait(toBe: .enabled, inOrderTo: "clear", within: timeout, filePath: filePath, line: line)
-        element.tap()
+        try wait(toBe: readiness, inOrderTo: "clear", within: timeout, filePath: filePath, line: line)
+        element.tapOrClick()
 
         // The result is checked, so this does not depend on where the tap put the cursor.
         let isEmpty = TextEntry.clear(
@@ -88,13 +88,25 @@ extension UITestElement where Kind: TextEntryKind {
         }
     }
 
+    /// What the field has to be before it is typed into.
+    ///
+    /// On macOS a text view reports that it is disabled even when it can be typed
+    /// into, so there it only has to exist.
+    private var readiness: ElementRequirement {
+        #if os(macOS)
+        Kind.elementType == .textView ? .exists : .enabled
+        #else
+        .enabled
+        #endif
+    }
+
     /// Taps the trailing corner of the field, which puts the cursor after the last
     /// character in most fields.
     ///
     /// This is a guess about the field's layout, so it is only used by
     /// ``clear(within:filePath:line:)``, which checks what the field holds afterwards.
     private func tapAfterLastCharacter() {
-        element.coordinate(withNormalizedOffset: CGVector(dx: 0.98, dy: 0.9)).tap()
+        element.coordinate(withNormalizedOffset: CGVector(dx: 0.98, dy: 0.9)).tapOrClick()
     }
     #endif
 }
@@ -122,7 +134,7 @@ extension UITestElement where Kind: SingleLineTextEntryKind {
         line: UInt = #line
     ) throws {
         try wait(toBe: .enabled, inOrderTo: "submit", within: timeout, filePath: filePath, line: line)
-        element.tap()
+        element.tapOrClick()
         element.typeText(XCUIKeyboardKey.return.rawValue)
     }
 }

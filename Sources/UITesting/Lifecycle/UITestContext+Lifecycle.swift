@@ -83,7 +83,9 @@ extension UITestContext {
     public func open(_ url: URL) {
         switch LinkOpening(appState: app.runState) {
         case .throughTheSystem: XCUIDevice.shared.system.open(url)
-        case .byLaunchingTheApp: app.open(url)
+        case .byLaunchingTheApp:
+            app.open(url)
+            app.waitForFirstWindow()
         }
     }
 
@@ -106,6 +108,7 @@ extension UITestContext {
     public func relaunch(opening url: URL, with traits: any UITestTrait...) throws {
         app.configure(with: try launch.applying(traits))
         app.open(url)
+        app.waitForFirstWindow()
     }
 }
 

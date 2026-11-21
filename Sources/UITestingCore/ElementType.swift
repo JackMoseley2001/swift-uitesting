@@ -40,6 +40,9 @@ public enum ElementType: String, Hashable, Sendable, CaseIterable {
     /// A radio button.
     case radioButton
 
+    /// A group of radio buttons. On macOS, a segmented control is one.
+    case radioGroup
+
     /// A slider.
     case slider
 
@@ -84,6 +87,9 @@ public enum ElementType: String, Hashable, Sendable, CaseIterable {
 
     /// A table, such as a `UITableView`.
     case table
+
+    /// An outline. On macOS, a SwiftUI `List` is one.
+    case outline
 
     /// A collection view. On recent versions of iOS, a SwiftUI `List` is one.
     case collectionView

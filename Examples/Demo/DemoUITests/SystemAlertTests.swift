@@ -1,6 +1,8 @@
 import UITesting
 import XCTest
 
+// The library answers the alerts of the system on iOS only.
+#if os(iOS)
 @UITestSuite(traits: .example(.permission), .resetAuthorization(for: .microphone), .animationsDisabled)
 final class SystemAlertTests: XCTestCase {
     @UITest
@@ -103,3 +105,4 @@ final class SystemAlertTraitTests: XCTestCase {
         #expect(app[PermissionID.status].label == "Allowed", within: .seconds(5))
     }
 }
+#endif
