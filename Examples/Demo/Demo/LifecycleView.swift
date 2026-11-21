@@ -27,7 +27,8 @@ struct LifecycleView: View {
             .font(.footnote)
             .padding()
         }
-        .onChange(of: scenePhase) { _, phase in
+        // The form of onChange that iOS 16 has. It is deprecated from iOS 17.
+        .onChange(of: scenePhase) { phase in
             if phase == .background {
                 backgroundCount += 1
             }
