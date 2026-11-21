@@ -51,12 +51,12 @@ CI covers that range on every pull request and on `main`:
 
 | What runs | With |
 |---|---|
-| The package's tests | Xcode 16.0, 16.4, 26.0, 26.6 and 27.1 |
+| The package's tests | Xcode 16.4, 26.6 and 27.2 |
 | The demo's UI tests, on an iPhone simulator | iOS 16.4, 17.5, 18.5, 26.5 and 27 |
 
-The first and last Xcode of each major version are used. Xcode 27 only runs simulators
-from iOS 17, so iOS 16.4, 17.5 and 18.5 are tested with Xcode 16.4. With Swift 6.0 to
-6.2 (Xcode 16.0 to 26.3), the package's tests leave out one target that needs Swift 6.3.
+The latest Xcode of each major version is used. Xcode 27 only runs simulators from
+iOS 17, so iOS 16.4, 17.5 and 18.5 are tested with Xcode 16.4. With Xcode 16.4, which
+has Swift 6.1, the package's tests leave out one target that needs Swift 6.3.
 
 Platforms other than iOS are built for but not tested, and the features that are marked
 as needing iOS 16.4 are not available on iOS 16.0 to 16.3.

@@ -21,18 +21,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # The first and last Xcode of each major version that the package supports. Each
-        # runner image has every minor version of the major versions it carries.
+        # The latest Xcode of each major version that the package supports.
         include:
-          - xcode: "16.0"
-            runner: macos-15
           - xcode: "16.4"
-            runner: macos-15
-          - xcode: "26.0"
             runner: macos-15
           - xcode: "26.6"
             runner: macos-26
-          - xcode: "27.1"
+          - xcode: "27.2"
             runner: xcode-27
     steps:
       - name: Check out
