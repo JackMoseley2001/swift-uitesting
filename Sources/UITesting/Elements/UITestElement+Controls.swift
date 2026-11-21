@@ -166,6 +166,19 @@ extension UITestElement where Kind == ElementKinds.Slider {
 }
 
 extension UITestElement where Kind == ElementKinds.Stepper {
+    /// The value of the stepper as text, read without waiting, or `nil` if the stepper
+    /// reports none.
+    ///
+    /// `XCUIElement` reports this as a string on iOS and as a number on macOS. This is
+    /// the same text on both.
+    ///
+    /// ```swift
+    /// #expect(app[BasketID.quantityStepper].value == "3")
+    /// ```
+    public var value: String? {
+        ControlState.stepperValue(value: element.value)
+    }
+
     /// Steps the stepper up, once it exists and is enabled.
     ///
     /// ```swift
@@ -175,14 +188,14 @@ extension UITestElement where Kind == ElementKinds.Stepper {
     ///
     /// If the stepper reports a value, each step is checked: a step that leaves the
     /// value as it was, such as one past the end of the stepper's range, fails. Read
-    /// the value with `value`, as for any element.
+    /// the value with ``value``.
     ///
     /// Pass `requiringChange: false` when a step is allowed to change nothing, such as
     /// in a test that the stepper stops at the end of its range:
     ///
     /// ```swift
     /// try app[BasketID.quantityStepper].increment(times: 10, requiringChange: false)
-    /// #expect(app[BasketID.quantityStepper].value as? String == "5")
+    /// #expect(app[BasketID.quantityStepper].value == "5")
     /// ```
     ///
     /// - Parameters:
@@ -264,7 +277,7 @@ extension UITestElement where Kind == ElementKinds.Stepper {
 
         let polling = ExpectationPolling()
         let settling = min(timeout ?? ActionTimeout.current, .seconds(2))
-        let reported = { "\(element.value ?? "")" }
+        let reported = { value ?? "" }
         let stuckAt = ControlState.step(
             times: times,
             requiringChange: requiringChange,

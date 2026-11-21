@@ -58,20 +58,20 @@ final class ControlsTests: XCTestCase {
     @UITest
     func stepsAStepperUpAndDown(app: XCUIApplication) throws {
         let quantity = try app[ControlsID.quantityStepper].scrollIntoView()
-        #expect(value(of: quantity) == "2")
+        #expect(quantity.value == "2")
 
         try quantity.increment()
-        #expect(value(of: quantity) == "3")
+        #expect(quantity.value == "3")
         // On macOS the label of a stepper is text beside it, and not part of the stepper.
         #if !os(macOS)
         #expect(quantity.label == "Quantity 3")
         #endif
 
         try quantity.increment(times: 2)
-        #expect(value(of: quantity) == "5")
+        #expect(quantity.value == "5")
 
         try quantity.decrement(times: 5)
-        #expect(value(of: quantity) == "0")
+        #expect(quantity.value == "0")
     }
 
     @UITest
@@ -91,10 +91,10 @@ final class ControlsTests: XCTestCase {
         let quantity = try app[ControlsID.quantityStepper].scrollIntoView()
 
         try quantity.increment(times: 5, requiringChange: false)
-        #expect(value(of: quantity) == "5")
+        #expect(quantity.value == "5")
 
         try quantity.decrement(times: 7, requiringChange: false)
-        #expect(value(of: quantity) == "0")
+        #expect(quantity.value == "0")
     }
 
     // Only iOS has pickers with a wheel.
@@ -110,9 +110,4 @@ final class ControlsTests: XCTestCase {
         #expect(colour.selection() == "Yellow", within: .seconds(2))
     }
     #endif
-
-    /// The value of a stepper as text. XCTest reports it as a string on iOS and as a number on macOS.
-    private func value(of stepper: UITestElement<ElementKinds.Stepper>) -> String {
-        "\(stepper.value ?? "")"
-    }
 }

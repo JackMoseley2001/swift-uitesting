@@ -907,6 +907,31 @@ func deletesAMessage(app: XCUIApplication) throws {
 
 Fields have more. See [Entering text](#entering-text).
 
+### The title of a screen, and going back
+
+A screen in a navigation stack has a title and a button to go back, and neither has
+an identifier of the app's. The app has both:
+
+```swift
+@UITest
+func opensAMessageAndGoesBack(app: XCUIApplication) throws {
+    try app[InboxID.row(1234)].tap()
+    #expect(app.navigationTitle == "Message", within: .seconds(2))
+
+    try app.goBack()
+    #expect(app.navigationTitle == "Inbox", within: .seconds(2))
+}
+```
+
+`navigationTitle` is the title of the screen that is showing, read without waiting, and
+is empty if there is none. `goBack()` waits for the button to go back and taps it. The
+label of that button is in the language of the app, and on iOS it is the title of the
+screen before, so `goBack()` finds it by what the system calls it, which is the same in
+every language.
+
+Both work on iOS and on macOS, where the title is in the title bar of the window and
+the button is in its toolbar.
+
 ### Switches, sliders, steppers and pickers
 
 Identifiers declared as these kinds have actions of their own. Each waits for the
@@ -925,7 +950,7 @@ try app[ProfileID.countryPicker].select("France")
 |---|---|---|
 | `Switch`, `Toggle`, `CheckBox` | `isOn`, `setOn(_:)`, `toggle()` | `XCUIElement` reports the state as the string `"1"` or `"0"`. `setOn(_:)` does nothing if the switch is already in that state, and checks that it changed. |
 | `Slider` | `position`, `adjust(to:tolerance:)` | `adjust(toNormalizedSliderPosition:)` can land several percent away. This drags the thumb, reads where it landed and drags again, until it is within the tolerance, which is 0.02 unless you pass one. |
-| `Stepper` | `increment(times:)`, `decrement(times:)` | Finds the two halves of the stepper, which have no identifiers of their own to look up. If the stepper reports a value, each step is checked, so a step past the end of its range fails. Pass `requiringChange: false` when a step is allowed to change nothing. Read the value with `value`. |
+| `Stepper` | `value`, `increment(times:)`, `decrement(times:)` | Finds the two halves of the stepper, which have no identifiers of their own to look up. If the stepper reports a value, each step is checked, so a step past the end of its range fails. Pass `requiringChange: false` when a step is allowed to change nothing. `value` is the stepper's value as text, which `XCUIElement` reports as a string on iOS and as a number on macOS. |
 | `SegmentedControl`, `SegmentedPicker`, `RadioGroup` | `selection`, `select(_:)` | Finds the segment by its label, and the failure lists the segments if there is none. `SegmentedPicker` is a SwiftUI `Picker` with the `segmented` style, which is a segmented control on iOS and a group of radio buttons on macOS. |
 | `MenuPicker` | `selection`, `select(_:)` | For a SwiftUI `Picker` with the `menu` style, or a `Menu`. The options are not inside the control, because the menu is shown over the app. This opens the menu, waits for the option and taps it. The kind matches a button on iOS and a pop-up button on macOS, which is how XCTest reports the control on each. |
 | `Picker`, `PickerWheel` (iOS) | `selection()`, `select(_:)` | Finds the wheel inside a picker that has the identifier. Pass `inWheel:` for a picker with several wheels. |
@@ -1456,6 +1481,8 @@ from an iOS one, and the library takes up the differences:
 | A `Picker` with the `menu` style is a button. | It is a pop-up button. | The kind `MenuPicker` matches whichever it is. |
 | A `Toggle` is a switch. | It is a checkbox. | `CheckBox` has `isOn`, `setOn(_:)` and `toggle()`, as `Switch` has. Declare the identifier as the kind for the platform. |
 | An alert is an alert, and a confirmation dialog is a sheet. | Both are sheets on the window, with the title as the first text inside. | `app.alert` and `app.dialog` both find the sheet, and `title`, `message` and `buttons` read it. |
+| The title of a screen is in the navigation bar, and so is the button to go back. | The title is in the title bar of the window, and the button is in its toolbar. | `app.navigationTitle` and `app.goBack()` use whichever it is. |
+| A stepper reports its value as text. | It reports its value as a number. | `value` of a `Stepper` is the same text on both. |
 | Content is scrolled by a drag. | Content is scrolled by the scroll wheel. | `scrollIntoView()` turns the wheel on macOS. |
 | The app starts with nothing on screen from before. | The app opens the windows it had when it last ran. | The app is launched with `-ApplePersistenceIgnoreState YES`, and the test starts once the first window is there. |
 

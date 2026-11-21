@@ -18,6 +18,16 @@ enum ControlState {
         return percentage / 100
     }
 
+    /// Returns the value of a stepper as text, from the value XCTest reports for it.
+    ///
+    /// A stepper reports its value as text on iOS and as a number on macOS. One that
+    /// reports nothing, or an empty string, has no value.
+    static func stepperValue(value: Any?) -> String? {
+        guard let value else { return nil }
+        let text = "\(value)"
+        return text.isEmpty ? nil : text
+    }
+
     /// Makes attempts at changing a control until it is in the state that is wanted.
     ///
     /// - Parameters:

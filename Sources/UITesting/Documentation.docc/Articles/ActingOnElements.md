@@ -53,6 +53,31 @@ final class InboxTests: XCTestCase {
 }
 ```
 
+## The title of a screen, and going back
+
+A screen in a navigation stack has a title and a button to go back, and neither has
+an identifier of the app's. The app has both:
+
+```swift
+@UITest
+func opensAMessageAndGoesBack(app: XCUIApplication) throws {
+    try app[InboxID.row(1234)].tap()
+    #expect(app.navigationTitle == "Message", within: .seconds(2))
+
+    try app.goBack()
+    #expect(app.navigationTitle == "Inbox", within: .seconds(2))
+}
+```
+
+`navigationTitle` is the title of the screen that is showing, read without waiting, and
+is empty if there is none. `goBack()` waits for the button to go back and taps it. The
+label of that button is in the language of the app, and on iOS it is the title of the
+screen before, so `goBack()` finds it by what the system calls it, which is the same in
+every language.
+
+Both work on iOS and on macOS, where the title is in the title bar of the window and
+the button is in its toolbar.
+
 ## Things to know
 
 - **Reading does not wait.** `app[id].label`, `exists` and the other properties of

@@ -17,6 +17,8 @@ from an iOS one, and the library takes up the differences:
 | A `Picker` with the `menu` style is a button. | It is a pop-up button. | The kind `MenuPicker` matches whichever it is. |
 | A `Toggle` is a switch. | It is a checkbox. | `CheckBox` has `isOn`, `setOn(_:)` and `toggle()`, as `Switch` has. Declare the identifier as the kind for the platform. |
 | An alert is an alert, and a confirmation dialog is a sheet. | Both are sheets on the window, with the title as the first text inside. | `app.alert` and `app.dialog` both find the sheet, and `title`, `message` and `buttons` read it. |
+| The title of a screen is in the navigation bar, and so is the button to go back. | The title is in the title bar of the window, and the button is in its toolbar. | `app.navigationTitle` and `app.goBack()` use whichever it is. |
+| A stepper reports its value as text. | It reports its value as a number. | `value` of a `Stepper` is the same text on both. |
 | Content is scrolled by a drag. | Content is scrolled by the scroll wheel. | `scrollIntoView()` turns the wheel on macOS. |
 | The app starts with nothing on screen from before. | The app opens the windows it had when it last ran. | The app is launched with `-ApplePersistenceIgnoreState YES`, and the test starts once the first window is there. |
 
