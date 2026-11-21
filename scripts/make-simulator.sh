@@ -2,13 +2,11 @@
 #
 # Creates an iPhone simulator that runs a version of iOS, and prints its identifier.
 #
-# usage: scripts/make-simulator.sh <iOS version> [--download]
+# usage: scripts/make-simulator.sh <iOS version>
 #
 # The version is one that the selected Xcode has a simulator runtime for, such as 17.5,
-# or the start of one, such as 17, which takes the newest 17.x that is installed.
-#
-# With --download, a runtime that is not installed is downloaded first. That is several
-# gigabytes, and needs the whole version, such as 16.4.
+# or the start of one, such as 17, which takes the newest 17.x that is installed. The
+# runtime has to be installed already; this does not download one.
 #
 # The identifier goes in an xcodebuild destination:
 #
@@ -17,12 +15,11 @@
 set -euo pipefail
 
 if [ $# -lt 1 ]; then
-    echo "usage: $0 <iOS version> [--download]" >&2
+    echo "usage: $0 <iOS version>" >&2
     exit 1
 fi
 
 version="$1"
-download="${2:-}"
 
 # Prints the identifier of the newest installed runtime for the version, then the
 # identifier of an iPhone it supports, or nothing if there is no such runtime.
@@ -66,20 +63,6 @@ print(phone["identifier"])
 }
 
 found="$(find_runtime_and_device)"
-
-if [ -z "$found" ] && [ "$download" = "--download" ]; then
-    echo "Downloading the iOS $version simulator runtime" >&2
-    xcodebuild -downloadPlatform iOS -buildVersion "$version" >&2
-
-    # A runtime can take a moment to appear after it has been installed.
-    for _ in 1 2 3 4 5 6 7 8 9 10 11 12; do
-        found="$(find_runtime_and_device)"
-        if [ -n "$found" ]; then
-            break
-        fi
-        sleep 10
-    done
-fi
 
 if [ -z "$found" ]; then
     echo "error: there is no iOS $version simulator runtime for the selected Xcode. Installed:" >&2

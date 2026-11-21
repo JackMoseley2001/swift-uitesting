@@ -17,23 +17,14 @@ jobs:
   ui-test:
     name: Demo UI tests (iOS ${{ matrix.ios }})
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: ${{ matrix.download && 60 || 20 }}
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
-        # One version of iOS from each major version that the package supports, each with
-        # an Xcode that can run its simulator. Xcode 27 runs iOS 17 and later, so the
-        # older ones are tested with Xcode 16.
+        # One version of iOS from each major version that a runner image has a simulator
+        # for, each with an Xcode from the same image. No image has an iOS 16 or iOS 17
+        # simulator, and downloading one takes several gigabytes on every run.
         include:
-          # No runner image has these two simulator runtimes, so they are downloaded.
-          - ios: "16.4"
-            xcode: "16.4"
-            runner: macos-15
-            download: true
-          - ios: "17.5"
-            xcode: "16.4"
-            runner: macos-15
-            download: true
           - ios: "18.5"
             xcode: "16.4"
             runner: macos-15
@@ -60,7 +51,7 @@ jobs:
           DESTINATION: ${{ matrix.destination }}
         run: |
           if [ -z "$DESTINATION" ]; then
-            simulator="$(scripts/make-simulator.sh "${{ matrix.ios }}" ${{ matrix.download && '--download' || '' }})"
+            simulator="$(scripts/make-simulator.sh "${{ matrix.ios }}")"
             DESTINATION="platform=iOS Simulator,id=$simulator"
           fi
           echo "Testing on $DESTINATION"
