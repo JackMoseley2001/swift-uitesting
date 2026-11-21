@@ -6,7 +6,7 @@
 # Needs a Mac with Xcode: the libraries use XCTest's UI testing API, SwiftUI and the
 # Network framework, so their symbols can only be read where those exist.
 #
-# usage: Scripts/build-docs.sh [output directory]
+# usage: scripts/build-docs.sh [output directory]
 #
 # The output directory defaults to .build/documentation/site.
 #

@@ -28,7 +28,7 @@ jobs:
         env:
           # A project site on GitHub Pages is served under the name of the repository.
           HOSTING_BASE_PATH: ${{ github.event.repository.name }}
-        run: Scripts/build-docs.sh site
+        run: scripts/build-docs.sh site
 
       - name: Upload the site
         uses: actions/upload-artifact@v7

@@ -1439,7 +1439,7 @@ that lists the two libraries and the tutorials, and publishes it to GitHub Pages
 `main` changes. To build the same site on a Mac:
 
 ```bash
-Scripts/build-docs.sh
+scripts/build-docs.sh
 ```
 
 The site is written to `.build/documentation/site`. It expects to be served under
@@ -1447,7 +1447,7 @@ The site is written to `.build/documentation/site`. It expects to be served unde
 for the root of a server and serve it:
 
 ```bash
-HOSTING_BASE_PATH="" Scripts/build-docs.sh
+HOSTING_BASE_PATH="" scripts/build-docs.sh
 ```
 
 ```bash
