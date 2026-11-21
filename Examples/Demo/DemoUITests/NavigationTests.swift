@@ -17,7 +17,8 @@ final class NavigationTests: XCTestCase {
         try app[ExampleID.row(.fruitList)].tap()
 
         try app[FruitID.selection].waitToAppear()
-        #expect(app.navigationTitle == Example.fruitList.title)
+        // On watchOS the bar with the title comes a moment after the screen.
+        #expect(app.navigationTitle == Example.fruitList.title, within: .seconds(2))
     }
 
     @UITest

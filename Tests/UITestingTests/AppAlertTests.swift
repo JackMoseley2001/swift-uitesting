@@ -20,6 +20,15 @@ struct AppAlertTests {
     }
 
     @Test
+    func titleThatIsReportedTwiceIsNotTheMessage() {
+        // watchOS reports the title again after the other text.
+        let title = "Delete the draft?"
+
+        #Testing::expect(AppAlertText.message(title: title, texts: [title, "This cannot be undone.", title]) == "This cannot be undone.")
+        #Testing::expect(AppAlertText.message(title: title, texts: [title, title]) == nil)
+    }
+
+    @Test
     func messageIsFoundWhenTheTitleIsNotAmongTheTexts() {
         #Testing::expect(AppAlertText.message(title: "", texts: ["This cannot be undone."]) == "This cannot be undone.")
     }

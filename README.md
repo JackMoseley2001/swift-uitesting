@@ -55,6 +55,8 @@ CI covers that range on every pull request and on `main`:
 | A build of the libraries for iOS, macOS, tvOS, watchOS and visionOS | Xcode 27.2 |
 | The demo's UI tests, on an iPhone simulator | iOS 18.5, 26.5 and 27 |
 | The demo's UI tests, as a Mac app | macOS, with Xcode 27.1 |
+| The demo's UI tests, on an Apple Watch simulator | watchOS 11.5, 26.5 and 27.2 |
+| The demo's UI tests, on an Apple Vision Pro simulator | visionOS 2.5, 26.5 and 27.2 |
 
 The latest Xcode of each major version is used, and each version of iOS is tested with
 the Xcode of its own year. With Xcode 16.4, which has Swift 6.1, the package's tests
@@ -64,8 +66,9 @@ iOS 16 and iOS 17 are supported but not tested in CI, because its runners do not
 simulators for them. The demo builds for iOS 16.4, so its UI tests can be run on those
 versions from a Mac that has the simulators.
 
-watchOS, tvOS and visionOS are built for but not tested. See
-[Testing a Mac app](#testing-a-mac-app) for what is different on macOS. The features
+tvOS is built for but not tested. See [Testing a Mac app](#testing-a-mac-app),
+[Testing a watch app](#testing-a-watch-app) and
+[Testing a visionOS app](#testing-a-visionos-app) for what is different there. The features
 that are marked as needing iOS 16.4 are not available on iOS 16.0 to 16.3.
 
 tvOS has no touch screen, so XCTest has no taps, drags or swipes there. On tvOS the
@@ -1530,6 +1533,83 @@ xcodebuild test -project Examples/Demo/Demo.xcodeproj -scheme Demo -destination 
 ```
 
 runs the demo's UI tests against the demo as a Mac app.
+
+## Testing a watch app
+
+A UI test target for a watch app uses the library in the same way, and a test that is
+shared with an iOS app reads the same on both. XCTest reports a watch app differently
+from an iOS one, and the library takes up the differences:
+
+| In an iOS app | In a watch app | What the library does |
+|---|---|---|
+| A field is typed into where it is. | A tap on a field opens a screen with a keyboard, and the field has the text when that screen is closed. | `enter(_:)`, `replaceText(with:)` and `clear()` type on that screen and close it with its button for done. |
+| Return submits a field. | A field is submitted whenever the screen to type on is closed. | `submit()` opens that screen and closes it. Every action that types submits the field as well. |
+| An alert is an alert, and a confirmation dialog is a sheet. | Both are a screen with a table, with the title as the first text inside. | `app.alert` and `app.dialog` both find it, and `title`, `message` and `buttons` read it. |
+| The button that cancels a dialog is one of its buttons. | It is a button to close the dialog, in the bar above it. | `app.dialog.dismiss()` taps it. |
+| A stepper is a stepper. | It is the text of its label, with a button for each direction inside. | The kind `Stepper` matches an element of any type on watchOS, and `value`, `increment()` and `decrement()` work on it. |
+| A slider has a thumb that is dragged. | A slider moves by a step at a time, with a tap on either end. | `adjust(to:)` taps until the slider is there, and fails if the position is between two steps. |
+| A drag moves the content by its own length. | The content carries on for several times the length of a drag. | `scrollIntoView()` drags slowly, so that no row goes past unseen. |
+
+A swipe of `scrollIntoView()` moves the content by about half the height of the screen,
+which on a watch is less than two rows of a list. Pass a larger `maximumSwipes` for an
+element that is far down:
+
+```swift
+try app[NumberID.row(60)].scrollIntoView(maximumSwipes: 60)
+```
+
+A slider with no `step` moves by a sixth of its range at a time on watchOS, so
+`adjust(to: 0.83)` can be reached and `adjust(to: 0.8)` cannot.
+
+Some things are not in a watch app, or are not reported by XCTest on watchOS, and the
+library does not have them there: pull to refresh, picker wheels, the actions for date
+pickers, `SystemAlert` and the `.systemAlerts` trait, the `.orientation` trait and
+`context.background()`. watchOS has no pickers with segments or with a menu, and no
+editor for several lines of text. It does not report the identifier of a button of an
+alert, so tap such a button by its label.
+
+`context.open(_:)` opens a link in an app that is running, as on iOS. An app that is
+not running is launched by the link without the arguments and environment of the
+test, so its launch traits do not apply. Launch the app first.
+
+```bash
+xcodebuild test -project Examples/Demo/Demo.xcodeproj -scheme Demo \
+  -destination "platform=watchOS Simulator,name=Apple Watch Series 12 (46mm)" -skipMacroValidation
+```
+
+runs the demo's UI tests against the demo as a watch app.
+
+## Testing a visionOS app
+
+A UI test target for a visionOS app uses the library in the same way. Most of what
+XCTest reports is the same as for an iOS app, and the library takes up what is not:
+
+| In an iOS app | In a visionOS app | What the library does |
+|---|---|---|
+| A drag anywhere in the app scrolls the view under it. | The app itself cannot be dragged, and a drag that holds at its end moves nothing. | `scrollIntoView()` swipes slowly. For an element looked up in the app, it swipes the app's first list or scroll view. |
+| A tap in a field puts the cursor where the tap was. | A tap puts the cursor at the start of the text. | `clear()` and `replaceText(with:)` move the cursor to the end with the keyboard. |
+| A slider's thumb is found from the slider's value. | The slider reports its thumb as an element inside it. | `adjust(to:)` drags that element. |
+| The label of a stepper is the label of the control. | A stepper has no label. | Read `value`, which is the same on both. |
+
+To scroll one particular view, look the element up in it, as on every platform:
+
+```swift
+try app[InboxID.list][InboxID.row(1234)].scrollIntoView()
+```
+
+Some things are not in a visionOS app, or are not in XCTest on visionOS, and the
+library does not have them there: picker wheels, the actions for date pickers,
+`SystemAlert` and the `.systemAlerts` trait, the `.orientation` trait and
+`context.background()`. `dismiss()` on a dialog fails on visionOS, because a dialog
+there does not close when tapped outside. XCTest cannot take a picture of the screen
+on visionOS, so a failure has the element hierarchy attached and no screenshot.
+
+```bash
+xcodebuild test -project Examples/Demo/Demo.xcodeproj -scheme Demo \
+  -destination "platform=visionOS Simulator,name=Apple Vision Pro" -skipMacroValidation
+```
+
+runs the demo's UI tests against the demo as a visionOS app.
 
 ## Demo
 

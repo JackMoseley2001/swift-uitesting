@@ -34,9 +34,9 @@ extension UITestElement where Kind: TextEntryKind {
         filePath: StaticString = #filePath,
         line: UInt = #line
     ) throws {
-        try wait(toBe: readiness, inOrderTo: "type into", within: timeout, filePath: filePath, line: line)
-        element.tapOrClick()
-        element.typeText(text)
+        let keyboard = try focus(inOrderTo: "type into", within: timeout, filePath: filePath, line: line)
+        keyboard.type(text)
+        keyboard.finish()
     }
 
     /// Replaces whatever is in the field with new text, once the field exists and is enabled.
@@ -57,8 +57,13 @@ extension UITestElement where Kind: TextEntryKind {
         filePath: StaticString = #filePath,
         line: UInt = #line
     ) throws {
-        try clear(within: timeout, filePath: filePath, line: line)
-        element.typeText(text)
+        let keyboard = try focus(inOrderTo: "replace the text of", within: timeout, filePath: filePath, line: line)
+        guard empty(with: keyboard) else {
+            keyboard.finish()
+            try failToClear(filePath: filePath, line: line)
+        }
+        keyboard.type(text)
+        keyboard.finish()
     }
 
     /// Deletes whatever is in the field, once the field exists and is enabled.
@@ -72,20 +77,67 @@ extension UITestElement where Kind: TextEntryKind {
         filePath: StaticString = #filePath,
         line: UInt = #line
     ) throws {
-        try wait(toBe: readiness, inOrderTo: "clear", within: timeout, filePath: filePath, line: line)
-        element.tapOrClick()
+        let keyboard = try focus(inOrderTo: "clear", within: timeout, filePath: filePath, line: line)
+        let isEmpty = empty(with: keyboard)
+        keyboard.finish()
+        guard isEmpty else { try failToClear(filePath: filePath, line: line) }
+    }
 
-        // The result is checked, so this does not depend on where the tap put the cursor.
-        let isEmpty = TextEntry.clear(
-            text: { text },
-            moveToEnd: { tapAfterLastCharacter() },
-            type: { element.typeText($0) }
-        )
-        guard isEmpty else {
-            let failure = "Could not clear \(reference.name): it still held \"\(text)\" after deleting"
+    /// Deletes whatever is in the field, and returns whether it ended up empty.
+    ///
+    /// The result is checked, so this does not depend on where the tap put the cursor.
+    private func empty(with keyboard: TextKeyboard) -> Bool {
+        TextEntry.clear(text: keyboard.text, moveToEnd: keyboard.moveToEnd, type: keyboard.type)
+    }
+
+    private func failToClear(filePath: StaticString, line: UInt) throws -> Never {
+        let failure = "Could not clear \(reference.name): it still held \"\(text)\" after deleting"
+        ExpectationReporter.report(message: failure, filePath: filePath, line: line)
+        throw RequirementFailedError(message: failure)
+    }
+
+    /// Waits for the field and taps it, and returns what to type into.
+    ///
+    /// On watchOS a field cannot be typed into where it is. A tap on it opens a screen
+    /// with a keyboard and a text view, and the field has the text when that screen is
+    /// closed with its button for done. Everywhere else the field itself is typed into.
+    fileprivate func focus(
+        inOrderTo intent: String,
+        within timeout: Duration?,
+        filePath: StaticString,
+        line: UInt
+    ) throws -> TextKeyboard {
+        try wait(toBe: readiness, inOrderTo: intent, within: timeout, filePath: filePath, line: line)
+        element.tapOrClick()
+        #if os(watchOS)
+        let host = (app ?? XCUIApplication()).otherElements[TextEntry.watchInputIdentifier].firstMatch
+        let view = host.textViews.firstMatch
+        let timeout = timeout ?? ActionTimeout.current
+        guard ExpectationPolling().wait(timeout: timeout, until: { view.exists }) == .met else {
+            let failure = "Could not \(intent) \(reference.name): "
+                + "the screen to type on did not show within \(ExpectationFailure.describe(timeout))"
             ExpectationReporter.report(message: failure, filePath: filePath, line: line)
             throw RequirementFailedError(message: failure)
         }
+        return TextKeyboard(
+            text: { TextEntry.text(value: view.value, placeholder: view.placeholderValue) },
+            type: { view.typeText($0) },
+            moveToEnd: { view.coordinate(withNormalizedOffset: CGVector(dx: 0.98, dy: 0.9)).tap() },
+            finish: {
+                // The buttons of the bar are the one to cancel and then the one for done.
+                let buttons = host.navigationBars.buttons
+                buttons.element(boundBy: buttons.count - 1).tap()
+                _ = ExpectationPolling().wait(timeout: .seconds(2), until: { !host.exists })
+            }
+        )
+        #else
+        return TextKeyboard(
+            text: { text },
+            type: { element.typeText($0) },
+            moveToEnd: { tapAfterLastCharacter() },
+            finish: {}
+        )
+        #endif
     }
 
     /// What the field has to be before it is typed into.
@@ -100,13 +152,20 @@ extension UITestElement where Kind: TextEntryKind {
         #endif
     }
 
-    /// Taps the trailing corner of the field, which puts the cursor after the last
-    /// character in most fields.
+    /// Moves the cursor towards the end of the text, with a tap on the trailing corner
+    /// of the field, which puts the cursor after the last character in most fields.
     ///
     /// This is a guess about the field's layout, so it is only used by
     /// ``clear(within:filePath:line:)``, which checks what the field holds afterwards.
     private func tapAfterLastCharacter() {
+        #if os(visionOS)
+        // On visionOS a tap in a field puts the cursor at the start of the text, and a
+        // tap away from the text takes the keyboard from the field. The keys that go
+        // to the end of the text are used there.
+        element.typeKey(.downArrow, modifierFlags: .command)
+        #else
         element.coordinate(withNormalizedOffset: CGVector(dx: 0.98, dy: 0.9)).tapOrClick()
+        #endif
     }
     #endif
 }
@@ -133,9 +192,27 @@ extension UITestElement where Kind: SingleLineTextEntryKind {
         filePath: StaticString = #filePath,
         line: UInt = #line
     ) throws {
-        try wait(toBe: .enabled, inOrderTo: "submit", within: timeout, filePath: filePath, line: line)
-        element.tapOrClick()
-        element.typeText(XCUIKeyboardKey.return.rawValue)
+        let keyboard = try focus(inOrderTo: "submit", within: timeout, filePath: filePath, line: line)
+        // On watchOS the field is submitted when the screen to type on is closed.
+        #if !os(watchOS)
+        keyboard.type(XCUIKeyboardKey.return.rawValue)
+        #endif
+        keyboard.finish()
     }
+}
+
+/// What text is typed into, once a field has been tapped.
+struct TextKeyboard {
+    /// Reads the text that is there.
+    let text: () -> String
+
+    /// Types keys.
+    let type: (String) -> Void
+
+    /// Moves the cursor towards the end of the text.
+    let moveToEnd: () -> Void
+
+    /// Ends the typing. On watchOS this closes the screen to type on.
+    let finish: () -> Void
 }
 #endif

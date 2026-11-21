@@ -16,7 +16,9 @@ struct LabelsView: View {
                 Text(signedInAs.map { "Signed in as \($0)" } ?? "Welcome back")
 
                 TextField("Email", text: $email)
+                    #if !os(watchOS)
                     .textFieldStyle(.roundedBorder)
+                    #endif
                     #if os(iOS)
                     .textInputAutocapitalization(.never)
                     #endif

@@ -3,6 +3,10 @@ import XCTest
 
 @UITestSuite(traits: .example(.numberList), .animationsDisabled)
 final class ScrollingTests: XCTestCase {
+    // A swipe moves a list by about half the height of the screen, which on a watch
+    // is less than two rows, so the rows far down the list take more than the usual 20.
+    private static let swipes = 60
+
     @UITest
     func aRowFurtherDownDoesNotExistUntilItIsScrolledTo(app: XCUIApplication) throws {
         // A list on macOS creates all of its rows, so the row exists there, out of view.
@@ -10,7 +14,7 @@ final class ScrollingTests: XCTestCase {
         #expect(!app[NumberID.row(40)].exists)
         #endif
 
-        try app[NumberID.row(40)].scrollIntoView().tap()
+        try app[NumberID.row(40)].scrollIntoView(maximumSwipes: Self.swipes).tap()
 
         #expect(app[NumberID.selection].label == "Selected 40")
     }
@@ -31,20 +35,20 @@ final class ScrollingTests: XCTestCase {
 
     @UITest
     func scrollsToTheLastRow(app: XCUIApplication) throws {
-        try app[NumberID.row(60)].scrollIntoView().tap()
+        try app[NumberID.row(60)].scrollIntoView(maximumSwipes: Self.swipes).tap()
 
         #expect(app[NumberID.selection].label == "Selected 60")
     }
 
     @UITest
     func scrollsBackUp(app: XCUIApplication) throws {
-        try app[NumberID.row(40)].scrollIntoView()
+        try app[NumberID.row(40)].scrollIntoView(maximumSwipes: Self.swipes)
         // A list on macOS creates all of its rows, so the row exists there, out of view.
         #if !os(macOS)
         #expect(!app[NumberID.row(1)].exists)
         #endif
 
-        try app[NumberID.row(1)].scrollIntoView(.up)
+        try app[NumberID.row(1)].scrollIntoView(.up, maximumSwipes: Self.swipes)
 
         #expect(app[NumberID.row(1)].isHittable)
     }

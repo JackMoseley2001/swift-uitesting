@@ -16,20 +16,27 @@ struct ProfileForm: View {
         ScrollView {
             VStack(spacing: 8) {
                 TextField("Name", text: $name)
+                    #if !os(watchOS)
                     .textFieldStyle(.roundedBorder)
+                    #endif
                     .autocorrectionDisabled()
                     .onSubmit { submittedName = name }
                     .accessibilityIdentifier(ProfileID.nameField)
 
                 SecureField("Password", text: $password)
+                    #if !os(watchOS)
                     .textFieldStyle(.roundedBorder)
+                    #endif
                     .accessibilityIdentifier(ProfileID.passwordField)
 
+                // watchOS has no editor for several lines of text.
+                #if !os(watchOS)
                 TextEditor(text: $notes)
                     .frame(height: 80)
                     .border(.quaternary)
                     .autocorrectionDisabled()
                     .accessibilityIdentifier(ProfileID.notesField)
+                #endif
 
                 Text("\(name)|\(password)|\(notes)")
                     .font(.footnote)
@@ -44,6 +51,8 @@ struct ProfileForm: View {
             .padding()
         }
         .focused($isEditing)
+        // Only iOS shows a keyboard on the screen with a bar above it.
+        #if os(iOS)
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
@@ -53,5 +62,6 @@ struct ProfileForm: View {
                 .accessibilityIdentifier(ProfileID.hideKeyboardButton)
             }
         }
+        #endif
     }
 }

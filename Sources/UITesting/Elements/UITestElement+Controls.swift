@@ -106,6 +106,10 @@ extension UITestElement where Kind == ElementKinds.Slider {
     /// try app[PlayerID.volumeSlider].adjust(to: 0.8)
     /// ```
     ///
+    /// A slider on watchOS moves by a step at a time, with a tap on either end of it.
+    /// There, this taps until the slider is within the tolerance, and fails if the
+    /// position wanted is between two steps.
+    ///
     /// - Parameters:
     ///   - position: The position wanted, from 0 at the start of the slider to 1 at its end.
     ///   - tolerance: How far from `position` the slider may end up. The default is 0.02.
@@ -123,13 +127,23 @@ extension UITestElement where Kind == ElementKinds.Slider {
     ) throws {
         try wait(toBe: .enabled, inOrderTo: "adjust", within: timeout, filePath: filePath, line: line)
 
+        #if os(watchOS)
+        // A slider on watchOS has no thumb to drag. A tap on either end of it moves it by one step.
+        let miss = ControlState.stepSlider(
+            to: position,
+            tolerance: tolerance,
+            position: { self.position },
+            step: { up in element.coordinate(withNormalizedOffset: CGVector(dx: up ? 0.9 : 0.1, dy: 0.5)).tap() }
+        )
+        #else
         let miss = ControlState.adjustSlider(
             to: position,
             tolerance: tolerance,
             position: { self.position },
             drag: { from, to in dragThumb(from: from, to: to) },
-            nudge: { element.adjust(toNormalizedSliderPosition: $0) }
+            nudge: { nudge(to: $0) }
         )
+        #endif
         guard let miss else { return }
 
         let wanted = "\(Int((position * 100).rounded()))%"
@@ -144,7 +158,7 @@ extension UITestElement where Kind == ElementKinds.Slider {
     #endif
 }
 
-#if !os(tvOS)
+#if !os(tvOS) && !os(watchOS)
 extension UITestElement where Kind == ElementKinds.Slider {
     /// Drags the slider's thumb by the distance between two positions.
     ///
@@ -152,9 +166,26 @@ extension UITestElement where Kind == ElementKinds.Slider {
     /// slider. The drag takes hold a little way in from an end, and moves by the
     /// distance wanted, which is what moves the value. A drag to either end goes past
     /// it, to be sure of reaching it.
+    ///
+    /// Where the slider reports its thumb as an element inside it, as on visionOS, the
+    /// drag takes hold of that.
     private func dragThumb(from: Double, to: Double) {
-        let hold = min(max(from, 0.06), 0.94)
         let past = to <= 0 ? -0.1 : (to >= 1 ? 0.1 : 0)
+        let thumb = element.otherElements[ControlState.sliderThumbIdentifier].firstMatch
+        if thumb.exists {
+            // The drag starts from the thumb itself. On visionOS one that starts from
+            // the same point of the slider does not always take hold of it.
+            let middle = thumb.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+            let distance = (to - from + past) * element.frame.width
+            middle.drag(
+                afterPressingFor: 0.1,
+                to: middle.withOffset(CGVector(dx: distance, dy: 0)),
+                velocity: .slow,
+                thenHoldingFor: 0.2
+            )
+            return
+        }
+        let hold = min(max(from, 0.06), 0.94)
         let release = hold + (to - from) + past
         element.coordinate(withNormalizedOffset: CGVector(dx: hold, dy: 0.5)).drag(
             afterPressingFor: 0.1,
@@ -163,8 +194,18 @@ extension UITestElement where Kind == ElementKinds.Slider {
             thenHoldingFor: 0.2
         )
     }
-}
 
+    /// Moves the slider towards a position without its thumb, with XCTest's own action.
+    private func nudge(to position: Double) {
+        // On visionOS that action cannot read the slider, and ends the test.
+        #if !os(visionOS)
+        element.adjust(toNormalizedSliderPosition: position)
+        #endif
+    }
+}
+#endif
+
+#if !os(tvOS)
 extension UITestElement where Kind == ElementKinds.Stepper {
     /// The value of the stepper as text, read without waiting, or `nil` if the stepper
     /// reports none.

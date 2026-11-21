@@ -84,8 +84,17 @@ public enum ElementKinds {
     }
 
     /// A stepper.
+    ///
+    /// watchOS does not report a stepper as one: it is the text of its label, with a
+    /// button for each direction inside. There, this kind matches an element of any type.
     public enum Stepper: ElementKind {
-        public static var elementType: ElementType { .stepper }
+        public static var elementType: ElementType {
+            #if os(watchOS)
+                .any
+            #else
+                .stepper
+            #endif
+        }
     }
 
     /// A picker.

@@ -23,11 +23,14 @@ struct ControlsView: View {
                 Slider(value: $volume)
                     .accessibilityIdentifier(ControlsID.volumeSlider)
 
+                // watchOS has no pickers with segments or with a menu.
+                #if !os(watchOS)
                 Picker("Size", selection: $size) {
                     ForEach(Self.sizes, id: \.self) { Text($0) }
                 }
                 .pickerStyle(.segmented)
                 .accessibilityIdentifier(ControlsID.sizePicker)
+                #endif
 
                 // Only iOS has pickers with a wheel.
                 #if os(iOS)
@@ -39,11 +42,13 @@ struct ControlsView: View {
                 .accessibilityIdentifier(ControlsID.colourPicker)
                 #endif
 
+                #if !os(watchOS)
                 Picker("Shape", selection: $shape) {
                     ForEach(Self.shapes, id: \.self) { Text($0) }
                 }
                 .pickerStyle(.menu)
                 .accessibilityIdentifier(ControlsID.shapeMenu)
+                #endif
 
                 Stepper("Quantity \(quantity)", value: $quantity, in: 0...5)
                     .accessibilityIdentifier(ControlsID.quantityStepper)

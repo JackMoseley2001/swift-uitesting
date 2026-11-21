@@ -7,7 +7,10 @@ final class LaunchSettingsTests: XCTestCase {
     func defaultsApplyWithoutAnyTraits(app: XCUIApplication) {
         #expect(app[LaunchSettingsID.betaFeatures].label == "off")
         #expect(app[LaunchSettingsID.orientation].label == "portrait")
+        // The text size that a watch starts with depends on the size of the watch.
+        #if !os(watchOS)
         #expect(app[LaunchSettingsID.textSize].label == "large")
+        #endif
     }
 
     @UITest(traits: .language("fr"))

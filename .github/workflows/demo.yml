@@ -17,13 +17,15 @@ jobs:
   ui-test:
     name: Demo UI tests (${{ matrix.platform }})
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 20
+    # The suite takes longest on a watch, where scrolling is slow, and on visionOS.
+    timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
         # One version of iOS from each major version that a runner image has simulators
         # for, with an Xcode and an iPhone that the same image has for it. No image has
-        # an iOS 16 or iOS 17 simulator. macOS is the Mac that the job runs on.
+        # an iOS 16 or iOS 17 simulator. macOS is the Mac that the job runs on. watchOS
+        # and visionOS have a row for each major version in the same way.
         include:
           - platform: iOS 18.5
             xcode: "16.4"
@@ -41,6 +43,30 @@ jobs:
             xcode: "27.1"
             runner: xcode-27
             destination: platform=macOS
+          - platform: watchOS 11.5
+            xcode: "16.4"
+            runner: macos-15
+            destination: platform=watchOS Simulator,name=Apple Watch Series 10 (46mm),OS=11.5
+          - platform: watchOS 26.5
+            xcode: "26.6"
+            runner: macos-26
+            destination: platform=watchOS Simulator,name=Apple Watch Series 11 (46mm),OS=26.5
+          - platform: watchOS 27.2
+            xcode: "27.2"
+            runner: xcode-27
+            destination: platform=watchOS Simulator,name=Apple Watch Series 12 (46mm),OS=27.2
+          - platform: visionOS 2.5
+            xcode: "16.4"
+            runner: macos-15
+            destination: platform=visionOS Simulator,name=Apple Vision Pro,OS=2.5
+          - platform: visionOS 26.5
+            xcode: "26.6"
+            runner: macos-26
+            destination: platform=visionOS Simulator,name=Apple Vision Pro,OS=26.5
+          - platform: visionOS 27.2
+            xcode: "27.2"
+            runner: xcode-27
+            destination: platform=visionOS Simulator,name=Apple Vision Pro,OS=27.2
     env:
       DESTINATION: ${{ matrix.destination }}
     steps:

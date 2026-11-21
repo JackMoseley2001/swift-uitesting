@@ -37,13 +37,21 @@ final class ControlsTests: XCTestCase {
         let volume = app[ControlsID.volumeSlider]
         #expect(volume.position == 0.5)
 
-        for target in [0.8, 0.25, 1, 0] {
+        // A slider on watchOS moves by a sixth at a time.
+        #if os(watchOS)
+        let targets = [0.83, 0.33, 1, 0]
+        #else
+        let targets = [0.8, 0.25, 1, 0]
+        #endif
+        for target in targets {
             try volume.adjust(to: target)
             let position = try #require(volume.position)
             #expect(abs(position - target) <= 0.02)
         }
     }
 
+    // watchOS has no picker with segments.
+    #if !os(watchOS)
     @UITest
     func selectsASegment(app: XCUIApplication) throws {
         let size = app[ControlsID.sizePicker]
@@ -54,6 +62,7 @@ final class ControlsTests: XCTestCase {
         #expect(size.selection == "Large")
         #expect(app[ControlsID.summary].label.contains("|Large|"))
     }
+    #endif
 
     @UITest
     func stepsAStepperUpAndDown(app: XCUIApplication) throws {
@@ -62,8 +71,8 @@ final class ControlsTests: XCTestCase {
 
         try quantity.increment()
         #expect(quantity.value == "3")
-        // On macOS the label of a stepper is text beside it, and not part of the stepper.
-        #if !os(macOS)
+        // On macOS and visionOS the label of a stepper is not reported as part of the stepper.
+        #if !os(macOS) && !os(visionOS)
         #expect(quantity.label == "Quantity 3")
         #endif
 
@@ -74,6 +83,8 @@ final class ControlsTests: XCTestCase {
         #expect(quantity.value == "0")
     }
 
+    // watchOS has no picker with a menu.
+    #if !os(watchOS)
     @UITest
     func selectsAnOptionInAMenu(app: XCUIApplication) throws {
         let shape = try app[ControlsID.shapeMenu].scrollIntoView()
@@ -85,6 +96,7 @@ final class ControlsTests: XCTestCase {
         try shape.select("Square")
         #expect(shape.selection == "Square")
     }
+    #endif
 
     @UITest
     func aStepperCanBeSteppedPastTheEndOfItsRange(app: XCUIApplication) throws {
