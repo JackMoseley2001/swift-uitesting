@@ -31,7 +31,7 @@ xcodebuild test ... -only-testing:DemoUITests/FruitListTests/test_<functionName>
 - `-skipMacroValidation` is required for `xcodebuild` on the command line.
 - The `UITestingTests` target needs Swift 6.3+ (its files import both `Testing` and `UITesting`). The libraries and other test targets build with Swift 6.0.
 - There is no linter or formatter configuration in the repo; match the surrounding style.
-- CI (`.github/workflows`) runs both of the above on every pull request, on Xcode 27. The demo workflow retries only when the simulator was not ready, never on a failing test.
+- CI (`.github/workflows`) runs both of the above on every pull request, on Xcode 27. The demo workflow retries only when the simulator was not ready, never on a failing test. `docs.yml` runs on pushes to `main`: it builds the documentation website with `scripts/build-docs.sh` on a Mac runner, then deploys it to GitHub Pages from an Ubuntu job.
 
 ## Architecture
 
@@ -64,7 +64,7 @@ The `.messageChannel` trait lets a test call `context.send(_:)` with a `UITestMe
 - **Tests use Swift Testing**, not XCTest. In `UITestingTests`, both `Testing` and `UITesting` are imported, so expectations must be written module-qualified: `#Testing::expect(...)`. `Tests/UITestingTests/Support.swift` has `reportedFailures(in:)`, which captures the library's own expectation failures (via the `ExpectationReporter.$handler` task-local) so they can be asserted on rather than failing the test.
 - **Macro tests** use `assertMacro` from swift-macro-testing with inline expansion/diagnostic snapshots.
 - **Every public symbol has a documentation comment**, and each library has a DocC catalog (`Documentation.docc`). The root page of a catalog is a short overview; each topic has an article in `Articles/` (traits, entering text, alerts, system alerts and so on), and `Sources/UITesting/Documentation.docc/Tutorials/` has step-by-step tutorials whose code is in `Resources/`. Public API is curated in the `## Topics` of the article it belongs to, not on the root page. A new feature gets a README section and the same text in an article, new or existing; a new article is added to the root page's topics. Examples check the app with `#expect` and `#require`, not `XCTAssert…`.
-- **Check the docs build** with `xcodebuild docbuild -scheme UITesting -destination "platform=iOS Simulator,name=iPhone 17" -skipMacroValidation` (and `-scheme UITestingCore`). Build for iOS, because some symbols are iOS only and their links do not resolve on macOS. Warnings about undocumented `filePath` and `line` parameters are expected. Tutorial code is not compiled by the build.
+- **Check the docs build** with `xcodebuild docbuild -scheme UITesting -destination "platform=iOS Simulator,name=iPhone 17" -skipMacroValidation` (and `-scheme UITestingCore`). Build for iOS, because some symbols are iOS only and their links do not resolve on macOS. Warnings about undocumented `filePath` and `line` parameters are expected. Tutorial code is not compiled by the build. `scripts/build-docs.sh` builds both catalogs the same way, merges the two archives into one with `docc merge`, and transforms the result for static hosting; it is what the Documentation workflow runs, so a change to how the docs are built belongs in the script. The build cannot run on Linux, because the libraries do not compile there.
 
 ### Demo app (`Examples/Demo`)
 

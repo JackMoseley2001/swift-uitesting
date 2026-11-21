@@ -1,0 +1,66 @@
+name: Documentation
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: documentation
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build documentation (Xcode 27)
+    runs-on: xcode-27
+    timeout-minutes: 30
+    steps:
+      - name: Check out
+        uses: actions/checkout@v7
+
+      - name: Show toolchain
+        run: xcodebuild -version
+
+      - name: Build the site
+        env:
+          # A project site on GitHub Pages is served under the name of the repository.
+          HOSTING_BASE_PATH: ${{ github.event.repository.name }}
+        run: scripts/build-docs.sh site
+
+      - name: Upload the site
+        uses: actions/upload-artifact@v7
+        with:
+          name: documentation-site
+          path: site
+          if-no-files-found: error
+          retention-days: 1
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Download the site
+        uses: actions/download-artifact@v8
+        with:
+          name: documentation-site
+          path: site
+
+      - name: Upload the site for GitHub Pages
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: site
+
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v5
