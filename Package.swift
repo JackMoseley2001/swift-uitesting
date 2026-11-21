@@ -3,50 +3,6 @@
 import CompilerPluginSupport
 import PackageDescription
 
-var targets: [Target] = [
-    .target(name: "UITestingCore"),
-    .target(
-        name: "UITesting",
-        dependencies: [
-            "UITestingCore",
-            "UITestingMacros",
-            .product(name: "CustomDump", package: "swift-custom-dump"),
-        ]
-    ),
-    .macro(
-        name: "UITestingMacros",
-        dependencies: [
-            .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
-            .product(name: "SwiftDiagnostics", package: "swift-syntax"),
-            .product(name: "SwiftOperators", package: "swift-syntax"),
-            .product(name: "SwiftSyntax", package: "swift-syntax"),
-            .product(name: "SwiftSyntaxBuilder", package: "swift-syntax"),
-            .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
-        ]
-    ),
-    .testTarget(
-        name: "UITestingCoreTests",
-        dependencies: ["UITestingCore"]
-    ),
-    .testTarget(
-        name: "UITestingMacrosTests",
-        dependencies: [
-            "UITestingMacros",
-            .product(name: "MacroTesting", package: "swift-macro-testing"),
-            .product(name: "SwiftSyntaxMacroExpansion", package: "swift-syntax"),
-        ]
-    ),
-]
-
-#if compiler(>=6.3)
-targets.append(
-    .testTarget(
-        name: "UITestingTests",
-        dependencies: ["UITesting"]
-    )
-)
-#endif
-
 let package = Package(
     name: "swift-uitesting",
     platforms: [
@@ -65,5 +21,38 @@ let package = Package(
         .package(url: "https://github.com/pointfreeco/swift-macro-testing", "0.7.0"..<"1.0.0"),
         .package(url: "https://github.com/pointfreeco/swift-custom-dump", "1.0.0"..<"2.0.0"),
     ],
-    targets: targets
+    targets: [
+        .target(name: "UITestingCore"),
+        .target(
+            name: "UITesting",
+            dependencies: [
+                "UITestingCore",
+                "UITestingMacros",
+                .product(name: "CustomDump", package: "swift-custom-dump"),
+            ]
+        ),
+        .macro(
+            name: "UITestingMacros",
+            dependencies: [
+                .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
+                .product(name: "SwiftDiagnostics", package: "swift-syntax"),
+                .product(name: "SwiftOperators", package: "swift-syntax"),
+                .product(name: "SwiftSyntax", package: "swift-syntax"),
+                .product(name: "SwiftSyntaxBuilder", package: "swift-syntax"),
+                .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
+            ]
+        ),
+        .testTarget(
+            name: "UITestingCoreTests",
+            dependencies: ["UITestingCore"]
+        ),
+        .testTarget(
+            name: "UITestingMacrosTests",
+            dependencies: [
+                "UITestingMacros",
+                .product(name: "MacroTesting", package: "swift-macro-testing"),
+                .product(name: "SwiftSyntaxMacroExpansion", package: "swift-syntax"),
+            ]
+        ),
+    ]
 )
