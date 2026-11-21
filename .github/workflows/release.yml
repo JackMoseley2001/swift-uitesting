@@ -1,0 +1,151 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      change:
+        description: What has changed since the last release
+        type: choice
+        options:
+          - use pull request labels
+          - patch
+          - feature
+          - breaking
+        default: use pull request labels
+      version:
+        description: An exact version to release instead, such as 1.0.0
+        type: string
+        required: false
+      dry_run:
+        description: Only show what would be released
+        type: boolean
+        default: false
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Check out
+        uses: actions/checkout@v7
+        with:
+          # Every commit and tag, to find the last release and what was merged since.
+          fetch-depth: 0
+
+      - name: Check the branch
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          if [ "$GITHUB_REF_NAME" != "$DEFAULT_BRANCH" ]; then
+            echo "::error::Releases are made from $DEFAULT_BRANCH, and this was run on $GITHUB_REF_NAME."
+            exit 1
+          fi
+
+      - name: Work out the version
+        id: plan
+        env:
+          CHANGE: ${{ inputs.change }}
+          EXACT_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+
+          # The last release is the highest version tag that this commit includes.
+          last="$(git tag --merged HEAD --list --sort=-version:refname | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1 || true)"
+
+          if [ -n "$last" ] && [ "$(git rev-list -n 1 "$last")" = "$(git rev-parse HEAD)" ]; then
+            echo "::error::Nothing has been merged since $last, so there is nothing to release."
+            exit 1
+          fi
+
+          change="$CHANGE"
+          labels=()
+          if [ -n "$EXACT_VERSION" ]; then
+            change="$EXACT_VERSION"
+          elif [ "$CHANGE" = "use pull request labels" ]; then
+            change="labels"
+            # A merged pull request leaves its number at the end of the commit's subject.
+            range="HEAD"
+            if [ -n "$last" ]; then
+              range="$last..HEAD"
+            fi
+            numbers="$(git log --format=%s "$range" | sed -nE 's/.*\(#([0-9]+)\)$/\1/p' | sort -un)"
+            for number in $numbers; do
+              if found="$(gh pr view "$number" --json labels --jq '.labels[].name')"; then
+                while IFS= read -r label; do
+                  if [ -n "$label" ]; then
+                    labels+=("$label")
+                  fi
+                done <<< "$found"
+              else
+                echo "::warning::Could not read the labels of #$number, so it was left out."
+              fi
+            done
+          fi
+
+          version="$(scripts/next-version.sh "${last:-none}" "$change" ${labels[@]+"${labels[@]}"})"
+
+          if git rev-parse --quiet --verify "refs/tags/$version" > /dev/null; then
+            echo "::error::There is already a tag named $version."
+            exit 1
+          fi
+
+          found_labels="none"
+          if [ ${#labels[@]} -gt 0 ]; then
+            found_labels="$(printf '%s\n' "${labels[@]}" | sort -u | paste -sd ',' - | sed 's/,/, /g')"
+          fi
+
+          {
+            echo "last=$last"
+            echo "version=$version"
+          } >> "$GITHUB_OUTPUT"
+
+          {
+            echo "## Release $version"
+            echo
+            echo "- Last release: ${last:-none}"
+            echo "- Change: $change"
+            if [ "$change" = "labels" ]; then
+              echo "- Labels on the pull requests merged since: $found_labels"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Show the release notes
+        env:
+          VERSION: ${{ steps.plan.outputs.version }}
+          LAST: ${{ steps.plan.outputs.last }}
+        run: |
+          set -euo pipefail
+          fields=(-f "tag_name=$VERSION" -f "target_commitish=$GITHUB_SHA")
+          if [ -n "$LAST" ]; then
+            fields+=(-f "previous_tag_name=$LAST")
+          fi
+          {
+            echo
+            echo "### Notes"
+            echo
+            gh api "repos/$GITHUB_REPOSITORY/releases/generate-notes" "${fields[@]}" --jq .body
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Create the tag and the release
+        if: ${{ !inputs.dry_run }}
+        env:
+          VERSION: ${{ steps.plan.outputs.version }}
+          LAST: ${{ steps.plan.outputs.last }}
+        run: |
+          set -euo pipefail
+          options=(--target "$GITHUB_SHA" --title "$VERSION" --generate-notes)
+          if [ -n "$LAST" ]; then
+            options+=(--notes-start-tag "$LAST")
+          fi
+          gh release create "$VERSION" "${options[@]}"
