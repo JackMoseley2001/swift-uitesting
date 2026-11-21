@@ -106,13 +106,17 @@ extension UITestElement where Kind: TextEntryKind {
         line: UInt
     ) throws -> TextKeyboard {
         try wait(toBe: readiness, inOrderTo: intent, within: timeout, filePath: filePath, line: line)
+        #if os(tvOS) || os(watchOS)
+        // The keyboard of tvOS and the screen to type on of watchOS belong to the app,
+        // not to the field.
+        let app = try owningApp(inOrderTo: intent, filePath: filePath, line: line)
+        #endif
         #if os(tvOS)
         // On tvOS a field that is selected opens a keyboard that fills the screen, with
         // a text view of its own. The field has the text as it is typed, and the
         // remote's menu button closes the keyboard.
         try moveFocus(inOrderTo: intent, filePath: filePath, line: line)
         XCUIRemote.shared.press(.select)
-        let app = app ?? XCUIApplication()
         let keyboard = app.keyboards.firstMatch
         let timeout = timeout ?? ActionTimeout.current
         guard ExpectationPolling().wait(timeout: timeout, until: { keyboard.exists }) == .met else {
@@ -136,7 +140,7 @@ extension UITestElement where Kind: TextEntryKind {
         element.tapOrClick()
         #endif
         #if os(watchOS)
-        let host = (app ?? XCUIApplication()).otherElements[TextEntry.watchInputIdentifier].firstMatch
+        let host = app.otherElements[TextEntry.watchInputIdentifier].firstMatch
         let view = host.textViews.firstMatch
         let timeout = timeout ?? ActionTimeout.current
         guard ExpectationPolling().wait(timeout: timeout, until: { view.exists }) == .met else {

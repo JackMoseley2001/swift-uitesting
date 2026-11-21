@@ -93,11 +93,16 @@ public struct UITestElement<Kind: ElementKind> {
         )
     }
 
-    /// Returns the app this element was looked up in, or ends the test if it is not known.
+    /// Returns the app this element belongs to, or ends the test if it is not known.
+    ///
+    /// That is the app the element was looked up in. An element that was looked up in a
+    /// query does not know its app, and belongs to the app of the test that is running,
+    /// which is the one the runner launched and gave to the test. A new application is
+    /// never made here: it would not be the one the test is using.
     ///
     /// - Parameter intent: What the app is needed for, completing the sentence "Could not …".
     func owningApp(inOrderTo intent: String, filePath: StaticString, line: UInt) throws -> XCUIApplication {
-        if let app { return app }
+        if let app = app ?? RunningTest.appUnderTest?.app { return app }
         try fail(
             "Could not \(intent) \(reference.name): \(reference.reasonForUnknownApp)",
             filePath: filePath,
