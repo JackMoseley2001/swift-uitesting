@@ -1,0 +1,18 @@
+# How GitHub groups pull requests in the notes of a release, by their labels.
+changelog:
+  exclude:
+    labels:
+      - skip release notes
+  categories:
+    - title: Breaking changes
+      labels:
+        - breaking
+    - title: New features
+      labels:
+        - feature
+    - title: Fixes and improvements
+      labels:
+        - patch
+    - title: Other changes
+      labels:
+        - "*"
