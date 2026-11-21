@@ -3,9 +3,11 @@ name: Demo UI Tests
 on:
   pull_request:
     types: [opened, synchronize, reopened]
+  push:
+    branches: [main]
 
 concurrency:
-  group: demo-${{ github.event.pull_request.number }}
+  group: demo-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -13,27 +15,72 @@ permissions:
 
 jobs:
   ui-test:
-    name: Demo UI tests (Xcode 27)
-    runs-on: xcode-27
-    timeout-minutes: 15
+    name: Demo UI tests (iOS ${{ matrix.ios }})
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: ${{ matrix.download && 60 || 20 }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # One version of iOS from each major version that the package supports, each with
+        # an Xcode that can run its simulator. Xcode 27 runs iOS 17 and later, so the
+        # older ones are tested with Xcode 16.
+        include:
+          # No runner image has these two simulator runtimes, so they are downloaded.
+          - ios: "16.4"
+            xcode: "16.4"
+            runner: macos-15
+            download: true
+          - ios: "17.5"
+            xcode: "16.4"
+            runner: macos-15
+            download: true
+          - ios: "18.5"
+            xcode: "16.4"
+            runner: macos-15
+          - ios: "26.5"
+            xcode: "26.6"
+            runner: macos-26
+          - ios: "27"
+            xcode: "27.1"
+            runner: xcode-27
+            destination: platform=iOS Simulator,name=iPhone 17
     steps:
       - name: Check out
         uses: actions/checkout@v7
 
+      - name: Select Xcode
+        run: sudo xcode-select --switch "/Applications/Xcode_${{ matrix.xcode }}.app"
+
       - name: Show toolchain
         run: xcodebuild -version
 
+      - name: Choose a simulator
+        id: simulator
+        env:
+          DESTINATION: ${{ matrix.destination }}
+        run: |
+          if [ -z "$DESTINATION" ]; then
+            simulator="$(scripts/make-simulator.sh "${{ matrix.ios }}" ${{ matrix.download && '--download' || '' }})"
+            DESTINATION="platform=iOS Simulator,id=$simulator"
+          fi
+          echo "Testing on $DESTINATION"
+          echo "destination=$DESTINATION" >> "$GITHUB_OUTPUT"
+
       - name: Build
+        env:
+          DESTINATION: ${{ steps.simulator.outputs.destination }}
         run: |
           set -o pipefail
           xcodebuild build-for-testing \
             -project Examples/Demo/Demo.xcodeproj \
             -scheme Demo \
-            -destination "platform=iOS Simulator,name=iPhone 17" \
+            -destination "$DESTINATION" \
             -skipMacroValidation \
             | xcbeautify --renderer github-actions
 
       - name: Run UI tests
+        env:
+          DESTINATION: ${{ steps.simulator.outputs.destination }}
         run: |
           set -o pipefail
           # A simulator on a freshly started runner is sometimes not ready when the tests
@@ -42,7 +89,7 @@ jobs:
             if xcodebuild test-without-building \
               -project Examples/Demo/Demo.xcodeproj \
               -scheme Demo \
-              -destination "platform=iOS Simulator,name=iPhone 17" \
+              -destination "$DESTINATION" \
               -skipMacroValidation \
               2>&1 | tee xcodebuild.log | xcbeautify --renderer github-actions; then
               exit 0
