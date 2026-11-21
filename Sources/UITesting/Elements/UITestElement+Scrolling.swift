@@ -222,17 +222,19 @@ extension UITestElement {
         filePath: StaticString = #filePath,
         line: UInt = #line
     ) throws -> UITestElement {
-        var focus = XCUIApplication.focus
+        // The app says what has the focus, which is how the remote's presses are followed.
+        let app = try owningApp(inOrderTo: "scroll to", filePath: filePath, line: line)
+        var focus = app.focus
         let found = ScrollSearch.find(
             direction: direction,
             maximumSwipes: maximumSwipes,
-            isInView: { element.moveFocus() },
+            isInView: { element.moveFocus(in: app) },
             scroll: { direction in
                 // The elements beside the one with the focus are on the screen, so
                 // nothing goes past unseen in three presses, and looking after each
                 // press would take most of the time.
                 let before = focus
-                focus = XCUIRemote.shared.pressAndWaitForFocus(direction, times: 3, from: before)
+                focus = XCUIRemote.shared.pressAndWaitForFocus(direction, times: 3, in: app, from: before)
                 return focus != before
             }
         )

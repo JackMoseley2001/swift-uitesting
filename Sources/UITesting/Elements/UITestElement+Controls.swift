@@ -35,16 +35,17 @@ extension UITestElement where Kind: SwitchKind {
         let name = isOn ? "on" : "off"
         try wait(toBe: .enabled, inOrderTo: "turn \(name)", within: timeout, filePath: filePath, line: line)
 
+        let tapElement = try tapAction(inOrderTo: "turn \(name)", filePath: filePath, line: line)
         let polling = ExpectationPolling()
         let settling = min(timeout ?? ActionTimeout.current, .seconds(2))
         let changed = ControlState.change(
             isDone: { self.isOn == isOn },
             attempts: [
-                { element.tapOrClick() },
+                { tapElement(element) },
                 {
                     let inner = element.switches.firstMatch
                     if inner.exists {
-                        inner.tapOrClick()
+                        tapElement(inner)
                         return
                     }
                     // tvOS has no touch screen, so there is no point of the switch to tap.
@@ -458,9 +459,10 @@ extension UITestElement where Kind == ElementKinds.MenuPicker {
     ) throws {
         let intent = "select \"\(label)\" in"
         let app = try owningApp(inOrderTo: intent, filePath: filePath, line: line)
+        let tapElement = try tapAction(inOrderTo: intent, filePath: filePath, line: line)
         try wait(toBe: .enabled, inOrderTo: intent, within: timeout, filePath: filePath, line: line)
         let own = element.frame
-        element.tapOrClick()
+        tapElement(element)
 
         // On macOS an item of a menu has a title, and no label.
         #if os(macOS)
@@ -497,7 +499,7 @@ extension UITestElement where Kind == ElementKinds.MenuPicker {
                 line: line
             )
         }
-        found.tapOrClick()
+        tapElement(found)
         // The menu takes a moment to close, and the control is covered until it has.
         #if os(tvOS)
         _ = polling.wait(timeout: .seconds(2), until: { !found.exists })
@@ -542,7 +544,9 @@ extension UITestElement where Kind: SegmentedKind {
         filePath: StaticString = #filePath,
         line: UInt = #line
     ) throws {
-        try wait(toBe: .enabled, inOrderTo: "select \"\(label)\" in", within: timeout, filePath: filePath, line: line)
+        let intent = "select \"\(label)\" in"
+        let tapElement = try tapAction(inOrderTo: intent, filePath: filePath, line: line)
+        try wait(toBe: .enabled, inOrderTo: intent, within: timeout, filePath: filePath, line: line)
 
         let segment = segments[label]
         guard segment.exists else {
@@ -554,7 +558,7 @@ extension UITestElement where Kind: SegmentedKind {
                 line: line
             )
         }
-        segment.tapOrClick()
+        tapElement(segment)
     }
 }
 

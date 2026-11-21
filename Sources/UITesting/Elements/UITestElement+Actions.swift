@@ -76,7 +76,9 @@ extension UITestElement {
 
     /// Moves the focus to the element, or ends the test if the remote cannot.
     func moveFocus(inOrderTo intent: String, filePath: StaticString, line: UInt) throws {
-        guard element.moveFocus() else {
+        // The app says what has the focus, so the remote can tell which way to move it.
+        let app = try owningApp(inOrderTo: intent, filePath: filePath, line: line)
+        guard element.moveFocus(in: app) else {
             if element.exists, element.frame.isEmpty {
                 try fail(
                     "Could not \(intent) \(reference.name): it is off the screen, so there is no telling "
@@ -85,7 +87,7 @@ extension UITestElement {
                     line: line
                 )
             }
-            let focused = XCUIApplication.focusedElement
+            let focused = app.focusedElement
             let stopped = focused.exists ? "it stopped on \(focused)" : "nothing has the focus"
             try fail(
                 "Could not \(intent) \(reference.name): the remote could not move the focus to it, and \(stopped)",
@@ -95,6 +97,27 @@ extension UITestElement {
         }
     }
     #endif
+
+    /// Returns what taps an element for this one: a tap, a click on macOS, or the remote
+    /// moving the focus to it and selecting it on tvOS.
+    ///
+    /// Use this for an element other than this one, such as an option of a menu that
+    /// this element opened. On tvOS the app says what has the focus, so the app this
+    /// element belongs to has to be known there.
+    ///
+    /// - Parameter intent: What the tap is for, completing the sentence "Could not …".
+    func tapAction(
+        inOrderTo intent: String,
+        filePath: StaticString,
+        line: UInt
+    ) throws -> (XCUIElement) -> Void {
+        #if os(tvOS)
+        let app = try owningApp(inOrderTo: intent, filePath: filePath, line: line)
+        return { $0.tapOrClick(in: app) }
+        #else
+        return { $0.tapOrClick() }
+        #endif
+    }
 
     #if os(macOS)
     /// Clicks the element, once it exists and is enabled.

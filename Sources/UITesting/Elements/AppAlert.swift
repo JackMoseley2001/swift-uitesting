@@ -208,7 +208,7 @@ public struct AppAlert {
                 line: line
             )
         }
-        dismissRegion.tapOrClick()
+        tapOrClick(dismissRegion)
         _ = ExpectationPolling().wait(timeout: .seconds(2), until: { !element.exists })
     }
 
@@ -234,9 +234,19 @@ public struct AppAlert {
             noun: noun
         )
         switch choice {
-        case .success(let position): buttons[position].element.tapOrClick()
+        case .success(let position): tapOrClick(buttons[position].element)
         case .failure(let error): try fail(error.message, filePath: filePath, line: line)
         }
+    }
+
+    /// Taps an element of the alert: a tap, a click on macOS, or the remote moving the
+    /// focus to it and selecting it on tvOS, where the app says what has the focus.
+    private func tapOrClick(_ target: XCUIElement) {
+        #if os(tvOS)
+        target.tapOrClick(in: app)
+        #else
+        target.tapOrClick()
+        #endif
     }
 
     private func wait(

@@ -10,8 +10,10 @@ extension XCUIElement {
     ///
     /// Nothing is selected if the focus cannot be moved to the element, and the
     /// failure is reported, because a press would act on some other element.
-    func tapOrClick() {
-        guard moveFocus() else {
+    ///
+    /// - Parameter app: The app the element is in, which says what has the focus.
+    func tapOrClick(in app: XCUIApplication) {
+        guard moveFocus(in: app) else {
             ExpectationReporter.report(
                 message: "Could not select \(self): the remote could not move the focus to it",
                 filePath: #filePath,
@@ -24,28 +26,29 @@ extension XCUIElement {
 
     /// Moves the focus to the element with the remote.
     ///
+    /// - Parameter app: The app the element is in, which says what has the focus.
     /// - Returns: Whether the focus ended up on the element.
     @discardableResult
-    func moveFocus() -> Bool {
+    func moveFocus(in app: XCUIApplication) -> Bool {
         FocusSearch.move(
-            focus: { XCUIApplication.focus },
+            focus: { app.focus },
             // One snapshot reads the frame, and fails for an element that is not there.
             target: { (try? self.snapshot())?.frame ?? .zero },
-            press: { XCUIRemote.shared.pressAndWaitForFocus($0) }
+            press: { XCUIRemote.shared.pressAndWaitForFocus($0, in: app) }
         )
     }
 }
 
 extension XCUIApplication {
-    /// The element of the app under test that has the focus.
-    static var focusedElement: XCUIElement {
-        XCUIApplication().descendants(matching: .any).matching(NSPredicate(format: "hasFocus == true")).firstMatch
+    /// The element of this app that has the focus.
+    var focusedElement: XCUIElement {
+        descendants(matching: .any).matching(NSPredicate(format: "hasFocus == true")).firstMatch
     }
 }
 
 extension XCUIApplication {
-    /// What has the focus in the app under test, or `nil` if nothing has.
-    static var focus: FocusSearch.Focus? {
+    /// What has the focus in this app, or `nil` if nothing has.
+    var focus: FocusSearch.Focus? {
         // One snapshot reads everything, where each property of the element would be a
         // query of its own. It fails if nothing has the focus.
         guard let focused = try? focusedElement.snapshot() else { return nil }
@@ -61,24 +64,38 @@ extension XCUIRemote {
     /// - Parameters:
     ///   - direction: The direction to press in.
     ///   - times: How many presses to make before looking at the focus.
-    ///   - before: What had the focus before, if it has just been read.
+    ///   - app: The app whose focus the remote moves, which says what has the focus.
+    ///   - before: What had the focus before, which has just been read.
     /// - Returns: What has the focus afterwards, which is the same as before if the
     ///   focus did not move.
     @discardableResult
     func pressAndWaitForFocus(
         _ direction: ScrollDirection,
         times: Int = 1,
-        from before: FocusSearch.Focus? = XCUIApplication.focus
+        in app: XCUIApplication,
+        from before: FocusSearch.Focus?
     ) -> FocusSearch.Focus? {
         for _ in 0..<times {
             press(Button(direction))
         }
         var after = before
         _ = ExpectationPolling().wait(timeout: .seconds(1)) {
-            after = XCUIApplication.focus
+            after = app.focus
             return after != before
         }
         return after
+    }
+
+    /// Presses the remote in a direction, and gives the focus a moment to move, reading
+    /// what has the focus first.
+    ///
+    /// - Parameters:
+    ///   - direction: The direction to press in.
+    ///   - app: The app whose focus the remote moves, which says what has the focus.
+    /// - Returns: What has the focus afterwards.
+    @discardableResult
+    func pressAndWaitForFocus(_ direction: ScrollDirection, in app: XCUIApplication) -> FocusSearch.Focus? {
+        pressAndWaitForFocus(direction, in: app, from: app.focus)
     }
 }
 
