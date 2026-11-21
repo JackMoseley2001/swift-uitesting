@@ -41,7 +41,24 @@ final class FailureCapture {
 }
 
 /// The capture for the running test.
+/// The app that the runner launched for the test that is running.
+///
+/// The app is held in a class of the main actor so that it can be passed down to
+/// the code that the test calls.
+@MainActor
+final class AppUnderTest {
+    let app: XCUIApplication
+
+    init(_ app: XCUIApplication) {
+        self.app = app
+    }
+}
+
 enum RunningTest {
+    /// The app of the test that is running, for an element that does not know which
+    /// app it was found in.
+    @TaskLocal static var appUnderTest: AppUnderTest?
+
     /// The capture for the running test, if the test attaches anything on failure.
     @TaskLocal static var failureCapture: FailureCapture?
 
