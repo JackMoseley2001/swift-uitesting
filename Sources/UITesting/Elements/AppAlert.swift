@@ -137,8 +137,6 @@ public struct AppAlert {
         }
     }
 
-    // tvOS has no touch screen, so XCTest has no taps, drags or swipes there.
-    #if !os(tvOS)
     /// Taps the button with a label, once it is showing.
     ///
     /// ```swift
@@ -240,7 +238,6 @@ public struct AppAlert {
         case .failure(let error): try fail(error.message, filePath: filePath, line: line)
         }
     }
-    #endif
 
     private func wait(
         inOrderTo intent: String,
@@ -345,7 +342,9 @@ enum AppAlertText {
     /// The title is the first text and the message is the one after it.
     static func message(title: String, texts: [String]) -> String? {
         // watchOS reports the title a second time, after the message.
-        let rest = texts.first == title ? Array(texts.dropFirst()) : texts
+        // tvOS reports the title with a full stop after it.
+        let isTitle = texts.first.map { $0 == title || (!title.isEmpty && $0 == title + ".") } ?? false
+        let rest = isTitle ? Array(texts.dropFirst()) : texts
         return rest.first { !$0.isEmpty && $0 != title }
     }
 }

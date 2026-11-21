@@ -19,6 +19,8 @@ struct DatesView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 12) {
+                // tvOS has no date pickers.
+                #if !os(tvOS)
                 DatePicker("Date", selection: $date, displayedComponents: [.date])
                     .accessibilityIdentifier(DatesID.datePicker)
                 Text(Self.day(date))
@@ -28,6 +30,7 @@ struct DatesView: View {
                     .accessibilityIdentifier(DatesID.dateAndTimePicker)
                 Text("\(Self.day(dateAndTime)) \(Self.time(dateAndTime))")
                     .accessibilityIdentifier(DatesID.dateAndTime)
+                #endif
 
                 // Only iOS has date pickers with wheels.
                 #if os(iOS)
@@ -41,7 +44,7 @@ struct DatesView: View {
                 #endif
 
                 // watchOS has no date picker that shows a calendar.
-                #if !os(watchOS)
+                #if !os(watchOS) && !os(tvOS)
                 DatePicker("Calendar", selection: $calendar, displayedComponents: [.date])
                     .datePickerStyle(.graphical)
                     .accessibilityIdentifier(DatesID.calendarPicker)

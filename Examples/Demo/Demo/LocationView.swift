@@ -19,8 +19,17 @@ final class LocationFinder: NSObject, ObservableObject, CLLocationManagerDelegat
         if manager.authorizationStatus == .notDetermined {
             manager.requestWhenInUseAuthorization()
         } else {
-            manager.startUpdatingLocation()
+            start()
         }
+    }
+
+    /// Asks for the location. tvOS gives it once, and has no updates to start.
+    private func start() {
+        #if os(tvOS)
+        manager.requestLocation()
+        #else
+        manager.startUpdatingLocation()
+        #endif
     }
 
     nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
@@ -28,7 +37,7 @@ final class LocationFinder: NSObject, ObservableObject, CLLocationManagerDelegat
         Task { @MainActor in
             guard coordinates == "Looking" else { return }
             switch status {
-            case .authorizedWhenInUse, .authorizedAlways: self.manager.startUpdatingLocation()
+            case .authorizedWhenInUse, .authorizedAlways: self.start()
             case .denied, .restricted: coordinates = "Denied"
             default: break
             }

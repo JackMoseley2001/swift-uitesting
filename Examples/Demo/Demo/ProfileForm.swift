@@ -16,7 +16,7 @@ struct ProfileForm: View {
         ScrollView {
             VStack(spacing: 8) {
                 TextField("Name", text: $name)
-                    #if !os(watchOS)
+                    #if !os(watchOS) && !os(tvOS)
                     .textFieldStyle(.roundedBorder)
                     #endif
                     .autocorrectionDisabled()
@@ -24,13 +24,13 @@ struct ProfileForm: View {
                     .accessibilityIdentifier(ProfileID.nameField)
 
                 SecureField("Password", text: $password)
-                    #if !os(watchOS)
+                    #if !os(watchOS) && !os(tvOS)
                     .textFieldStyle(.roundedBorder)
                     #endif
                     .accessibilityIdentifier(ProfileID.passwordField)
 
-                // watchOS has no editor for several lines of text.
-                #if !os(watchOS)
+                // watchOS and tvOS have no editor for several lines of text.
+                #if !os(watchOS) && !os(tvOS)
                 TextEditor(text: $notes)
                     .frame(height: 80)
                     .border(.quaternary)

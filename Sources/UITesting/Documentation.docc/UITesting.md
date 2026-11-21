@@ -75,6 +75,7 @@ a first suite and a trait of your own step by step.
 - <doc:TestingAMacApp>
 - <doc:TestingAWatchApp>
 - <doc:TestingAVisionApp>
+- <doc:TestingATVApp>
 
 ### Alerts
 

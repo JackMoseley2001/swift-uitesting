@@ -3,6 +3,8 @@ import XCTest
 
 @UITestSuite(traits: .example(.inbox), .animationsDisabled)
 final class InboxTests: XCTestCase {
+    // tvOS has no swipe actions.
+    #if !os(tvOS)
     @UITest
     func usesATrailingSwipeActionByItsLabel(app: XCUIApplication) throws {
         try app[InboxID.row(2)].swipeAction("Flag")
@@ -10,14 +12,20 @@ final class InboxTests: XCTestCase {
         #expect(app[InboxID.lastAction].label == "Flagged Invoice", within: .seconds(2))
         #expect(app[InboxID.row(2)].exists)
     }
+    #endif
 
+    // tvOS has no swipe actions.
+    #if !os(tvOS)
     @UITest
     func usesALeadingSwipeAction(app: XCUIApplication) throws {
         try app[InboxID.row(3)].swipeAction("Read", edge: .leading)
 
         #expect(app[InboxID.lastAction].label == "Read Reminder", within: .seconds(2))
     }
+    #endif
 
+    // tvOS has no swipe actions.
+    #if !os(tvOS)
     @UITest
     func usesASwipeActionByItsIdentifier(app: XCUIApplication) throws {
         try app[InboxID.row(1)].swipeAction(InboxID.deleteButton(1))
@@ -26,9 +34,10 @@ final class InboxTests: XCTestCase {
         #expect(app[InboxID.lastAction].label == "Deleted Welcome")
         #expect(app[InboxID.row(2)].exists)
     }
+    #endif
 
-    // A Mac app has no pull to refresh, and neither has a watch app.
-    #if !os(macOS) && !os(watchOS)
+    // Only an iOS or a visionOS app has pull to refresh.
+    #if os(iOS) || os(visionOS)
     @UITest
     func pullsTheListToRefreshIt(app: XCUIApplication) throws {
         #expect(!app[InboxID.row(4)].exists)
@@ -40,8 +49,8 @@ final class InboxTests: XCTestCase {
     }
     #endif
 
-    // A Mac app has no pull to refresh, and neither has a watch app.
-    #if !os(macOS) && !os(watchOS)
+    // Only an iOS or a visionOS app has pull to refresh.
+    #if os(iOS) || os(visionOS)
     @UITest
     func refreshesTwice(app: XCUIApplication) throws {
         try app[InboxID.list].pullToRefresh()
@@ -58,8 +67,8 @@ final class InboxTests: XCTestCase {
         #expect(app[InboxID.list][all: InboxID.row].map(\.label) == ["Welcome", "Invoice", "Reminder"])
     }
 
-    // A Mac app has no pull to refresh, and neither has a watch app.
-    #if !os(macOS) && !os(watchOS)
+    // Only an iOS or a visionOS app has pull to refresh.
+    #if os(iOS) || os(visionOS)
     @UITest
     func waitsForTheNumberOfRowsToChange(app: XCUIApplication) throws {
         try app[InboxID.list].pullToRefresh()
@@ -70,6 +79,8 @@ final class InboxTests: XCTestCase {
     }
     #endif
 
+    // tvOS has no swipe actions.
+    #if !os(tvOS)
     @UITest
     func anElementKeepsToItsRowWhenTheListChanges(app: XCUIApplication) throws {
         let first = app[all: InboxID.row][0]
@@ -82,7 +93,10 @@ final class InboxTests: XCTestCase {
         #expect(app[all: InboxID.row].count == 2)
         #expect(app[all: InboxID.row][0].label == "Invoice")
     }
+    #endif
 
+    // tvOS has no swipe actions.
+    #if !os(tvOS)
     @UITest
     func deletesSeveralRowsOneAfterAnother(app: XCUIApplication) throws {
         for id in [3, 1] {
@@ -92,4 +106,5 @@ final class InboxTests: XCTestCase {
 
         #expect(app[InboxID.row(2)].exists)
     }
+    #endif
 }

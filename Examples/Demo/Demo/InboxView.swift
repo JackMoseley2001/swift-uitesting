@@ -24,6 +24,8 @@ struct InboxView: View {
             List(messages) { message in
                 Text(message.subject)
                     .accessibilityIdentifier(InboxID.row(message.id))
+                    // tvOS has no swipe actions.
+                    #if !os(tvOS)
                     .swipeActions(edge: .trailing) {
                         Button("Delete", role: .destructive) {
                             messages.removeAll { $0.id == message.id }
@@ -36,6 +38,7 @@ struct InboxView: View {
                     .swipeActions(edge: .leading) {
                         Button("Read") { lastAction = "Read \(message.subject)" }
                     }
+                    #endif
             }
             .refreshable {
                 // Long enough for a UI test to have to wait for the new message.

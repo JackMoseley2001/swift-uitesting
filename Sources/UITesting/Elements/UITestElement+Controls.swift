@@ -8,8 +8,6 @@ extension UITestElement where Kind: SwitchKind {
         ControlState.isOn(value: element.value)
     }
 
-    // tvOS has no touch screen, so XCTest has no taps, drags or swipes there.
-    #if !os(tvOS)
     /// Turns the switch on or off, once it exists and is enabled.
     ///
     /// Does nothing if the switch is already in that state. Otherwise it taps the
@@ -47,9 +45,12 @@ extension UITestElement where Kind: SwitchKind {
                     let inner = element.switches.firstMatch
                     if inner.exists {
                         inner.tapOrClick()
-                    } else {
-                        element.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).tapOrClick()
+                        return
                     }
+                    // tvOS has no touch screen, so there is no point of the switch to tap.
+                    #if !os(tvOS)
+                    element.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).tapOrClick()
+                    #endif
                 },
             ],
             wait: { polling.wait(timeout: settling, until: { self.isOn == isOn }) == .met }
@@ -78,7 +79,6 @@ extension UITestElement where Kind: SwitchKind {
         try wait(toBe: .enabled, inOrderTo: "toggle", within: timeout, filePath: filePath, line: line)
         try setOn(!isOn, within: timeout, filePath: filePath, line: line)
     }
-    #endif
 }
 
 extension UITestElement where Kind == ElementKinds.Slider {
@@ -432,7 +432,6 @@ extension UITestElement where Kind == ElementKinds.MenuPicker {
         return value
     }
 
-    #if !os(tvOS)
     /// Opens the menu and selects the option with a label, once the control exists
     /// and is enabled.
     ///
@@ -469,13 +468,18 @@ extension UITestElement where Kind == ElementKinds.MenuPicker {
         #else
         let hasLabel = NSPredicate(format: "label == %@", label)
         #endif
+        #if os(tvOS)
+        // On tvOS the options are the cells of a list, and it is what is inside a cell that has the label.
+        let queries = [app.cells.otherElements.matching(hasLabel), app.buttons.matching(hasLabel)]
+        #else
         let queries = [app.menuItems.matching(hasLabel), app.buttons.matching(hasLabel)]
+        #endif
         // The menu is in front of the app, so its option is the last element with the
         // label. The control itself can have the same label, and is not an option.
         func option() -> XCUIElement? {
             queries.lazy
                 .flatMap { $0.allElementsBoundByIndex.reversed() }
-                .first { $0.frame != own && $0.isHittable }
+                .first { $0.frame != own && $0.isReachable }
         }
 
         let polling = ExpectationPolling()
@@ -495,9 +499,12 @@ extension UITestElement where Kind == ElementKinds.MenuPicker {
         }
         found.tapOrClick()
         // The menu takes a moment to close, and the control is covered until it has.
+        #if os(tvOS)
+        _ = polling.wait(timeout: .seconds(2), until: { !found.exists })
+        #else
         _ = polling.wait(timeout: .seconds(2), until: { element.isHittable })
+        #endif
     }
-    #endif
 }
 
 extension UITestElement where Kind: SegmentedKind {
@@ -516,7 +523,6 @@ extension UITestElement where Kind: SegmentedKind {
         Kind.elementType == .radioGroup ? element.radioButtons : element.buttons
     }
 
-    #if !os(tvOS)
     /// Selects the segment with a label, once the control exists and is enabled.
     ///
     /// ```swift
@@ -550,7 +556,6 @@ extension UITestElement where Kind: SegmentedKind {
         }
         segment.tapOrClick()
     }
-    #endif
 }
 
 extension UITestElement {

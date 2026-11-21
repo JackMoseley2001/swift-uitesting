@@ -33,8 +33,6 @@ extension XCUIApplication {
         #endif
     }
 
-    // tvOS has no touch screen, so XCTest has no taps, drags or swipes there.
-    #if !os(tvOS)
     /// Goes back to the screen before, with the button that a navigation stack shows
     /// for it, once the button is there.
     ///
@@ -46,7 +44,8 @@ extension XCUIApplication {
     /// The label of the button is in the language of the app, and on iOS it is the
     /// title of the screen before. This finds the button by what the system calls it,
     /// which is the same in every language. It is in the navigation bar on iOS and in
-    /// the toolbar of the window on macOS.
+    /// the toolbar of the window on macOS. tvOS shows no such button, and this presses
+    /// the menu button of the remote, which goes back there.
     ///
     /// - Parameter timeout: How long to wait for the button. The default is the test's
     ///   ``UITestTrait/actionTimeout(_:)``.
@@ -58,6 +57,10 @@ extension XCUIApplication {
         filePath: StaticString = #filePath,
         line: UInt = #line
     ) throws {
+        #if os(tvOS)
+        // tvOS shows no button to go back. The remote's menu button goes back.
+        XCUIRemote.shared.press(.menu)
+        #else
         let timeout = timeout ?? ActionTimeout.current
         let button = backButton
         guard ExpectationPolling().wait(timeout: timeout, until: { button.exists }) == .met else {
@@ -66,8 +69,10 @@ extension XCUIApplication {
             throw RequirementFailedError(message: message)
         }
         button.tapOrClick()
+        #endif
     }
 
+    #if !os(tvOS)
     /// The button that goes back, found by the identifier the system gives it.
     @MainActor
     private var backButton: XCUIElement {

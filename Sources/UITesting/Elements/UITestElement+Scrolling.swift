@@ -191,3 +191,62 @@ extension UITestElement {
 }
 #endif
 #endif
+
+#if os(tvOS)
+extension UITestElement {
+    /// Moves the focus until the element is on screen and has it.
+    ///
+    /// tvOS has no touch screen, and content scrolls as the focus moves through it. A
+    /// list only creates the rows near the ones on screen, so a row further down does
+    /// not exist until the focus is moved towards it. This presses the remote in
+    /// `direction` until the element is on the screen, and then moves the focus to it:
+    ///
+    /// ```swift
+    /// try app[InboxID.row(1234)].scrollIntoView().tap()
+    /// ```
+    ///
+    /// The search goes in `direction` until a press no longer moves the focus, then
+    /// back the other way, so it finds the element whichever side it is on.
+    ///
+    /// - Parameters:
+    ///   - direction: The direction to look in first. The default is ``ScrollDirection/down``.
+    ///   - maximumSwipes: The most steps to make before going back the other way. Each
+    ///     step is three presses of the remote. The default is 20.
+    /// - Returns: This element, so that an action can follow.
+    /// - Throws: ``RequirementFailedError`` if the focus did not reach the element. The
+    ///   failure is recorded at the line of the call, and the test ends.
+    @discardableResult
+    public func scrollIntoView(
+        _ direction: ScrollDirection = .down,
+        maximumSwipes: Int = 20,
+        filePath: StaticString = #filePath,
+        line: UInt = #line
+    ) throws -> UITestElement {
+        var focus = XCUIApplication.focus
+        let found = ScrollSearch.find(
+            direction: direction,
+            maximumSwipes: maximumSwipes,
+            isInView: { element.moveFocus() },
+            scroll: { direction in
+                // The elements beside the one with the focus are on the screen, so
+                // nothing goes past unseen in three presses, and looking after each
+                // press would take most of the time.
+                let before = focus
+                focus = XCUIRemote.shared.pressAndWaitForFocus(direction, times: 3, from: before)
+                return focus != before
+            }
+        )
+        guard found else {
+            let kind = Kind.elementType == .any ? "element" : Kind.elementType.rawValue
+            var failure = "Could not scroll to \(reference.name): the focus did not reach a \(kind) with this "
+                + "\(reference.attribute) after moving \(direction) and then \(direction.opposite)"
+            if let other = elementOfAnyKind, other.exists, !element.exists {
+                failure += "\n" + reference.hint(forElementOfType: nil)
+            }
+            ExpectationReporter.report(message: failure, filePath: filePath, line: line)
+            throw RequirementFailedError(message: failure)
+        }
+        return self
+    }
+}
+#endif

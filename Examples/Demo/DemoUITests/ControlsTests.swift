@@ -32,6 +32,8 @@ final class ControlsTests: XCTestCase {
         #expect(!app[ControlsID.notificationsSwitch].isOn)
     }
 
+    // tvOS has no sliders.
+    #if !os(tvOS)
     @UITest
     func movesASlider(app: XCUIApplication) throws {
         let volume = app[ControlsID.volumeSlider]
@@ -49,6 +51,7 @@ final class ControlsTests: XCTestCase {
             #expect(abs(position - target) <= 0.02)
         }
     }
+    #endif
 
     // watchOS has no picker with segments.
     #if !os(watchOS)
@@ -64,6 +67,8 @@ final class ControlsTests: XCTestCase {
     }
     #endif
 
+    // tvOS has no steppers.
+    #if !os(tvOS)
     @UITest
     func stepsAStepperUpAndDown(app: XCUIApplication) throws {
         let quantity = try app[ControlsID.quantityStepper].scrollIntoView()
@@ -82,6 +87,7 @@ final class ControlsTests: XCTestCase {
         try quantity.decrement(times: 5)
         #expect(quantity.value == "0")
     }
+    #endif
 
     // watchOS has no picker with a menu.
     #if !os(watchOS)
@@ -98,6 +104,8 @@ final class ControlsTests: XCTestCase {
     }
     #endif
 
+    // tvOS has no steppers.
+    #if !os(tvOS)
     @UITest
     func aStepperCanBeSteppedPastTheEndOfItsRange(app: XCUIApplication) throws {
         let quantity = try app[ControlsID.quantityStepper].scrollIntoView()
@@ -108,6 +116,7 @@ final class ControlsTests: XCTestCase {
         try quantity.decrement(times: 7, requiringChange: false)
         #expect(quantity.value == "0")
     }
+    #endif
 
     // Only iOS has pickers with a wheel.
     #if os(iOS)
