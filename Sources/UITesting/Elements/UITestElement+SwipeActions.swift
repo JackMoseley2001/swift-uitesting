@@ -1,5 +1,7 @@
 import XCTest
 
+// tvOS has no touch screen, so XCTest has no taps, drags or swipes there.
+#if !os(tvOS)
 extension UITestElement {
     /// Swipes a row of a list and taps the action with a label, once the row exists.
     ///
@@ -140,3 +142,4 @@ extension UITestElement {
         action.tap()
     }
 }
+#endif

@@ -1,6 +1,8 @@
 import XCTest
 
 extension UITestElement {
+    // tvOS has no touch screen, so XCTest has no taps, drags or swipes there.
+    #if !os(tvOS)
     /// Taps the element, once it exists and is enabled.
     ///
     /// ```swift
@@ -19,6 +21,7 @@ extension UITestElement {
         try wait(toBe: .enabled, inOrderTo: "tap", within: timeout, filePath: filePath, line: line)
         element.tap()
     }
+    #endif
 
     /// Waits for the element to exist.
     ///

@@ -52,6 +52,7 @@ CI covers that range on every pull request and on `main`:
 | What runs | With |
 |---|---|
 | The package's tests | Xcode 16.4, 26.6 and 27.2 |
+| A build of the libraries for iOS, macOS, tvOS, watchOS and visionOS | Xcode 27.2 |
 | The demo's UI tests, on an iPhone simulator | iOS 18.5, 26.5 and 27 |
 
 The latest Xcode of each major version is used, and each version of iOS is tested with
@@ -64,6 +65,11 @@ versions from a Mac that has the simulators.
 
 Platforms other than iOS are built for but not tested, and the features that are marked
 as needing iOS 16.4 are not available on iOS 16.0 to 16.3.
+
+tvOS has no touch screen, so XCTest has no taps, drags or swipes there. On tvOS the
+library has no actions that touch the screen: `tap()`, entering text, scrolling, swipe
+actions, changing a control and tapping a button of an alert. Looking elements up,
+reading them, waiting for them and expectations all work, as do traits and messages.
 
 ## Installation
 

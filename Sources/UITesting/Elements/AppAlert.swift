@@ -128,6 +128,8 @@ public struct AppAlert {
         }
     }
 
+    // tvOS has no touch screen, so XCTest has no taps, drags or swipes there.
+    #if !os(tvOS)
     /// Taps the button with a label, once it is showing.
     ///
     /// ```swift
@@ -229,6 +231,7 @@ public struct AppAlert {
         case .failure(let error): try fail(error.message, filePath: filePath, line: line)
         }
     }
+    #endif
 
     private func wait(
         inOrderTo intent: String,

@@ -8,6 +8,8 @@ extension UITestElement where Kind: SwitchKind {
         ControlState.isOn(value: element.value)
     }
 
+    // tvOS has no touch screen, so XCTest has no taps, drags or swipes there.
+    #if !os(tvOS)
     /// Turns the switch on or off, once it exists and is enabled.
     ///
     /// Does nothing if the switch is already in that state. Otherwise it taps the
@@ -76,6 +78,7 @@ extension UITestElement where Kind: SwitchKind {
         try wait(toBe: .enabled, inOrderTo: "toggle", within: timeout, filePath: filePath, line: line)
         try setOn(!isOn, within: timeout, filePath: filePath, line: line)
     }
+    #endif
 }
 
 extension UITestElement where Kind == ElementKinds.Slider {
@@ -87,6 +90,7 @@ extension UITestElement where Kind == ElementKinds.Slider {
         ControlState.sliderPosition(value: element.value)
     }
 
+    #if !os(tvOS)
     /// Moves the slider to a position, once it exists and is enabled.
     ///
     /// XCTest's own `adjust(toNormalizedSliderPosition:)` can land several percent
@@ -132,8 +136,10 @@ extension UITestElement where Kind == ElementKinds.Slider {
             }
         try fail("Could not move \(reference.name) to \(wanted): \(reason)", filePath: filePath, line: line)
     }
+    #endif
 }
 
+#if !os(tvOS)
 extension UITestElement where Kind == ElementKinds.Slider {
     /// Drags the slider's thumb by the distance between two positions.
     ///
@@ -301,6 +307,7 @@ extension UITestElement where Kind == ElementKinds.Stepper {
         element.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: x, dy: y)).tap()
     }
 }
+#endif
 
 // Picker wheels are only on iOS, and so is the XCTest call that turns one.
 #if os(iOS)
@@ -358,6 +365,7 @@ extension UITestElement where Kind == ElementKinds.MenuPicker {
         return value
     }
 
+    #if !os(tvOS)
     /// Opens the menu and selects the option with a label, once the control exists
     /// and is enabled.
     ///
@@ -417,6 +425,7 @@ extension UITestElement where Kind == ElementKinds.MenuPicker {
         // The menu takes a moment to close, and the control is covered until it has.
         _ = polling.wait(timeout: .seconds(2), until: { element.isHittable })
     }
+    #endif
 }
 
 extension UITestElement where Kind == ElementKinds.SegmentedControl {
@@ -425,6 +434,7 @@ extension UITestElement where Kind == ElementKinds.SegmentedControl {
         element.buttons.allElementsBoundByIndex.first { $0.isSelected }?.label
     }
 
+    #if !os(tvOS)
     /// Selects the segment with a label, once the control exists and is enabled.
     ///
     /// ```swift
@@ -458,6 +468,7 @@ extension UITestElement where Kind == ElementKinds.SegmentedControl {
         }
         segment.tap()
     }
+    #endif
 }
 
 extension UITestElement {

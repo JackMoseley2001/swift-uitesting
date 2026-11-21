@@ -51,3 +51,38 @@ jobs:
             options+=(--disable-experimental-prebuilts)
           fi
           swift test ${options[@]+"${options[@]}"}
+
+  build:
+    name: Build (${{ matrix.platform }})
+    runs-on: xcode-27
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        # Every platform in the package's manifest. The build is for no device in
+        # particular, so it needs the platform's SDK, which Xcode has, and no simulator.
+        platform:
+          - iOS
+          - macOS
+          - tvOS
+          - watchOS
+          - visionOS
+    steps:
+      - name: Check out
+        uses: actions/checkout@v7
+
+      - name: Select Xcode
+        run: xcodes select "27.2"
+
+      - name: Show toolchain
+        run: xcodebuild -version
+
+      - name: Build
+        run: |
+          set -o pipefail
+          # UITesting depends on the package's other two libraries, so this builds all three.
+          xcodebuild build \
+            -scheme UITesting \
+            -destination "generic/platform=${{ matrix.platform }}" \
+            -skipMacroValidation \
+            | xcbeautify --renderer github-actions

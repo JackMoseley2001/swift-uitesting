@@ -9,6 +9,8 @@ extension UITestElement where Kind: TextEntryKind {
         TextEntry.text(value: element.value, placeholder: element.placeholderValue)
     }
 
+    // tvOS has no touch screen, so XCTest has no taps, drags or swipes there.
+    #if !os(tvOS)
     /// Types text into the field, once the field exists and is enabled.
     ///
     /// The field is tapped first, to give it the keyboard. In a field that already
@@ -94,8 +96,10 @@ extension UITestElement where Kind: TextEntryKind {
     private func tapAfterLastCharacter() {
         element.coordinate(withNormalizedOffset: CGVector(dx: 0.98, dy: 0.9)).tap()
     }
+    #endif
 }
 
+#if !os(tvOS)
 extension UITestElement where Kind: SingleLineTextEntryKind {
     /// Presses the Return key in the field, once the field exists and is enabled.
     ///
@@ -122,3 +126,4 @@ extension UITestElement where Kind: SingleLineTextEntryKind {
         element.typeText(XCUIKeyboardKey.return.rawValue)
     }
 }
+#endif

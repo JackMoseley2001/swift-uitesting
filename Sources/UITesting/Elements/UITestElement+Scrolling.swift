@@ -1,5 +1,7 @@
 import XCTest
 
+// tvOS has no touch screen, so XCTest has no taps, drags or swipes there.
+#if !os(tvOS)
 extension UITestElement {
     /// Scrolls until the element is on screen and can be tapped.
     ///
@@ -119,3 +121,4 @@ extension UITestElement {
         )
     }
 }
+#endif
