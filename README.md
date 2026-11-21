@@ -1423,6 +1423,34 @@ the command line:
 xcodebuild test -project Examples/Demo/Demo.xcodeproj -scheme Demo -destination "platform=iOS Simulator,name=iPhone 17" -skipMacroValidation
 ```
 
+## Releases
+
+A version is a git tag with no prefix, such as `1.2.0`, which is what Swift Package
+Manager reads. Each one has a GitHub release that lists the pull requests merged since
+the one before.
+
+A release is made by running the Release workflow from the Actions tab, on `main`. It
+asks what has changed since the last release:
+
+| Choice | Next version after 1.2.3 |
+|---|---|
+| `use pull request labels` | Decided by the labels on the pull requests merged since: `breaking` if any has it, or else `feature` if any has it, or else `patch`. |
+| `patch` | 1.2.4, for fixes and small improvements. |
+| `feature` | 1.3.0, for something new that does not break existing code. |
+| `breaking` | 2.0.0, for a change that existing code has to adapt to. |
+
+Things to know:
+
+- **Before 1.0.0**, a breaking change raises the middle number, as a feature does:
+  0.3.1 becomes 0.4.0. Version 1.0.0 is released by typing it into the workflow's
+  version field, which releases exactly that version whatever the choice above.
+- **The first release** is 0.1.0, unless the version field says otherwise.
+- **Labels** `breaking`, `feature` and `patch` on a pull request also decide which
+  heading it is listed under in the release's notes. A pull request with none of them
+  is listed under "Other changes" and counts as a patch.
+- **To see what would be released** without releasing it, tick the workflow's dry run
+  box. The version and the notes are shown in the run's summary.
+
 ## Documentation
 
 Every public symbol has a documentation comment, and both libraries have a DocC

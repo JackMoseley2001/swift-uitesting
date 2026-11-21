@@ -33,6 +33,10 @@ xcodebuild test ... -only-testing:DemoUITests/FruitListTests/test_<functionName>
 - There is no linter or formatter configuration in the repo; match the surrounding style.
 - CI (`.github/workflows`) runs both of the above on every pull request, on Xcode 27. The demo workflow retries only when the simulator was not ready, never on a failing test.
 
+## Releasing
+
+A version is a tag with no prefix (`1.2.0`). `.github/workflows/release.yml` is run by hand from the Actions tab: it finds the last version tag, works out the next one with `scripts/next-version.sh` (from a choice of patch, feature or breaking, from the `breaking`/`feature`/`patch` labels of the pull requests merged since, or from an exact version), and creates the tag and a GitHub release with generated notes. `.github/release.yml` groups those notes by the same labels. Nothing in the package records its own version, so a release changes no files.
+
 ## Architecture
 
 Three targets, with a strict dependency direction:
