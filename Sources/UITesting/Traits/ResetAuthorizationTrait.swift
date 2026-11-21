@@ -30,7 +30,7 @@ extension UITestTrait where Self == ResetAuthorizationTrait {
     /// ```
     ///
     /// The reset happens once, before the first launch. It is not repeated by
-    /// ``UITestContext/relaunch(with:)``, so a test can check that the app keeps the
+    /// ``UITestContext/relaunch(with:within:)``, so a test can check that the app keeps the
     /// access it was given across a restart.
     ///
     /// - Parameter resources: The resources to reset, such as `.photos` or `.location`.

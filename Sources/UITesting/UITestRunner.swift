@@ -71,6 +71,7 @@ public enum UITestRunner {
                             launch: {
                                 if launchesAutomatically(with: traits) {
                                     app.launch()
+                                    app.waitForFirstWindow()
                                 }
                             },
                             setUp: { try await $0.setUp(context) },

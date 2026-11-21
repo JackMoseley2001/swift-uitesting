@@ -16,10 +16,23 @@ struct AnimationView: View {
 
             Button("Move") {
                 hasArrived = false
-                withAnimation(.linear(duration: 3)) {
-                    isMoved.toggle()
-                } completion: {
-                    hasArrived = true
+                if #available(iOS 17.0, *) {
+                    withAnimation(.linear(duration: 3)) {
+                        isMoved.toggle()
+                    } completion: {
+                        hasArrived = true
+                    }
+                } else {
+                    // iOS 16 does not say when an animation ends, so the marker has
+                    // arrived when the time the animation takes has gone by.
+                    withAnimation(.linear(duration: 3)) {
+                        isMoved.toggle()
+                    }
+                    let duration: Duration = launchTraits.animationsDisabled ? .zero : .seconds(3)
+                    Task {
+                        try? await Task.sleep(for: duration)
+                        hasArrived = true
+                    }
                 }
             }
             .accessibilityIdentifier(AnimationID.moveButton)

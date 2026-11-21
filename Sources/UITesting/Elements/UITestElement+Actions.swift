@@ -3,7 +3,7 @@ import XCTest
 extension UITestElement {
     // tvOS has no touch screen, so XCTest has no taps, drags or swipes there.
     #if !os(tvOS)
-    /// Taps the element, once it exists and is enabled.
+    /// Taps the element, once it exists and is enabled. On macOS this is a click.
     ///
     /// ```swift
     /// try app[LoginID.signInButton].tap()
@@ -19,7 +19,31 @@ extension UITestElement {
         line: UInt = #line
     ) throws {
         try wait(toBe: .enabled, inOrderTo: "tap", within: timeout, filePath: filePath, line: line)
-        element.tap()
+        element.tapOrClick()
+    }
+    #endif
+
+    #if os(macOS)
+    /// Clicks the element, once it exists and is enabled.
+    ///
+    /// This is ``tap(within:filePath:line:)`` under the name the action has on a Mac.
+    /// Use `tap` in a test that runs on other platforms as well.
+    ///
+    /// ```swift
+    /// try app[LoginID.signInButton].click()
+    /// ```
+    ///
+    /// - Parameter timeout: How long to wait for the element. The default is the
+    ///   test's ``UITestTrait/actionTimeout(_:)``.
+    /// - Throws: ``RequirementFailedError`` if the element is not ready in time. The
+    ///   failure is recorded at the line of the call, and the test ends.
+    public func click(
+        within timeout: Duration? = nil,
+        filePath: StaticString = #filePath,
+        line: UInt = #line
+    ) throws {
+        try wait(toBe: .enabled, inOrderTo: "click", within: timeout, filePath: filePath, line: line)
+        element.click()
     }
     #endif
 

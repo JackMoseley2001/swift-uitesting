@@ -56,14 +56,20 @@ public struct AppAlert {
 
     /// Its title, read without waiting. Empty if it is not showing.
     public var title: String {
-        element.exists ? element.label : ""
+        guard element.exists else { return "" }
+        #if os(macOS)
+        // On macOS the label of every alert is "alert", and its title is the first text inside it.
+        return element.staticTexts.firstMatch.labelOrText
+        #else
+        return element.label
+        #endif
     }
 
     /// Its message, read without waiting, or `nil` if it has none or is not showing.
     public var message: String? {
         guard element.exists else { return nil }
-        let texts = element.staticTexts.allElementsBoundByIndex.map(\.label)
-        return AppAlertText.message(title: element.label, texts: texts)
+        let texts = element.staticTexts.allElementsBoundByIndex.map(\.labelOrText)
+        return AppAlertText.message(title: title, texts: texts)
     }
 
     /// The labels of its buttons in order, read without waiting. Empty if it is not showing.
@@ -201,7 +207,7 @@ public struct AppAlert {
                 line: line
             )
         }
-        dismissRegion.tap()
+        dismissRegion.tapOrClick()
         _ = ExpectationPolling().wait(timeout: .seconds(2), until: { !element.exists })
     }
 
@@ -222,12 +228,12 @@ public struct AppAlert {
         let buttons = buttonElements()
         let choice = SystemAlertChoice.position(
             of: button,
-            inAlertTitled: element.label,
+            inAlertTitled: title,
             withButtons: buttons.map(\.info),
             noun: noun
         )
         switch choice {
-        case .success(let position): buttons[position].element.tap()
+        case .success(let position): buttons[position].element.tapOrClick()
         case .failure(let error): try fail(error.message, filePath: filePath, line: line)
         }
     }
@@ -271,7 +277,12 @@ extension XCUIApplication {
     /// ```
     @MainActor
     public var alert: AppAlert {
+        #if os(macOS)
+        // On macOS an alert is a sheet on the window, as a confirmation dialog is.
+        AppAlert(element: sheets.firstMatch, app: self, noun: .alert, dismissRegion: nil)
+        #else
         AppAlert(element: alerts.firstMatch, app: self, noun: .alert, dismissRegion: nil)
+        #endif
     }
 
     /// The confirmation dialog or action sheet that the app is showing, or the next one it shows.

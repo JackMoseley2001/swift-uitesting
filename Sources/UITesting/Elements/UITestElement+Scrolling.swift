@@ -39,18 +39,36 @@ extension UITestElement {
         filePath: StaticString = #filePath,
         line: UInt = #line
     ) throws -> UITestElement {
-        let scrollView = scope ?? XCUIApplication()
-        var screen = XCUIScreen.main.screenshot().pngRepresentation
+        let scrollView = (scope ?? XCUIApplication()).viewToScroll
+        // What is looked at to tell whether the content moved. On macOS it is the view,
+        // because the screen has other windows on it, which change on their own.
+        #if os(macOS)
+        let picture = { scrollView.screenshot().pngRepresentation }
+        #else
+        let picture = { XCUIScreen.main.screenshot().pngRepresentation }
+        #endif
+        var screen = picture()
 
         let found = ScrollSearch.find(
             direction: direction,
             maximumSwipes: maximumSwipes,
-            isInView: { element.exists && element.isHittable },
+            isInView: {
+                guard element.exists else { return false }
+                if element.isHittable { return true }
+                #if os(macOS)
+                // Some controls on macOS, such as a stepper, report that they cannot be
+                // clicked when they can. They are in view when their middle is.
+                let frame = element.frame
+                return !frame.isEmpty && scrollView.frame.contains(CGPoint(x: frame.midX, y: frame.midY))
+                #else
+                return false
+                #endif
+            },
             scroll: { direction in
                 scrollView.drag(towards: direction)
                 // The content has stopped moving when a swipe leaves the screen as it was.
                 let before = screen
-                screen = XCUIScreen.main.screenshot().pngRepresentation
+                screen = picture()
                 return screen != before
             }
         )
@@ -69,11 +87,36 @@ extension UITestElement {
 }
 
 extension XCUIElement {
+    /// The element that is scrolled to move the content of this one.
+    ///
+    /// It is the element itself, except on macOS for an app, which has no place for
+    /// the pointer to be: there it is the first scroll view of the app's window.
+    fileprivate var viewToScroll: XCUIElement {
+        #if os(macOS)
+        guard self is XCUIApplication else { return self }
+        let window = windows.firstMatch
+        let scrollView = window.scrollViews.firstMatch
+        return scrollView.exists ? scrollView : window
+        #else
+        self
+        #endif
+    }
+
     /// Drags across the middle of the element to show the content in the given direction.
     ///
     /// The drag is slow and holds at its end, so the content does not carry on moving
-    /// and nothing is skipped.
+    /// and nothing is skipped. On macOS, where a drag does not scroll, this turns the
+    /// scroll wheel by half the size of the element.
     fileprivate func drag(towards direction: ScrollDirection) {
+        #if os(macOS)
+        let size = frame.size
+        switch direction {
+        case .down: scroll(byDeltaX: 0, deltaY: -size.height / 2)
+        case .up: scroll(byDeltaX: 0, deltaY: size.height / 2)
+        case .right: scroll(byDeltaX: -size.width / 2, deltaY: 0)
+        case .left: scroll(byDeltaX: size.width / 2, deltaY: 0)
+        }
+        #else
         let (from, to): (CGVector, CGVector) =
             switch direction {
             case .down: (CGVector(dx: 0.5, dy: 0.7), CGVector(dx: 0.5, dy: 0.3))
@@ -81,15 +124,17 @@ extension XCUIElement {
             case .right: (CGVector(dx: 0.7, dy: 0.5), CGVector(dx: 0.3, dy: 0.5))
             case .left: (CGVector(dx: 0.3, dy: 0.5), CGVector(dx: 0.7, dy: 0.5))
             }
-        coordinate(withNormalizedOffset: from).press(
-            forDuration: 0.05,
-            thenDragTo: coordinate(withNormalizedOffset: to),
-            withVelocity: .default,
-            thenHoldForDuration: 0.2
+        coordinate(withNormalizedOffset: from).drag(
+            afterPressingFor: 0.05,
+            to: coordinate(withNormalizedOffset: to),
+            thenHoldingFor: 0.2
         )
+        #endif
     }
 }
 
+// A Mac app has no pull to refresh.
+#if !os(macOS)
 extension UITestElement {
     /// Pulls a list or scroll view down to refresh it, once it exists.
     ///
@@ -121,4 +166,5 @@ extension UITestElement {
         )
     }
 }
+#endif
 #endif

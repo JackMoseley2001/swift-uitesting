@@ -42,13 +42,13 @@ extension UITestElement where Kind: SwitchKind {
         let changed = ControlState.change(
             isDone: { self.isOn == isOn },
             attempts: [
-                { element.tap() },
+                { element.tapOrClick() },
                 {
                     let inner = element.switches.firstMatch
                     if inner.exists {
-                        inner.tap()
+                        inner.tapOrClick()
                     } else {
-                        element.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).tap()
+                        element.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).tapOrClick()
                     }
                 },
             ],
@@ -87,7 +87,12 @@ extension UITestElement where Kind == ElementKinds.Slider {
     ///
     /// `XCUIElement` reports this as a percentage in a string, such as "50%".
     public var position: Double? {
+        #if os(macOS)
+        // On macOS the value is a number in the slider's own range, and not a percentage.
+        element.exists ? Double(element.normalizedSliderPosition) : nil
+        #else
         ControlState.sliderPosition(value: element.value)
+        #endif
     }
 
     #if !os(tvOS)
@@ -151,16 +156,29 @@ extension UITestElement where Kind == ElementKinds.Slider {
         let hold = min(max(from, 0.06), 0.94)
         let past = to <= 0 ? -0.1 : (to >= 1 ? 0.1 : 0)
         let release = hold + (to - from) + past
-        element.coordinate(withNormalizedOffset: CGVector(dx: hold, dy: 0.5)).press(
-            forDuration: 0.1,
-            thenDragTo: element.coordinate(withNormalizedOffset: CGVector(dx: release, dy: 0.5)),
-            withVelocity: .slow,
-            thenHoldForDuration: 0.2
+        element.coordinate(withNormalizedOffset: CGVector(dx: hold, dy: 0.5)).drag(
+            afterPressingFor: 0.1,
+            to: element.coordinate(withNormalizedOffset: CGVector(dx: release, dy: 0.5)),
+            velocity: .slow,
+            thenHoldingFor: 0.2
         )
     }
 }
 
 extension UITestElement where Kind == ElementKinds.Stepper {
+    /// The value of the stepper as text, read without waiting, or `nil` if the stepper
+    /// reports none.
+    ///
+    /// `XCUIElement` reports this as a string on iOS and as a number on macOS. This is
+    /// the same text on both.
+    ///
+    /// ```swift
+    /// #expect(app[BasketID.quantityStepper].value == "3")
+    /// ```
+    public var value: String? {
+        ControlState.stepperValue(value: element.value)
+    }
+
     /// Steps the stepper up, once it exists and is enabled.
     ///
     /// ```swift
@@ -170,14 +188,14 @@ extension UITestElement where Kind == ElementKinds.Stepper {
     ///
     /// If the stepper reports a value, each step is checked: a step that leaves the
     /// value as it was, such as one past the end of the stepper's range, fails. Read
-    /// the value with `value`, as for any element.
+    /// the value with ``value``.
     ///
     /// Pass `requiringChange: false` when a step is allowed to change nothing, such as
     /// in a test that the stepper stops at the end of its range:
     ///
     /// ```swift
     /// try app[BasketID.quantityStepper].increment(times: 10, requiringChange: false)
-    /// #expect(app[BasketID.quantityStepper].value as? String == "5")
+    /// #expect(app[BasketID.quantityStepper].value == "5")
     /// ```
     ///
     /// - Parameters:
@@ -259,7 +277,7 @@ extension UITestElement where Kind == ElementKinds.Stepper {
 
         let polling = ExpectationPolling()
         let settling = min(timeout ?? ActionTimeout.current, .seconds(2))
-        let reported = { "\(element.value ?? "")" }
+        let reported = { value ?? "" }
         let stuckAt = ControlState.step(
             times: times,
             requiringChange: requiringChange,
@@ -285,15 +303,23 @@ extension UITestElement where Kind == ElementKinds.Stepper {
     /// stepper that never has buttons is tapped a quarter of the way in from the end
     /// of the control inside it.
     private func tapButton(for step: Step) {
+        #if os(macOS)
+        // On macOS the halves are arrows, and not buttons.
+        let arrows = step == .increment ? element.incrementArrows : element.decrementArrows
+        if arrows.firstMatch.exists {
+            arrows.firstMatch.click()
+            return
+        }
+        #endif
         let named = element.buttons["\(accessibilityIdentifier)-\(step == .increment ? "Increment" : "Decrement")"]
         let buttons = element.buttons
         _ = ExpectationPolling().wait(timeout: .seconds(1), until: { named.exists || buttons.count == 2 })
         if named.exists {
-            named.tap()
+            named.tapOrClick()
             return
         }
         if buttons.count == 2 {
-            buttons.element(boundBy: step == .increment ? 1 : 0).tap()
+            buttons.element(boundBy: step == .increment ? 1 : 0).tapOrClick()
             return
         }
 
@@ -304,7 +330,7 @@ extension UITestElement where Kind == ElementKinds.Stepper {
         let control = inner.exists ? inner.frame : whole
         let x = control.minX + control.width * (step == .increment ? 0.75 : 0.25) - whole.minX
         let y = control.midY - whole.minY
-        element.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: x, dy: y)).tap()
+        element.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: x, dy: y)).tapOrClick()
     }
 }
 #endif
@@ -359,7 +385,7 @@ extension UITestElement where Kind == ElementKinds.MenuPicker {
     public var selection: String? {
         let text = element.staticTexts.firstMatch
         if text.exists {
-            return text.label
+            return text.labelOrText
         }
         guard let value = element.value as? String, !value.isEmpty else { return nil }
         return value
@@ -394,9 +420,14 @@ extension UITestElement where Kind == ElementKinds.MenuPicker {
         let app = try owningApp(inOrderTo: intent, filePath: filePath, line: line)
         try wait(toBe: .enabled, inOrderTo: intent, within: timeout, filePath: filePath, line: line)
         let own = element.frame
-        element.tap()
+        element.tapOrClick()
 
+        // On macOS an item of a menu has a title, and no label.
+        #if os(macOS)
+        let hasLabel = NSPredicate(format: "label == %@ OR title == %@", label, label)
+        #else
         let hasLabel = NSPredicate(format: "label == %@", label)
+        #endif
         let queries = [app.menuItems.matching(hasLabel), app.buttons.matching(hasLabel)]
         // The menu is in front of the app, so its option is the last element with the
         // label. The control itself can have the same label, and is not an option.
@@ -421,17 +452,27 @@ extension UITestElement where Kind == ElementKinds.MenuPicker {
                 line: line
             )
         }
-        found.tap()
+        found.tapOrClick()
         // The menu takes a moment to close, and the control is covered until it has.
         _ = polling.wait(timeout: .seconds(2), until: { element.isHittable })
     }
     #endif
 }
 
-extension UITestElement where Kind == ElementKinds.SegmentedControl {
+extension UITestElement where Kind: SegmentedKind {
     /// The label of the segment that is selected, read without waiting.
     public var selection: String? {
-        element.buttons.allElementsBoundByIndex.first { $0.isSelected }?.label
+        if Kind.elementType == .radioGroup {
+            // A radio button reports whether it is selected as its value.
+            segments.allElementsBoundByIndex.first { ControlState.isOn(value: $0.value) }?.label
+        } else {
+            segments.allElementsBoundByIndex.first { $0.isSelected }?.label
+        }
+    }
+
+    /// The segments of the control, which are radio buttons in a group of them.
+    private var segments: XCUIElementQuery {
+        Kind.elementType == .radioGroup ? element.radioButtons : element.buttons
     }
 
     #if !os(tvOS)
@@ -456,9 +497,9 @@ extension UITestElement where Kind == ElementKinds.SegmentedControl {
     ) throws {
         try wait(toBe: .enabled, inOrderTo: "select \"\(label)\" in", within: timeout, filePath: filePath, line: line)
 
-        let segment = element.buttons[label]
+        let segment = segments[label]
         guard segment.exists else {
-            let labels = element.buttons.allElementsBoundByIndex.map(\.label).joined(separator: ", ")
+            let labels = segments.allElementsBoundByIndex.map(\.label).joined(separator: ", ")
             try fail(
                 "Could not select \"\(label)\" in \(reference.name): "
                     + "no segment has this label. Its segments are: \(labels)",
@@ -466,7 +507,7 @@ extension UITestElement where Kind == ElementKinds.SegmentedControl {
                 line: line
             )
         }
-        segment.tap()
+        segment.tapOrClick()
     }
     #endif
 }

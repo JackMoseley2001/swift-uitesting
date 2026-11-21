@@ -273,7 +273,7 @@ extension UITestElement {
     init(labeled label: String, in scope: XCUIElement, app: XCUIApplication?) {
         // The string subscript of a query also matches identifiers, titles, values
         // and placeholders, so the label is matched with a predicate.
-        let hasLabel = NSPredicate(format: "label == %@", label)
+        let hasLabel = NSPredicate.hasLabel(label)
         let matches = scope.descendants(matching: XCUIElement.ElementType(Kind.elementType)).matching(hasLabel)
         self.init(
             // Not the first match: with several, nothing says which one is meant.

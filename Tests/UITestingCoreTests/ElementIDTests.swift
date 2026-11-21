@@ -135,12 +135,31 @@ struct ElementIDTests {
     }
 
     @Test
+    func segmentedPickerIsTheTypeThatThePlatformReports() {
+        #if os(macOS)
+            #expect(ElementKinds.SegmentedPicker.elementType == .radioGroup)
+        #else
+            #expect(ElementKinds.SegmentedPicker.elementType == .segmentedControl)
+        #endif
+    }
+
+    @Test
+    func listIsTheTypeThatThePlatformReports() {
+        #if os(macOS)
+            #expect(ElementKinds.List.elementType == .outline)
+        #else
+            #expect(ElementKinds.List.elementType == .collectionView)
+        #endif
+    }
+
+    @Test
     func everyElementTypeHasAKind() {
         let kinds: [any ElementKind.Type] = [
             ElementKinds.AnyElement.self, ElementKinds.Other.self, ElementKinds.Button.self,
             ElementKinds.StaticText.self, ElementKinds.TextField.self, ElementKinds.SecureTextField.self,
             ElementKinds.TextView.self, ElementKinds.SearchField.self, ElementKinds.Switch.self,
             ElementKinds.Toggle.self, ElementKinds.CheckBox.self, ElementKinds.RadioButton.self,
+            ElementKinds.RadioGroup.self, ElementKinds.Outline.self,
             ElementKinds.Slider.self, ElementKinds.Stepper.self, ElementKinds.Picker.self,
             ElementKinds.PickerWheel.self, ElementKinds.DatePicker.self, ElementKinds.SegmentedControl.self,
             ElementKinds.PopUpButton.self, ElementKinds.MenuButton.self, ElementKinds.Menu.self,

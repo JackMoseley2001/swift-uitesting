@@ -22,7 +22,7 @@ extension UITestContext {
     ///
     /// The call returns when the app has finished handling the message. It waits for
     /// the app to connect and to be receiving this type of message, so it can be the
-    /// first thing a test does, and it works again after ``relaunch(with:)``.
+    /// first thing a test does, and it works again after ``relaunch(with:within:)``.
     ///
     /// - Parameters:
     ///   - message: The message to send.

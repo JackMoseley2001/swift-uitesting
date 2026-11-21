@@ -29,12 +29,15 @@ struct ControlsView: View {
                 .pickerStyle(.segmented)
                 .accessibilityIdentifier(ControlsID.sizePicker)
 
+                // Only iOS has pickers with a wheel.
+                #if os(iOS)
                 Picker("Colour", selection: $colour) {
                     ForEach(Self.colours, id: \.self) { Text($0) }
                 }
                 .pickerStyle(.wheel)
                 .frame(height: 120)
                 .accessibilityIdentifier(ControlsID.colourPicker)
+                #endif
 
                 Picker("Shape", selection: $shape) {
                     ForEach(Self.shapes, id: \.self) { Text($0) }

@@ -1,6 +1,8 @@
 import UITesting
 import XCTest
 
+// The library sets date pickers on iOS only.
+#if os(iOS)
 @UITestSuite(traits: .example(.dates), .animationsDisabled)
 final class DatesTests: XCTestCase {
     @UITest
@@ -93,3 +95,4 @@ final class DatesTests: XCTestCase {
         #expect(app[DatesID.dateAndTimeWheel].label == "2023-11-14 16:45")
     }
 }
+#endif

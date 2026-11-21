@@ -75,7 +75,7 @@ step instead.
 
 ### Launching
 
-- ``UITestContext/relaunch(with:)``
-- ``UITestContext/relaunch(opening:with:)``
+- ``UITestContext/relaunch(with:within:)``
+- ``UITestContext/relaunch(opening:with:within:)``
 - ``UITestTrait/manualLaunch``
 - ``ManualLaunchTrait``

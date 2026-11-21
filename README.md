@@ -54,6 +54,7 @@ CI covers that range on every pull request and on `main`:
 | The package's tests | Xcode 16.4, 26.6 and 27.2 |
 | A build of the libraries for iOS, macOS, tvOS, watchOS and visionOS | Xcode 27.2 |
 | The demo's UI tests, on an iPhone simulator | iOS 18.5, 26.5 and 27 |
+| The demo's UI tests, as a Mac app | macOS, with Xcode 27.1 |
 
 The latest Xcode of each major version is used, and each version of iOS is tested with
 the Xcode of its own year. With Xcode 16.4, which has Swift 6.1, the package's tests
@@ -63,8 +64,9 @@ iOS 16 and iOS 17 are supported but not tested in CI, because its runners do not
 simulators for them. The demo builds for iOS 16.4, so its UI tests can be run on those
 versions from a Mac that has the simulators.
 
-Platforms other than iOS are built for but not tested, and the features that are marked
-as needing iOS 16.4 are not available on iOS 16.0 to 16.3.
+watchOS, tvOS and visionOS are built for but not tested. See
+[Testing a Mac app](#testing-a-mac-app) for what is different on macOS. The features
+that are marked as needing iOS 16.4 are not available on iOS 16.0 to 16.3.
 
 tvOS has no touch screen, so XCTest has no taps, drags or swipes there. On tvOS the
 library has no actions that touch the screen: `tap()`, entering text, scrolling, swipe
@@ -753,9 +755,9 @@ identifier, one for each element type that XCTest reports. Some common ones:
 | `Button` | Buttons, including a SwiftUI `NavigationLink`. |
 | `StaticText` | Text the user cannot edit: a SwiftUI `Text`, a `UILabel`. |
 | `TextField`, `SecureTextField`, `TextView` | A text field, a password field, and a multi-line editor. |
-| `Switch` | A SwiftUI `Toggle` on iOS. On macOS it is a `CheckBox`. |
-| `Slider`, `Stepper`, `Picker`, `DatePicker`, `SegmentedControl`, `MenuPicker` | Controls. A SwiftUI `Picker` is a different kind for each picker style: `Picker` for a wheel, `SegmentedControl`, and `MenuPicker` for a menu. |
-| `Image`, `Link`, `Cell`, `Table`, `CollectionView`, `ScrollView` | Content and containers. |
+| `Switch`, `CheckBox` | A SwiftUI `Toggle` is a `Switch` on iOS and a `CheckBox` on macOS. |
+| `Slider`, `Stepper`, `Picker`, `DatePicker`, `SegmentedControl`, `SegmentedPicker`, `MenuPicker` | Controls. A SwiftUI `Picker` is a different kind for each picker style: `Picker` for a wheel, `SegmentedPicker` for segments, and `MenuPicker` for a menu. `SegmentedPicker` and `MenuPicker` match what XCTest reports on iOS and on macOS, which differ. |
+| `Image`, `Link`, `Cell`, `Table`, `CollectionView`, `Outline`, `List`, `ScrollView` | Content and containers. A SwiftUI `List` is a `CollectionView` on recent versions of iOS and an `Outline` on macOS, and `List` matches whichever it is. |
 | `AnyElement` | An element of any kind. |
 
 The kind is what XCTest sees, which is not always what the SwiftUI view is called. If
@@ -905,6 +907,31 @@ func deletesAMessage(app: XCUIApplication) throws {
 
 Fields have more. See [Entering text](#entering-text).
 
+### The title of a screen, and going back
+
+A screen in a navigation stack has a title and a button to go back, and neither has
+an identifier of the app's. The app has both:
+
+```swift
+@UITest
+func opensAMessageAndGoesBack(app: XCUIApplication) throws {
+    try app[InboxID.row(1234)].tap()
+    #expect(app.navigationTitle == "Message", within: .seconds(2))
+
+    try app.goBack()
+    #expect(app.navigationTitle == "Inbox", within: .seconds(2))
+}
+```
+
+`navigationTitle` is the title of the screen that is showing, read without waiting, and
+is empty if there is none. `goBack()` waits for the button to go back and taps it. The
+label of that button is in the language of the app, and on iOS it is the title of the
+screen before, so `goBack()` finds it by what the system calls it, which is the same in
+every language.
+
+Both work on iOS and on macOS, where the title is in the title bar of the window and
+the button is in its toolbar.
+
 ### Switches, sliders, steppers and pickers
 
 Identifiers declared as these kinds have actions of their own. Each waits for the
@@ -921,10 +948,10 @@ try app[ProfileID.countryPicker].select("France")
 
 | Kind | Members | Why not XCTest's own |
 |---|---|---|
-| `Switch`, `Toggle` | `isOn`, `setOn(_:)`, `toggle()` | `XCUIElement` reports the state as the string `"1"` or `"0"`. `setOn(_:)` does nothing if the switch is already in that state, and checks that it changed. |
+| `Switch`, `Toggle`, `CheckBox` | `isOn`, `setOn(_:)`, `toggle()` | `XCUIElement` reports the state as the string `"1"` or `"0"`. `setOn(_:)` does nothing if the switch is already in that state, and checks that it changed. |
 | `Slider` | `position`, `adjust(to:tolerance:)` | `adjust(toNormalizedSliderPosition:)` can land several percent away. This drags the thumb, reads where it landed and drags again, until it is within the tolerance, which is 0.02 unless you pass one. |
-| `Stepper` | `increment(times:)`, `decrement(times:)` | Finds the two halves of the stepper, which have no identifiers of their own to look up. If the stepper reports a value, each step is checked, so a step past the end of its range fails. Pass `requiringChange: false` when a step is allowed to change nothing. Read the value with `value`. |
-| `SegmentedControl` | `selection`, `select(_:)` | Finds the segment by its label, and the failure lists the segments if there is none. |
+| `Stepper` | `value`, `increment(times:)`, `decrement(times:)` | Finds the two halves of the stepper, which have no identifiers of their own to look up. If the stepper reports a value, each step is checked, so a step past the end of its range fails. Pass `requiringChange: false` when a step is allowed to change nothing. `value` is the stepper's value as text, which `XCUIElement` reports as a string on iOS and as a number on macOS. |
+| `SegmentedControl`, `SegmentedPicker`, `RadioGroup` | `selection`, `select(_:)` | Finds the segment by its label, and the failure lists the segments if there is none. `SegmentedPicker` is a SwiftUI `Picker` with the `segmented` style, which is a segmented control on iOS and a group of radio buttons on macOS. |
 | `MenuPicker` | `selection`, `select(_:)` | For a SwiftUI `Picker` with the `menu` style, or a `Menu`. The options are not inside the control, because the menu is shown over the app. This opens the menu, waits for the option and taps it. The kind matches a button on iOS and a pop-up button on macOS, which is how XCTest reports the control on each. |
 | `Picker`, `PickerWheel` (iOS) | `selection()`, `select(_:)` | Finds the wheel inside a picker that has the identifier. Pass `inWheel:` for a picker with several wheels. |
 
@@ -1439,10 +1466,75 @@ final class AccountTests: XCTestCase, UITestSuite {
 }
 ```
 
+## Testing a Mac app
+
+A UI test target for a Mac app uses the library in the same way, and a test that is
+shared with an iOS app reads the same on both. XCTest reports a Mac app differently
+from an iOS one, and the library takes up the differences:
+
+| In an iOS app | In a Mac app | What the library does |
+|---|---|---|
+| An element is tapped. | A tap does nothing. An element is clicked. | `tap()`, and every action that taps, clicks on macOS. `click()` is `tap()` under the name it has on a Mac. |
+| Text reports what it says as its label. | Text reports what it says as its value, and has no label. | `label` is the text on both, and so is a lookup by label such as `app.staticText("Welcome")`. |
+| A `Picker` with the `segmented` style is a segmented control. | It is a group of radio buttons. | The kind `SegmentedPicker` matches whichever it is, and has `selection` and `select(_:)`. |
+| A `List` is a collection view. | It is an outline. | The kind `List` matches whichever it is. |
+| A `Picker` with the `menu` style is a button. | It is a pop-up button. | The kind `MenuPicker` matches whichever it is. |
+| A `Toggle` is a switch. | It is a checkbox. | `CheckBox` has `isOn`, `setOn(_:)` and `toggle()`, as `Switch` has. Declare the identifier as the kind for the platform. |
+| An alert is an alert, and a confirmation dialog is a sheet. | Both are sheets on the window, with the title as the first text inside. | `app.alert` and `app.dialog` both find the sheet, and `title`, `message` and `buttons` read it. |
+| The title of a screen is in the navigation bar, and so is the button to go back. | The title is in the title bar of the window, and the button is in its toolbar. | `app.navigationTitle` and `app.goBack()` use whichever it is. |
+| A stepper reports its value as text. | It reports its value as a number. | `value` of a `Stepper` is the same text on both. |
+| Content is scrolled by a drag. | Content is scrolled by the scroll wheel. | `scrollIntoView()` turns the wheel on macOS. |
+| The app starts with nothing on screen from before. | The app opens the windows it had when it last ran. | The app is launched with `-ApplePersistenceIgnoreState YES`, and the test starts once the first window is there. The wait is as long as the test's `.actionTimeout`, or the `within:` of `relaunch` and `open`. |
+
+```swift
+enum SettingsID: ElementIDs {
+    static var sizePicker: SegmentedPicker { element() }
+    static var list: List { element() }
+
+    #if os(macOS)
+    static var notificationsToggle: CheckBox { element() }
+    #else
+    static var notificationsToggle: Switch { element() }
+    #endif
+}
+```
+
+Some things are not in a Mac app, or are not in XCTest on macOS, and the library does
+not have them there: pull to refresh, picker wheels, the actions for date pickers,
+`SystemAlert` and the `.systemAlerts` trait, the `.orientation` trait and
+`context.background()`. `dismiss()` on a dialog fails on macOS, because a dialog there
+does not close when clicked outside. The `.dynamicTypeSize` trait has no effect on a
+Mac app.
+
+### Messages need an entitlement
+
+Xcode runs the UI tests of a Mac app in a sandbox, which does not let them listen for
+the app to connect. A test with the `.messageChannel` trait fails with "Operation not
+permitted" unless the UI test target has an entitlements file with:
+
+```xml
+<key>com.apple.security.network.server</key>
+<true/>
+```
+
+Set it as the target's Code Signing Entitlements. An app that is sandboxed itself
+needs `com.apple.security.network.client` to connect to the test.
+
+### Running the tests
+
+UI tests of a Mac app use the pointer and the keyboard of the Mac they run on, so
+leave it alone while they run.
+
+```bash
+xcodebuild test -project Examples/Demo/Demo.xcodeproj -scheme Demo -destination "platform=macOS" -skipMacroValidation
+```
+
+runs the demo's UI tests against the demo as a Mac app.
+
 ## Demo
 
-`Examples/Demo` is a small SwiftUI app with a UI test target that uses everything
-above. The app opens on a list of examples, each with its own screen, and each test
+`Examples/Demo` is a small SwiftUI app for iOS and macOS, with a UI test target that
+uses everything above. The app opens on a list of examples, each with its own screen, and each test
 suite opens the app on the screen it tests with a trait such as `.example(.fruitList)`. Open `Examples/Demo/Demo.xcodeproj` in Xcode and run the tests, or run them from
 the command line:
 

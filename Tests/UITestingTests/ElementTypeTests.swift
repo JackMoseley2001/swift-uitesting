@@ -24,3 +24,23 @@ struct ElementTypeTests {
         #Testing::expect(Set(types).count == UITestingCore.ElementType.allCases.count)
     }
 }
+
+@Suite
+struct ElementLabelTests {
+    @Test
+    func labelIsUsedWhenThereIsOne() {
+        #Testing::expect(ElementLabel.text(label: "Welcome", value: "Something else") == "Welcome")
+        #Testing::expect(ElementLabel.text(label: "Welcome", value: nil) == "Welcome")
+    }
+
+    @Test
+    func textReportedAsTheValueStandsInForAnEmptyLabel() {
+        #Testing::expect(ElementLabel.text(label: "", value: "Welcome") == "Welcome")
+    }
+
+    @Test
+    func valueThatIsNotTextIsNotALabel() {
+        #Testing::expect(ElementLabel.text(label: "", value: 1) == "")
+        #Testing::expect(ElementLabel.text(label: "", value: nil) == "")
+    }
+}

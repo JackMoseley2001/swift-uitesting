@@ -27,6 +27,8 @@ final class InboxTests: XCTestCase {
         #expect(app[InboxID.row(2)].exists)
     }
 
+    // A Mac app has no pull to refresh.
+    #if !os(macOS)
     @UITest
     func pullsTheListToRefreshIt(app: XCUIApplication) throws {
         #expect(!app[InboxID.row(4)].exists)
@@ -36,7 +38,10 @@ final class InboxTests: XCTestCase {
         #expect(app[InboxID.lastAction].label == "Refreshed", within: .seconds(5))
         #expect(app[InboxID.row(4)].label == "Update 4")
     }
+    #endif
 
+    // A Mac app has no pull to refresh.
+    #if !os(macOS)
     @UITest
     func refreshesTwice(app: XCUIApplication) throws {
         try app[InboxID.list].pullToRefresh()
@@ -45,6 +50,7 @@ final class InboxTests: XCTestCase {
         try app[InboxID.list].pullToRefresh()
         try app[InboxID.row(5)].waitToAppear()
     }
+    #endif
 
     @UITest
     func countsTheRowsInsideTheList(app: XCUIApplication) {
@@ -52,6 +58,8 @@ final class InboxTests: XCTestCase {
         #expect(app[InboxID.list][all: InboxID.row].map(\.label) == ["Welcome", "Invoice", "Reminder"])
     }
 
+    // A Mac app has no pull to refresh.
+    #if !os(macOS)
     @UITest
     func waitsForTheNumberOfRowsToChange(app: XCUIApplication) throws {
         try app[InboxID.list].pullToRefresh()
@@ -60,6 +68,7 @@ final class InboxTests: XCTestCase {
         #expect(app[all: InboxID.row].count == 4, within: .seconds(5))
         #expect(app[all: InboxID.row].map(\.label) == ["Welcome", "Invoice", "Reminder", "Update 4"])
     }
+    #endif
 
     @UITest
     func anElementKeepsToItsRowWhenTheListChanges(app: XCUIApplication) throws {

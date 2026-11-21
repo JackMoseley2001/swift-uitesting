@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 
 @testable import UITesting
@@ -20,6 +21,19 @@ struct ControlStateTests {
         #Testing::expect(ControlState.sliderPosition(value: "100 %") == 1)
         #Testing::expect(ControlState.sliderPosition(value: nil) == nil)
         #Testing::expect(ControlState.sliderPosition(value: "half") == nil)
+    }
+
+    @Test
+    func stepperValueIsTheSameTextForAStringAndANumber() {
+        #Testing::expect(ControlState.stepperValue(value: "3") == "3")
+        #Testing::expect(ControlState.stepperValue(value: 3) == "3")
+        #Testing::expect(ControlState.stepperValue(value: NSNumber(value: 3)) == "3")
+    }
+
+    @Test
+    func stepperThatReportsNothingHasNoValue() {
+        #Testing::expect(ControlState.stepperValue(value: nil) == nil)
+        #Testing::expect(ControlState.stepperValue(value: "") == nil)
     }
 
     @Test

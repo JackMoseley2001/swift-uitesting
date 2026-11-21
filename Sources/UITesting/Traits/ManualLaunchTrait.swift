@@ -21,7 +21,7 @@ extension UITestTrait where Self == ManualLaunchTrait {
     /// }
     /// ```
     ///
-    /// To launch with further traits, call ``UITestContext/relaunch(with:)``.
+    /// To launch with further traits, call ``UITestContext/relaunch(with:within:)``.
     ///
     /// The `willLaunch(_:)` and `setUp(_:)` steps of every trait still run before the
     /// test, which in a test with this trait means `setUp(_:)` runs before the app has

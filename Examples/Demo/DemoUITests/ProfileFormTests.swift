@@ -84,6 +84,8 @@ final class ProfileFormTests: XCTestCase {
         #expect(app[ProfileID.submittedName].label == "Submitted Ada King")
     }
 
+    // Only iOS shows a keyboard on the screen.
+    #if os(iOS)
     @UITest
     func theAppsOwnButtonHidesTheKeyboard(app: XCUIApplication) throws {
         try app[ProfileID.notesField].replaceText(with: "A note")
@@ -94,6 +96,7 @@ final class ProfileFormTests: XCTestCase {
         #expect(!app.keyboards.firstMatch.exists, within: .seconds(2))
         #expect(app[ProfileID.notesField].text == "A note")
     }
+    #endif
 
     @UITest
     func movesFromOneFieldToTheNext(app: XCUIApplication) throws {

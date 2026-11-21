@@ -61,6 +61,15 @@ public struct UITestElement<Kind: ElementKind> {
     /// What the element was looked up by, when that was its label and not an identifier.
     var labelMatch: LabelMatch? = nil
 
+    /// The label of the element, read without waiting.
+    ///
+    /// On macOS, text such as a SwiftUI `Text` reports what it says as its value and
+    /// has no label. For such an element this is the text, so that a test reads what
+    /// an element says in the same way on every platform.
+    public var label: String {
+        element.labelOrText
+    }
+
     /// Reads a property of the underlying `XCUIElement`, without waiting.
     public subscript<Value>(dynamicMember keyPath: KeyPath<XCUIElement, Value>) -> Value {
         element[keyPath: keyPath]

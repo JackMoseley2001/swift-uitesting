@@ -73,6 +73,11 @@ public enum ElementKinds {
         public static var elementType: ElementType { .radioButton }
     }
 
+    /// A group of radio buttons.
+    public enum RadioGroup: ElementKind {
+        public static var elementType: ElementType { .radioGroup }
+    }
+
     /// A slider.
     public enum Slider: ElementKind {
         public static var elementType: ElementType { .slider }
@@ -101,6 +106,21 @@ public enum ElementKinds {
     /// A segmented control.
     public enum SegmentedControl: ElementKind {
         public static var elementType: ElementType { .segmentedControl }
+    }
+
+    /// A SwiftUI `Picker` with the `segmented` style.
+    ///
+    /// XCTest reports one as a segmented control on iOS and as a group of radio
+    /// buttons on macOS, and this kind matches whichever it is. In a UI test, elements
+    /// of this kind have an action for selecting a segment.
+    public enum SegmentedPicker: ElementKind {
+        public static var elementType: ElementType {
+            #if os(macOS)
+                .radioGroup
+            #else
+                .segmentedControl
+            #endif
+        }
     }
 
     /// A pop-up button.
@@ -167,6 +187,25 @@ public enum ElementKinds {
     /// A collection view. On recent versions of iOS, a SwiftUI `List` is one.
     public enum CollectionView: ElementKind {
         public static var elementType: ElementType { .collectionView }
+    }
+
+    /// An outline. On macOS, a SwiftUI `List` is one.
+    public enum Outline: ElementKind {
+        public static var elementType: ElementType { .outline }
+    }
+
+    /// A SwiftUI `List`.
+    ///
+    /// XCTest reports one as a collection view on recent versions of iOS and as an
+    /// outline on macOS, and this kind matches whichever it is.
+    public enum List: ElementKind {
+        public static var elementType: ElementType {
+            #if os(macOS)
+                .outline
+            #else
+                .collectionView
+            #endif
+        }
     }
 
     /// A scroll view.
@@ -288,6 +327,9 @@ extension ElementIDs {
     /// The type of an identifier for a radio button.
     public typealias RadioButton = ElementID<ElementKinds.RadioButton>
 
+    /// The type of an identifier for a group of radio buttons.
+    public typealias RadioGroup = ElementID<ElementKinds.RadioGroup>
+
     /// The type of an identifier for a slider.
     public typealias Slider = ElementID<ElementKinds.Slider>
 
@@ -305,6 +347,10 @@ extension ElementIDs {
 
     /// The type of an identifier for a segmented control.
     public typealias SegmentedControl = ElementID<ElementKinds.SegmentedControl>
+
+    /// The type of an identifier for a SwiftUI `Picker` with the `segmented` style,
+    /// whatever XCTest reports it as.
+    public typealias SegmentedPicker = ElementID<ElementKinds.SegmentedPicker>
 
     /// The type of an identifier for a pop-up button.
     public typealias PopUpButton = ElementID<ElementKinds.PopUpButton>
@@ -338,6 +384,12 @@ extension ElementIDs {
 
     /// The type of an identifier for a collection view. On recent versions of iOS, a SwiftUI `List` is one.
     public typealias CollectionView = ElementID<ElementKinds.CollectionView>
+
+    /// The type of an identifier for an outline. On macOS, a SwiftUI `List` is one.
+    public typealias Outline = ElementID<ElementKinds.Outline>
+
+    /// The type of an identifier for a SwiftUI `List`, whatever XCTest reports it as.
+    public typealias List = ElementID<ElementKinds.List>
 
     /// The type of an identifier for a scroll view.
     public typealias ScrollView = ElementID<ElementKinds.ScrollView>
@@ -410,6 +462,16 @@ public protocol SwitchKind: ElementKind {}
 
 extension ElementKinds.Switch: SwitchKind {}
 extension ElementKinds.Toggle: SwitchKind {}
+extension ElementKinds.CheckBox: SwitchKind {}
+
+/// A kind of element that shows its options side by side, with one selected.
+///
+/// In a UI test, elements of these kinds have actions for reading and selecting a segment.
+public protocol SegmentedKind: ElementKind {}
+
+extension ElementKinds.SegmentedControl: SegmentedKind {}
+extension ElementKinds.SegmentedPicker: SegmentedKind {}
+extension ElementKinds.RadioGroup: SegmentedKind {}
 
 /// A kind of element that holds a wheel to pick a value from.
 ///

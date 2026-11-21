@@ -4,10 +4,11 @@ import XCTest
 @UITestSuite(traits: .animationsDisabled)
 final class NavigationTests: XCTestCase {
     @UITest
-    func theAppOpensOnTheListOfExamples(app: XCUIApplication) {
-        #expect(app.navigationBars["Examples"].exists)
+    func theAppOpensOnTheListOfExamples(app: XCUIApplication) throws {
+        #expect(app.navigationTitle == "Examples")
         for example in Example.allCases {
-            #expect(app[ExampleID.row(example)].exists)
+            // The list is longer than a small screen, and a row below it does not exist yet.
+            try app[ExampleID.row(example)].scrollIntoView()
         }
     }
 
@@ -16,7 +17,7 @@ final class NavigationTests: XCTestCase {
         try app[ExampleID.row(.fruitList)].tap()
 
         try app[FruitID.selection].waitToAppear()
-        #expect(app.navigationBars[Example.fruitList.title].exists)
+        #expect(app.navigationTitle == Example.fruitList.title)
     }
 
     @UITest
@@ -24,7 +25,7 @@ final class NavigationTests: XCTestCase {
         try app[ExampleID.row(.message)].tap()
         try app[MessageID.loadButton].waitToAppear()
 
-        app.navigationBars.buttons.firstMatch.tap()
+        try app.goBack()
 
         try app[ExampleID.row(.message)].waitToAppear()
     }

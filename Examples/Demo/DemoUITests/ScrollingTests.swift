@@ -5,13 +5,18 @@ import XCTest
 final class ScrollingTests: XCTestCase {
     @UITest
     func aRowFurtherDownDoesNotExistUntilItIsScrolledTo(app: XCUIApplication) throws {
+        // A list on macOS creates all of its rows, so the row exists there, out of view.
+        #if !os(macOS)
         #expect(!app[NumberID.row(40)].exists)
+        #endif
 
         try app[NumberID.row(40)].scrollIntoView().tap()
 
         #expect(app[NumberID.selection].label == "Selected 40")
     }
 
+    // A list on macOS creates all of its rows.
+    #if !os(macOS)
     @UITest
     func onlyTheRowsThatAreLoadedAreCounted(app: XCUIApplication) throws {
         try app[NumberID.row(1)].waitToAppear()
@@ -22,6 +27,7 @@ final class ScrollingTests: XCTestCase {
         #expect(loaded > 0)
         #expect(loaded < 60)
     }
+    #endif
 
     @UITest
     func scrollsToTheLastRow(app: XCUIApplication) throws {
@@ -33,7 +39,10 @@ final class ScrollingTests: XCTestCase {
     @UITest
     func scrollsBackUp(app: XCUIApplication) throws {
         try app[NumberID.row(40)].scrollIntoView()
+        // A list on macOS creates all of its rows, so the row exists there, out of view.
+        #if !os(macOS)
         #expect(!app[NumberID.row(1)].exists)
+        #endif
 
         try app[NumberID.row(1)].scrollIntoView(.up)
 

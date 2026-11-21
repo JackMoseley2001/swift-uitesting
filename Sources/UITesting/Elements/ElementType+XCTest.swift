@@ -16,6 +16,7 @@ extension XCUIElement.ElementType {
         case .toggle: self = .toggle
         case .checkBox: self = .checkBox
         case .radioButton: self = .radioButton
+        case .radioGroup: self = .radioGroup
         case .slider: self = .slider
         case .stepper: self = .stepper
         case .picker: self = .picker
@@ -31,6 +32,7 @@ extension XCUIElement.ElementType {
         case .link: self = .link
         case .cell: self = .cell
         case .table: self = .table
+        case .outline: self = .outline
         case .collectionView: self = .collectionView
         case .scrollView: self = .scrollView
         case .navigationBar: self = .navigationBar
