@@ -108,9 +108,13 @@ extension UITestElement where Kind: TextEntryKind {
         line: UInt
     ) throws -> TextKeyboard {
         try wait(toBe: readiness, inOrderTo: intent, within: timeout, filePath: filePath, line: line)
+        #if os(watchOS)
+        // The screen to type on belongs to the app, not to the field.
+        let app = try owningApp(inOrderTo: intent, filePath: filePath, line: line)
+        #endif
         element.tapOrClick()
         #if os(watchOS)
-        let host = (app ?? XCUIApplication()).otherElements[TextEntry.watchInputIdentifier].firstMatch
+        let host = app.otherElements[TextEntry.watchInputIdentifier].firstMatch
         let view = host.textViews.firstMatch
         let timeout = timeout ?? ActionTimeout.current
         guard ExpectationPolling().wait(timeout: timeout, until: { view.exists }) == .met else {

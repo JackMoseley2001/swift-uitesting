@@ -39,7 +39,7 @@ extension UITestElement {
         filePath: StaticString = #filePath,
         line: UInt = #line
     ) throws -> UITestElement {
-        let scrollView = (scope ?? XCUIApplication()).viewToScroll
+        let scrollView = try (scope ?? owningApp(inOrderTo: "scroll to", filePath: filePath, line: line)).viewToScroll
         // What is looked at to tell whether the content moved. On macOS it is the view,
         // because the screen has other windows on it, which change on their own, and on
         // visionOS because XCTest cannot take a picture of the screen there.
