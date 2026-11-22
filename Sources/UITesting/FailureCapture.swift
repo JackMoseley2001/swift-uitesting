@@ -40,7 +40,6 @@ final class FailureCapture {
 
 }
 
-/// The capture for the running test.
 /// The app that the runner launched for the test that is running.
 ///
 /// The app is held in a class of the main actor so that it can be passed down to
@@ -54,6 +53,7 @@ final class AppUnderTest {
     }
 }
 
+/// What the runner passes down to the code that the running test calls.
 enum RunningTest {
     /// The app of the test that is running, for an element that does not know which
     /// app it was found in.
