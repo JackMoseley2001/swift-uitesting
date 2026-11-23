@@ -104,10 +104,12 @@ extension UITestElement {
 
         // A slow swipe shows the actions. A fast one can carry the first of them out,
         // as a full swipe by a person does.
-        if edge == .trailing {
-            cell.swipeLeft(velocity: .slow)
-        } else {
-            cell.swipeRight(velocity: .slow)
+        func swipe() {
+            if edge == .trailing {
+                cell.swipeLeft(velocity: .slow)
+            } else {
+                cell.swipeRight(velocity: .slow)
+            }
         }
 
         // XCTest does not report the actions as part of the cell. They are the
@@ -117,24 +119,38 @@ extension UITestElement {
             (row.minY...row.maxY).contains(candidate.frame.midY)
         }
         let candidates = find(container)
-        var action: XCUIElement?
         let timeout = timeout ?? ActionTimeout.current
-        _ = ExpectationPolling().wait(timeout: min(timeout, .seconds(3))) {
-            action = candidates.allElementsBoundByIndex.first(where: isBesideRow)
-            return action != nil
+        func shownAction() -> XCUIElement? {
+            var action: XCUIElement?
+            _ = ExpectationPolling().wait(timeout: min(timeout, .seconds(3))) {
+                action = candidates.allElementsBoundByIndex.first(where: isBesideRow)
+                return action != nil
+            }
+            return action
         }
-        guard let action else {
+        func shownLabels() -> [String] {
             let buttons = container.buttons.allElementsBoundByIndex
                 .filter(isBesideRow)
                 .map { (label: $0.label, identifier: $0.identifier) }
-            let shown =
-                if let labelMatch {
-                    SwipeActions.labels(ofButtons: buttons, rowLabel: labelMatch.label)
-                } else {
-                    SwipeActions.labels(ofButtons: buttons, rowIdentifier: accessibilityIdentifier)
-                }
+            return if let labelMatch {
+                SwipeActions.labels(ofButtons: buttons, rowLabel: labelMatch.label)
+            } else {
+                SwipeActions.labels(ofButtons: buttons, rowIdentifier: accessibilityIdentifier)
+            }
+        }
+
+        swipe()
+        var action = shownAction()
+        // A swipe on a row of a screen that has just shown is sometimes lost, and no
+        // action shows at all. The row is swiped once more in that case only: a second
+        // swipe on a row whose actions are showing could carry one of them out.
+        if action == nil, shownLabels().isEmpty {
+            swipe()
+            action = shownAction()
+        }
+        guard let action else {
             try fail(
-                SwipeActions.missing(action: name, row: reference.name, edge: edge, shown: shown),
+                SwipeActions.missing(action: name, row: reference.name, edge: edge, shown: shownLabels()),
                 filePath: filePath,
                 line: line
             )
