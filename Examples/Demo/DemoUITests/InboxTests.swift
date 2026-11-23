@@ -27,8 +27,8 @@ final class InboxTests: XCTestCase {
         #expect(app[InboxID.row(2)].exists)
     }
 
-    // A Mac app has no pull to refresh.
-    #if !os(macOS)
+    // A Mac app has no pull to refresh, and neither has a watch app.
+    #if !os(macOS) && !os(watchOS)
     @UITest
     func pullsTheListToRefreshIt(app: XCUIApplication) throws {
         #expect(!app[InboxID.row(4)].exists)
@@ -40,8 +40,8 @@ final class InboxTests: XCTestCase {
     }
     #endif
 
-    // A Mac app has no pull to refresh.
-    #if !os(macOS)
+    // A Mac app has no pull to refresh, and neither has a watch app.
+    #if !os(macOS) && !os(watchOS)
     @UITest
     func refreshesTwice(app: XCUIApplication) throws {
         try app[InboxID.list].pullToRefresh()
@@ -58,8 +58,8 @@ final class InboxTests: XCTestCase {
         #expect(app[InboxID.list][all: InboxID.row].map(\.label) == ["Welcome", "Invoice", "Reminder"])
     }
 
-    // A Mac app has no pull to refresh.
-    #if !os(macOS)
+    // A Mac app has no pull to refresh, and neither has a watch app.
+    #if !os(macOS) && !os(watchOS)
     @UITest
     func waitsForTheNumberOfRowsToChange(app: XCUIApplication) throws {
         try app[InboxID.list].pullToRefresh()

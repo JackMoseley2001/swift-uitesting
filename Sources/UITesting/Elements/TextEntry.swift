@@ -5,6 +5,9 @@ enum TextEntry {
     /// The key that deletes the character before the cursor, as `typeText(_:)` takes it.
     static let deleteKey = XCUIKeyboardKey.delete.rawValue
 
+    /// The identifier of the screen that watchOS shows to type into a field.
+    static let watchInputIdentifier = "TextInputHost"
+
     /// Returns the text in a field from what XCTest reports for it.
     ///
     /// An empty field reports its placeholder as its value, so a value that is the same

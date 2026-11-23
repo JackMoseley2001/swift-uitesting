@@ -39,10 +39,11 @@ extension UITestElement {
         filePath: StaticString = #filePath,
         line: UInt = #line
     ) throws -> UITestElement {
-        let scrollView = (scope ?? XCUIApplication()).viewToScroll
+        let scrollView = try (scope ?? owningApp(inOrderTo: "scroll to", filePath: filePath, line: line)).viewToScroll
         // What is looked at to tell whether the content moved. On macOS it is the view,
-        // because the screen has other windows on it, which change on their own.
-        #if os(macOS)
+        // because the screen has other windows on it, which change on their own, and on
+        // visionOS because XCTest cannot take a picture of the screen there.
+        #if os(macOS) || os(visionOS)
         let picture = { scrollView.screenshot().pngRepresentation }
         #else
         let picture = { XCUIScreen.main.screenshot().pngRepresentation }
@@ -90,13 +91,19 @@ extension XCUIElement {
     /// The element that is scrolled to move the content of this one.
     ///
     /// It is the element itself, except on macOS for an app, which has no place for
-    /// the pointer to be: there it is the first scroll view of the app's window.
+    /// the pointer to be: there it is the first scroll view of the app's window. On
+    /// visionOS an app cannot be swiped either, and it is the app's first list or
+    /// scroll view.
     fileprivate var viewToScroll: XCUIElement {
         #if os(macOS)
         guard self is XCUIApplication else { return self }
         let window = windows.firstMatch
         let scrollView = window.scrollViews.firstMatch
         return scrollView.exists ? scrollView : window
+        #elseif os(visionOS)
+        guard self is XCUIApplication else { return self }
+        let views = [collectionViews.firstMatch, scrollViews.firstMatch, tables.firstMatch]
+        return views.first(where: \.exists) ?? self
         #else
         self
         #endif
@@ -106,7 +113,7 @@ extension XCUIElement {
     ///
     /// The drag is slow and holds at its end, so the content does not carry on moving
     /// and nothing is skipped. On macOS, where a drag does not scroll, this turns the
-    /// scroll wheel by half the size of the element.
+    /// scroll wheel by half the size of the element. On visionOS it is a slow swipe.
     fileprivate func drag(towards direction: ScrollDirection) {
         #if os(macOS)
         let size = frame.size
@@ -116,6 +123,14 @@ extension XCUIElement {
         case .right: scroll(byDeltaX: -size.width / 2, deltaY: 0)
         case .left: scroll(byDeltaX: size.width / 2, deltaY: 0)
         }
+        #elseif os(visionOS)
+        // A drag that holds at its end moves nothing on visionOS. A slow swipe does.
+        switch direction {
+        case .down: swipeUp(velocity: .slow)
+        case .up: swipeDown(velocity: .slow)
+        case .right: swipeLeft(velocity: .slow)
+        case .left: swipeRight(velocity: .slow)
+        }
         #else
         let (from, to): (CGVector, CGVector) =
             switch direction {
@@ -124,17 +139,25 @@ extension XCUIElement {
             case .right: (CGVector(dx: 0.7, dy: 0.5), CGVector(dx: 0.3, dy: 0.5))
             case .left: (CGVector(dx: 0.3, dy: 0.5), CGVector(dx: 0.7, dy: 0.5))
             }
+        // On watchOS the content carries on for several times the length of a drag at
+        // the usual speed, which takes rows past before they can be seen.
+        #if os(watchOS)
+        let velocity = XCUIGestureVelocity.slow
+        #else
+        let velocity = XCUIGestureVelocity.default
+        #endif
         coordinate(withNormalizedOffset: from).drag(
             afterPressingFor: 0.05,
             to: coordinate(withNormalizedOffset: to),
+            velocity: velocity,
             thenHoldingFor: 0.2
         )
         #endif
     }
 }
 
-// A Mac app has no pull to refresh.
-#if !os(macOS)
+// A Mac app has no pull to refresh, and neither has a watch app.
+#if !os(macOS) && !os(watchOS)
 extension UITestElement {
     /// Pulls a list or scroll view down to refresh it, once it exists.
     ///

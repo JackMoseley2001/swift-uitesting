@@ -40,11 +40,14 @@ struct DatesView: View {
                     .accessibilityIdentifier(DatesID.timeWheel)
                 #endif
 
+                // watchOS has no date picker that shows a calendar.
+                #if !os(watchOS)
                 DatePicker("Calendar", selection: $calendar, displayedComponents: [.date])
                     .datePickerStyle(.graphical)
                     .accessibilityIdentifier(DatesID.calendarPicker)
                 Text(Self.day(calendar))
                     .accessibilityIdentifier(DatesID.calendar)
+                #endif
 
                 #if os(iOS)
                 DatePicker("Date", selection: $dateWheel, displayedComponents: [.date])

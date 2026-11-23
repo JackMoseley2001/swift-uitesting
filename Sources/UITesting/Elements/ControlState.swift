@@ -72,6 +72,52 @@ enum ControlState {
         return nil
     }
 
+    /// The identifier of the thumb of a slider, where the slider reports it.
+    static let sliderThumbIdentifier = "AXSliderKnob"
+
+    /// Moves a slider that goes by a step at a time, as one on watchOS does.
+    ///
+    /// Steps are taken towards the target until the slider is within the tolerance.
+    /// A target between two steps is not reached, and the slider is left on the
+    /// nearer of the two.
+    ///
+    /// - Parameters:
+    ///   - target: The position wanted, between 0 and 1.
+    ///   - tolerance: How far from the target counts as there.
+    ///   - maximumSteps: The most steps to take.
+    ///   - position: Reads the position of the slider.
+    ///   - step: Moves the slider by one step, up or down.
+    /// - Returns: `nil` if the slider ended within the tolerance. Otherwise where it
+    ///   ended, which is itself `nil` if the slider does not report a position.
+    static func stepSlider(
+        to target: Double,
+        tolerance: Double,
+        maximumSteps: Int = 100,
+        position: () -> Double?,
+        step: (_ up: Bool) -> Void
+    ) -> Double?? {
+        guard var now = position() else { return .some(nil) }
+        for _ in 0..<maximumSteps {
+            if abs(now - target) <= tolerance { return nil }
+
+            let up = target > now
+            step(up)
+            guard let next = position() else { return .some(nil) }
+            // A step that changes nothing is one past the end of the slider.
+            if next == now { break }
+
+            let hasPassed = up ? next > target : next < target
+            if hasPassed, abs(next - target) > tolerance {
+                // The target is between two steps. The slider is left on the nearer one.
+                guard abs(now - target) < abs(next - target) else { return .some(next) }
+                step(!up)
+                return .some(position() ?? now)
+            }
+            now = next
+        }
+        return abs(now - target) <= tolerance ? nil : .some(now)
+    }
+
     /// Moves a slider to a position by dragging its thumb, checking where it lands.
     ///
     /// Each round reads where the slider is and drags the thumb by the distance that

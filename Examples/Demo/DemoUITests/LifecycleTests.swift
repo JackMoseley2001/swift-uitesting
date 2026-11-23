@@ -50,6 +50,9 @@ final class LifecycleTests: XCTestCase {
     }
     #endif
 
+    // On watchOS an app that a link launches is not given the arguments and environment
+    // of the test, so it does not open on this example.
+    #if !os(watchOS)
     @UITest
     func linkLaunchesAnAppThatIsNotRunning(context: UITestContext) {
         let app = context.app
@@ -59,6 +62,7 @@ final class LifecycleTests: XCTestCase {
 
         #expect(app[LifecycleID.openedLink].label == "uitestingdemo://orders/7")
     }
+    #endif
 
     // The library sends the app to the background on iOS only.
     #if os(iOS)

@@ -25,6 +25,8 @@ final class AlertsTests: XCTestCase {
         #expect(app[AlertsID.outcome].label == "Kept")
     }
 
+    // watchOS does not report the identifier of a button of an alert.
+    #if !os(watchOS)
     @UITest
     func tapsAButtonOfAnAlertByItsIdentifier(app: XCUIApplication) throws {
         try app[AlertsID.deleteButton].tap()
@@ -33,6 +35,7 @@ final class AlertsTests: XCTestCase {
 
         #expect(app[AlertsID.outcome].label == "Deleted", within: .seconds(2))
     }
+    #endif
 
     @UITest
     func tapsAButtonOfADialog(app: XCUIApplication) throws {
@@ -45,8 +48,9 @@ final class AlertsTests: XCTestCase {
         #expect(app[AlertsID.outcome].label == "Discarded")
     }
 
-    // A dialog closes when tapped outside only where it is shown as a popover, which is not on macOS.
-    #if !os(macOS)
+    // A dialog closes when tapped outside only where it is shown as a popover, which is
+    // not on macOS or visionOS.
+    #if !os(macOS) && !os(visionOS)
     @UITest
     func dismissesADialog(app: XCUIApplication) throws {
         try app[AlertsID.shareButton].tap()

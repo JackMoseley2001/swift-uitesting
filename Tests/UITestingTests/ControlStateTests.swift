@@ -246,4 +246,54 @@ struct ControlStateTests {
 
         #Testing::expect(failure == .some(nil))
     }
+
+    /// A slider that moves by a sixth at a time, as one on watchOS does.
+    private func steppedSlider(at start: Int, to target: Double) -> (failure: Double??, steps: Int) {
+        var sixths = start
+        var steps = 0
+        let failure = ControlState.stepSlider(
+            to: target,
+            tolerance: 0.02,
+            position: { (Double(sixths) / 6 * 100).rounded() / 100 },
+            step: { up in
+                steps += 1
+                sixths = min(max(sixths + (up ? 1 : -1), 0), 6)
+            }
+        )
+        return (failure, steps)
+    }
+
+    @Test
+    func steppedSliderIsSteppedUntilItIsThere() {
+        #Testing::expect(steppedSlider(at: 3, to: 0.83).failure == nil)
+        #Testing::expect(steppedSlider(at: 3, to: 0.83).steps == 2)
+        #Testing::expect(steppedSlider(at: 3, to: 0).steps == 3)
+        #Testing::expect(steppedSlider(at: 3, to: 0.5).steps == 0)
+    }
+
+    @Test
+    func steppedSliderStopsOnTheNearerStepToATargetBetweenTwo() {
+        // 0.7 is between 0.67 and 0.83, and nearer the first.
+        let result = steppedSlider(at: 3, to: 0.7)
+
+        #Testing::expect(result.failure == .some(0.67))
+        // One step to it, one past it, and one back.
+        #Testing::expect(result.steps == 3)
+    }
+
+    @Test
+    func steppedSliderGoesBackWhenItPassesTheNearerStep() {
+        // 0.6 is between 0.5 and 0.67, and nearer the second, which is where it started.
+        let result = steppedSlider(at: 4, to: 0.6)
+
+        #Testing::expect(result.failure == .some(0.67))
+        #Testing::expect(result.steps == 2)
+    }
+
+    @Test
+    func steppedSliderWithoutAPositionFails() {
+        let failure = ControlState.stepSlider(to: 0.5, tolerance: 0.02, position: { nil }, step: { _ in })
+
+        #Testing::expect(failure == .some(nil))
+    }
 }

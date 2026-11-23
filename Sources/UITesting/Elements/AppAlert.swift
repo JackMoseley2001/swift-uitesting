@@ -60,6 +60,9 @@ public struct AppAlert {
         #if os(macOS)
         // On macOS the label of every alert is "alert", and its title is the first text inside it.
         return element.staticTexts.firstMatch.labelOrText
+        #elseif os(watchOS)
+        // On watchOS an alert is a table, and its title is the first text inside it.
+        return element.staticTexts.firstMatch.label
         #else
         return element.label
         #endif
@@ -280,6 +283,8 @@ extension XCUIApplication {
         #if os(macOS)
         // On macOS an alert is a sheet on the window, as a confirmation dialog is.
         AppAlert(element: sheets.firstMatch, app: self, noun: .alert, dismissRegion: nil)
+        #elseif os(watchOS)
+        AppAlert(element: watchAlertTable, app: self, noun: .alert, dismissRegion: nil)
         #else
         AppAlert(element: alerts.firstMatch, app: self, noun: .alert, dismissRegion: nil)
         #endif
@@ -292,22 +297,55 @@ extension XCUIApplication {
     /// ```
     @MainActor
     public var dialog: AppAlert {
+        #if os(watchOS)
+        // The button that cancels a dialog is not among its buttons on watchOS. It is
+        // a button to close the dialog, in the bar above it.
+        AppAlert(
+            element: watchAlertTable,
+            app: self,
+            noun: .dialog,
+            dismissRegion: buttons[AppAlertText.watchCloseButtonIdentifier].firstMatch
+        )
+        #else
         AppAlert(
             element: sheets.firstMatch,
             app: self,
             noun: .dialog,
             dismissRegion: descendants(matching: .any)["PopoverDismissRegion"].firstMatch
         )
+        #endif
     }
+
+    #if os(watchOS)
+    /// The table that holds the text and buttons of an alert or a dialog on watchOS.
+    ///
+    /// watchOS shows both as a screen of its own, with a bar that has this identifier
+    /// in every language, and reports neither as an alert or a sheet.
+    @MainActor
+    private var watchAlertTable: XCUIElement {
+        otherElements
+            .containing(.navigationBar, identifier: AppAlertText.watchAlertBarIdentifier)
+            .firstMatch
+            .tables
+            .firstMatch
+    }
+    #endif
 }
 
 /// The parts of reading an alert that do not need a running app.
 enum AppAlertText {
+    /// The identifier of the bar above an alert or a dialog on watchOS.
+    static let watchAlertBarIdentifier = "PUICActionContentChild"
+
+    /// The identifier of the button that closes a dialog on watchOS.
+    static let watchCloseButtonIdentifier = "AX_ActionContentControllerCancelButton"
+
     /// Returns the message of an alert from the text inside it.
     ///
     /// The title is the first text and the message is the one after it.
     static func message(title: String, texts: [String]) -> String? {
+        // watchOS reports the title a second time, after the message.
         let rest = texts.first == title ? Array(texts.dropFirst()) : texts
-        return rest.first { !$0.isEmpty }
+        return rest.first { !$0.isEmpty && $0 != title }
     }
 }
