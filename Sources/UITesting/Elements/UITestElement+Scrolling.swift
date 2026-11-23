@@ -41,9 +41,13 @@ extension UITestElement {
     ) throws -> UITestElement {
         let scrollView = try (scope ?? owningApp(inOrderTo: "scroll to", filePath: filePath, line: line)).viewToScroll
         // What is looked at to tell whether the content moved. On macOS it is the view,
-        // because the screen has other windows on it, which change on their own, and on
-        // visionOS because XCTest cannot take a picture of the screen there.
-        #if os(macOS) || os(visionOS)
+        // because the screen has other windows on it, which change on their own. On
+        // visionOS it is what the view reports of its content, because XCTest cannot
+        // take a picture of the screen there, and before visionOS 26 a picture of a
+        // view is blank.
+        #if os(visionOS)
+        let picture = { Data(ScrollSearch.signature(ofHierarchy: scrollView.debugDescription).utf8) }
+        #elseif os(macOS)
         let picture = { scrollView.screenshot().pngRepresentation }
         #else
         let picture = { XCUIScreen.main.screenshot().pngRepresentation }

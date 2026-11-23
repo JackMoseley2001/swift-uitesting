@@ -27,22 +27,37 @@ enum TextEntry {
     ///
     /// Deleting removes what is before the cursor. The first round deletes from
     /// wherever the cursor is. If text is left, it was after the cursor, so each later
-    /// round moves the cursor towards the end first. It stops when the field is
-    /// empty, or when a round that moved the cursor removed nothing.
+    /// round moves the cursor towards the end first. When a round that moved the
+    /// cursor removed nothing, all of the text is selected and deleted, where there is
+    /// a way to select it. It stops when the field is empty, or when that removed
+    /// nothing either.
     ///
     /// - Parameters:
     ///   - text: Reads the text in the field.
     ///   - moveToEnd: Moves the cursor towards the end of the text.
+    ///   - selectAll: Selects all of the text, if the platform has a way to.
     ///   - type: Types keys into the field.
     /// - Returns: Whether the field ended up empty.
-    static func clear(text: () -> String, moveToEnd: () -> Void, type: (String) -> Void) -> Bool {
+    static func clear(
+        text: () -> String,
+        moveToEnd: () -> Void,
+        selectAll: (() -> Void)? = nil,
+        type: (String) -> Void
+    ) -> Bool {
         var remaining = text()
         var hasMoved = false
+        var hasSelected = false
         while !remaining.isEmpty {
             type(deletion(of: remaining))
 
             let now = text()
-            if now.count >= remaining.count, hasMoved { return false }
+            if now.count >= remaining.count, hasMoved {
+                guard let selectAll, !hasSelected else { return false }
+                hasSelected = true
+                selectAll()
+                type(deleteKey)
+                return text().isEmpty
+            }
             remaining = now
             if !remaining.isEmpty {
                 moveToEnd()

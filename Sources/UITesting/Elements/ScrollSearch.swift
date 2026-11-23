@@ -1,3 +1,5 @@
+import Foundation
+
 /// A direction to scroll in, named for where the content being looked for is.
 ///
 /// Scrolling ``down`` shows what is further down the screen, which is what a person
@@ -51,5 +53,17 @@ enum ScrollSearch {
             }
         }
         return false
+    }
+
+    /// Returns what a description of a hierarchy of elements says about where they
+    /// are, without what changes from one reading to the next.
+    ///
+    /// A description has the address of each element in memory, which is a new one
+    /// each time the hierarchy is read. Without the addresses, two descriptions are the
+    /// same when the content has not moved.
+    ///
+    /// - Parameter description: The `debugDescription` of an element.
+    static func signature(ofHierarchy description: String) -> String {
+        description.replacingOccurrences(of: "0x[0-9a-fA-F]+", with: "", options: .regularExpression)
     }
 }

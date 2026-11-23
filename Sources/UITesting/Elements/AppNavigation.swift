@@ -44,7 +44,7 @@ extension XCUIApplication {
     /// The label of the button is in the language of the app, and on iOS it is the
     /// title of the screen before. This finds the button by what the system calls it,
     /// which is the same in every language. It is in the navigation bar on iOS and in
-    /// the toolbar of the window on macOS. Before iOS 26 the system calls it nothing,
+    /// the toolbar of the window on macOS. Before iOS 26 and visionOS 26 the system calls it nothing,
     /// and this taps the first button of the navigation bar, which is the button to
     /// go back on a screen that has one. tvOS shows no such button, and this presses
     /// the menu button of the remote, which goes back there.
@@ -81,8 +81,9 @@ extension XCUIApplication {
         #if os(macOS)
         windows.firstMatch.toolbars.buttons[AppNavigation.macBackButtonIdentifier].firstMatch
         #else
-        // Before iOS 26 the button has no identifier. It is the first button of the bar.
-        if #available(iOS 26, *) {
+        // Before iOS 26 and visionOS 26 the button has no identifier. It is the first
+        // button of the bar.
+        if #available(iOS 26, visionOS 26, *) {
             navigationBars.buttons[AppNavigation.backButtonIdentifier].firstMatch
         } else {
             navigationBars.firstMatch.buttons.firstMatch
