@@ -132,10 +132,18 @@ extension XCUIElement {
         case .left: swipeRight(velocity: .slow)
         }
         #else
+        // A drag upwards starts lower on a watch. Before watchOS 26 the bar at the top
+        // takes a quarter of the screen, and a drag that starts on what is fixed under
+        // it, above the list, moves nothing.
+        #if os(watchOS)
+        let top = 0.45
+        #else
+        let top = 0.3
+        #endif
         let (from, to): (CGVector, CGVector) =
             switch direction {
             case .down: (CGVector(dx: 0.5, dy: 0.7), CGVector(dx: 0.5, dy: 0.3))
-            case .up: (CGVector(dx: 0.5, dy: 0.3), CGVector(dx: 0.5, dy: 0.7))
+            case .up: (CGVector(dx: 0.5, dy: top), CGVector(dx: 0.5, dy: top + 0.4))
             case .right: (CGVector(dx: 0.7, dy: 0.5), CGVector(dx: 0.3, dy: 0.5))
             case .left: (CGVector(dx: 0.3, dy: 0.5), CGVector(dx: 0.7, dy: 0.5))
             }

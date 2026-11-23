@@ -36,6 +36,12 @@ pickers, `SystemAlert` and the `.systemAlerts` trait, the `.orientation` trait a
 editor for several lines of text. It does not report the identifier of a button of an
 alert, so tap such a button by its label.
 
+Before watchOS 26 a text field has its identifier and its label on an element around
+it, and not on the field. The library looks inside that element there, so
+`app[ProfileID.nameField]` and `app.textField("Email")` find the field on every
+version. A query of your own, such as `app.textFields["ProfileID.nameField"]`, does
+not.
+
 `context.open(_:)` opens a link in an app that is running, as on iOS. An app that is
 not running is launched by the link without the arguments and environment of the
 test, so its launch traits do not apply. Launch the app first.
