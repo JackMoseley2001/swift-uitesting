@@ -1671,6 +1671,20 @@ the command line:
 xcodebuild test -project Examples/Demo/Demo.xcodeproj -scheme Demo -destination "platform=iOS Simulator,name=iPhone 17" -skipMacroValidation
 ```
 
+The scheme has two test plans. `Demo`, the default, runs one test at a time on one
+simulator. `DemoParallel` runs the suites side by side on copies of the simulator that
+Xcode makes, which takes less than half the time on a Mac with cores and memory to spare:
+
+```bash
+xcodebuild test -project Examples/Demo/Demo.xcodeproj -scheme Demo -destination "platform=iOS Simulator,name=iPhone 17" -skipMacroValidation -testPlan DemoParallel -parallel-testing-worker-count 3
+```
+
+Every copy is a simulator of its own, so keep the number of them low: with too many
+running at once, each is slow and tests fail on their time limits. Use `DemoParallel`
+with a simulator only, because the tests of a Mac app share one pointer and one
+keyboard. The workflows use the default plan: each platform already has a runner of its
+own there, and a runner has too few cores to run copies of a simulator.
+
 ## Documentation
 
 Every public symbol has a documentation comment, and both libraries have a DocC

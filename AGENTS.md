@@ -36,6 +36,13 @@ xcodebuild test -project Examples/Demo/Demo.xcodeproj -scheme Demo \
 xcodebuild test -project Examples/Demo/Demo.xcodeproj -scheme Demo \
   -destination "platform=tvOS Simulator,name=Apple TV 4K (4th generation)" -skipMacroValidation
 
+# The same tests with the suites side by side on copies of the simulator (the
+# DemoParallel test plan; the default plan, Demo, runs one test at a time). For a
+# simulator only, and with few copies: too many at once make tests fail on time limits.
+xcodebuild test -project Examples/Demo/Demo.xcodeproj -scheme Demo \
+  -destination "platform=iOS Simulator,name=iPhone 17" -skipMacroValidation \
+  -testPlan DemoParallel -parallel-testing-worker-count 3
+
 # One demo suite / test (generated methods are named test_<function name>)
 xcodebuild test ... -only-testing:DemoUITests/FruitListTests/test_<functionName>
 ```

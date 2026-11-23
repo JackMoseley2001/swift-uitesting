@@ -1,0 +1,21 @@
+{
+  "configurations" : [
+    {
+      "id" : "6B0E5A0C-2C1D-4E53-9C55-0D5A5D1E7A02",
+      "name" : "Configuration 1",
+      "options" : {}
+    }
+  ],
+  "defaultOptions" : {},
+  "testTargets" : [
+    {
+      "parallelizable" : true,
+      "target" : {
+        "containerPath" : "container:Demo.xcodeproj",
+        "identifier" : "DE0000000000000000000016",
+        "name" : "DemoUITests"
+      }
+    }
+  ],
+  "version" : 1
+}
