@@ -57,9 +57,8 @@ jobs:
         # One version of iOS from each major version that a runner image has simulators
         # for, with an Xcode and an iPhone that the same image has for it. No image has
         # an iOS 16 or iOS 17 simulator. macOS is the Mac that the job runs on. watchOS,
-        # visionOS and tvOS have a row for each major version in the same way, but no
-        # image has a visionOS 2 simulator. The row with the newest version of a
-        # platform has `latest`.
+        # visionOS and tvOS have a row for each major version in the same way. The row
+        # with the newest version of a platform has `latest`.
         run: |
           rows=$(jq -c --arg versions "$VERSIONS" \
             'map(select($versions == "all" or .latest)) | map(del(.latest))' <<'JSON'
@@ -71,6 +70,7 @@ jobs:
             {"platform": "watchOS 11.5", "xcode": "16.4", "runner": "macos-15", "destination": "platform=watchOS Simulator,name=Apple Watch Series 10 (46mm),OS=11.5"},
             {"platform": "watchOS 26.5", "xcode": "26.6", "runner": "macos-26", "destination": "platform=watchOS Simulator,name=Apple Watch Series 11 (46mm),OS=26.5"},
             {"platform": "watchOS 27.2", "xcode": "27.2", "runner": "xcode-27", "destination": "platform=watchOS Simulator,name=Apple Watch Series 12 (46mm),OS=27.2", "latest": true},
+            {"platform": "visionOS 2.5", "xcode": "16.4", "runner": "macos-15", "destination": "platform=visionOS Simulator,name=Apple Vision Pro,OS=2.5"},
             {"platform": "visionOS 26.5", "xcode": "26.6", "runner": "macos-26", "destination": "platform=visionOS Simulator,name=Apple Vision Pro,OS=26.5"},
             {"platform": "visionOS 27.2", "xcode": "27.2", "runner": "xcode-27", "destination": "platform=visionOS Simulator,name=Apple Vision Pro,OS=27.2", "latest": true},
             {"platform": "tvOS 18.5", "xcode": "16.4", "runner": "macos-15", "destination": "platform=tvOS Simulator,name=Apple TV 4K (3rd generation),OS=18.5"},
@@ -107,12 +107,26 @@ jobs:
       - name: Build
         run: |
           set -o pipefail
-          xcodebuild build-for-testing \
-            -project Examples/Demo/Demo.xcodeproj \
-            -scheme Demo \
-            -destination "$DESTINATION" \
-            -skipMacroValidation \
-            | xcbeautify --renderer github-actions
+          # A freshly started runner sometimes does not list its simulators yet, and
+          # the build then finds no device for the destination. Try again in that
+          # case only.
+          for attempt in 1 2 3 4; do
+            if xcodebuild build-for-testing \
+              -project Examples/Demo/Demo.xcodeproj \
+              -scheme Demo \
+              -destination "$DESTINATION" \
+              -skipMacroValidation \
+              2>&1 | tee build.log | xcbeautify --renderer github-actions; then
+              exit 0
+            fi
+            if ! grep -q "Unable to find a device matching the provided destination specifier" build.log; then
+              exit 1
+            fi
+            echo "::warning::The simulators were not listed on attempt $attempt."
+            xcrun simctl list devices available || true
+            sleep 45
+          done
+          exit 1
 
       - name: Run UI tests
         run: |

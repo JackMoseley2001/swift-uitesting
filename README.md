@@ -56,7 +56,7 @@ CI covers that range:
 | The demo's UI tests, on an iPhone simulator | iOS 18.5, 26.5 and 27 |
 | The demo's UI tests, as a Mac app | macOS, with Xcode 27.1 |
 | The demo's UI tests, on an Apple Watch simulator | watchOS 11.5, 26.5 and 27.2 |
-| The demo's UI tests, on an Apple Vision Pro simulator | visionOS 26.5 and 27.2 |
+| The demo's UI tests, on an Apple Vision Pro simulator | visionOS 2.5, 26.5 and 27.2 |
 | The demo's UI tests, on an Apple TV simulator | tvOS 18.5, 26.5 and 27.2 |
 
 The latest Xcode of each major version is used, and each version of iOS is tested with
