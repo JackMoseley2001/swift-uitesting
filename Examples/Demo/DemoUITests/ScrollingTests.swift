@@ -9,8 +9,8 @@ final class ScrollingTests: XCTestCase {
 
     @UITest
     func aRowFurtherDownDoesNotExistUntilItIsScrolledTo(app: XCUIApplication) throws {
-        // A list on macOS creates all of its rows, so the row exists there, out of view.
-        #if !os(macOS)
+        // A list on macOS or tvOS creates all of its rows, so the row exists there, out of view.
+        #if !os(macOS) && !os(tvOS)
         #expect(!app[NumberID.row(40)].exists)
         #endif
 
@@ -19,8 +19,8 @@ final class ScrollingTests: XCTestCase {
         #expect(app[NumberID.selection].label == "Selected 40")
     }
 
-    // A list on macOS creates all of its rows.
-    #if !os(macOS)
+    // A list on macOS or tvOS creates all of its rows.
+    #if !os(macOS) && !os(tvOS)
     @UITest
     func onlyTheRowsThatAreLoadedAreCounted(app: XCUIApplication) throws {
         try app[NumberID.row(1)].waitToAppear()
@@ -43,8 +43,8 @@ final class ScrollingTests: XCTestCase {
     @UITest
     func scrollsBackUp(app: XCUIApplication) throws {
         try app[NumberID.row(40)].scrollIntoView(maximumSwipes: Self.swipes)
-        // A list on macOS creates all of its rows, so the row exists there, out of view.
-        #if !os(macOS)
+        // A list on macOS or tvOS creates all of its rows, so the row exists there, out of view.
+        #if !os(macOS) && !os(tvOS)
         #expect(!app[NumberID.row(1)].exists)
         #endif
 

@@ -9,8 +9,6 @@ extension UITestElement where Kind: TextEntryKind {
         TextEntry.text(value: element.value, placeholder: element.placeholderValue)
     }
 
-    // tvOS has no touch screen, so XCTest has no taps, drags or swipes there.
-    #if !os(tvOS)
     /// Types text into the field, once the field exists and is enabled.
     ///
     /// The field is tapped first, to give it the keyboard. In a field that already
@@ -108,11 +106,39 @@ extension UITestElement where Kind: TextEntryKind {
         line: UInt
     ) throws -> TextKeyboard {
         try wait(toBe: readiness, inOrderTo: intent, within: timeout, filePath: filePath, line: line)
-        #if os(watchOS)
-        // The screen to type on belongs to the app, not to the field.
+        #if os(tvOS) || os(watchOS)
+        // The keyboard of tvOS and the screen to type on of watchOS belong to the app,
+        // not to the field.
         let app = try owningApp(inOrderTo: intent, filePath: filePath, line: line)
         #endif
+        #if os(tvOS)
+        // On tvOS a field that is selected opens a keyboard that fills the screen, with
+        // a text view of its own. The field has the text as it is typed, and the
+        // remote's menu button closes the keyboard.
+        try moveFocus(inOrderTo: intent, filePath: filePath, line: line)
+        XCUIRemote.shared.press(.select)
+        let keyboard = app.keyboards.firstMatch
+        let timeout = timeout ?? ActionTimeout.current
+        guard ExpectationPolling().wait(timeout: timeout, until: { keyboard.exists }) == .met else {
+            let failure = "Could not \(intent) \(reference.name): "
+                + "the keyboard did not show within \(ExpectationFailure.describe(timeout))"
+            ExpectationReporter.report(message: failure, filePath: filePath, line: line)
+            throw RequirementFailedError(message: failure)
+        }
+        return TextKeyboard(
+            text: { text },
+            type: { app.typeText($0) },
+            // The cursor is at the end of the text when the keyboard opens.
+            moveToEnd: {},
+            finish: {
+                guard keyboard.exists else { return }
+                XCUIRemote.shared.press(.menu)
+                _ = ExpectationPolling().wait(timeout: .seconds(2), until: { !keyboard.exists })
+            }
+        )
+        #else
         element.tapOrClick()
+        #endif
         #if os(watchOS)
         let host = app.otherElements[TextEntry.watchInputIdentifier].firstMatch
         let view = host.textViews.firstMatch
@@ -134,7 +160,7 @@ extension UITestElement where Kind: TextEntryKind {
                 _ = ExpectationPolling().wait(timeout: .seconds(2), until: { !host.exists })
             }
         )
-        #else
+        #elseif !os(tvOS)
         return TextKeyboard(
             text: { text },
             type: { element.typeText($0) },
@@ -156,6 +182,7 @@ extension UITestElement where Kind: TextEntryKind {
         #endif
     }
 
+    #if !os(tvOS)
     /// Moves the cursor towards the end of the text, with a tap on the trailing corner
     /// of the field, which puts the cursor after the last character in most fields.
     ///
@@ -174,7 +201,6 @@ extension UITestElement where Kind: TextEntryKind {
     #endif
 }
 
-#if !os(tvOS)
 extension UITestElement where Kind: SingleLineTextEntryKind {
     /// Presses the Return key in the field, once the field exists and is enabled.
     ///
@@ -201,6 +227,7 @@ extension UITestElement where Kind: SingleLineTextEntryKind {
         #if !os(watchOS)
         keyboard.type(XCUIKeyboardKey.return.rawValue)
         #endif
+        // On tvOS Return closes the keyboard, and finishing does nothing more.
         keyboard.finish()
     }
 }
@@ -219,4 +246,3 @@ struct TextKeyboard {
     /// Ends the typing. On watchOS this closes the screen to type on.
     let finish: () -> Void
 }
-#endif

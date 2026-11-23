@@ -22,8 +22,8 @@ final class ProfileFormTests: XCTestCase {
     func readsTheTextInAField(app: XCUIApplication) {
         #expect(app[ProfileID.nameField].text == "Ada Lovelace")
         #expect(app[ProfileID.passwordField].text == "")
-        // watchOS has no editor for several lines of text.
-        #if !os(watchOS)
+        // watchOS and tvOS have no editor for several lines of text.
+        #if !os(watchOS) && !os(tvOS)
         #expect(app[ProfileID.notesField].text == "First line\nSecond line")
         #endif
     }
@@ -69,8 +69,8 @@ final class ProfileFormTests: XCTestCase {
         #expect(app[ProfileID.summary].label.contains("|swordfish|"))
     }
 
-    // watchOS has no editor for several lines of text.
-    #if !os(watchOS)
+    // watchOS and tvOS have no editor for several lines of text.
+    #if !os(watchOS) && !os(tvOS)
     @UITest
     func replacesTheTextInAMultiLineEditor(app: XCUIApplication) throws {
         try app[ProfileID.notesField].replaceText(with: "Only line")
@@ -107,8 +107,8 @@ final class ProfileFormTests: XCTestCase {
     }
     #endif
 
-    // The last of the fields is an editor for several lines, which watchOS does not have.
-    #if !os(watchOS)
+    // The last of the fields is an editor for several lines, which watchOS and tvOS do not have.
+    #if !os(watchOS) && !os(tvOS)
     @UITest
     func movesFromOneFieldToTheNext(app: XCUIApplication) throws {
         try app[ProfileID.nameField].replaceText(with: "Grace")

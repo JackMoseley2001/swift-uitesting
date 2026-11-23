@@ -20,8 +20,11 @@ struct ControlsView: View {
                 Toggle("Notifications", isOn: $notifications)
                     .accessibilityIdentifier(ControlsID.notificationsSwitch)
 
+                // tvOS has no sliders and no steppers.
+                #if !os(tvOS)
                 Slider(value: $volume)
                     .accessibilityIdentifier(ControlsID.volumeSlider)
+                #endif
 
                 // watchOS has no pickers with segments or with a menu.
                 #if !os(watchOS)
@@ -50,8 +53,10 @@ struct ControlsView: View {
                 .accessibilityIdentifier(ControlsID.shapeMenu)
                 #endif
 
+                #if !os(tvOS)
                 Stepper("Quantity \(quantity)", value: $quantity, in: 0...5)
                     .accessibilityIdentifier(ControlsID.quantityStepper)
+                #endif
 
                 Text("\(notifications ? "on" : "off")|\(Int((volume * 100).rounded()))|\(size)|\(colour)")
                     .font(.footnote)

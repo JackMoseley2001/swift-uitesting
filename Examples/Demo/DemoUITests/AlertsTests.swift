@@ -49,8 +49,8 @@ final class AlertsTests: XCTestCase {
     }
 
     // A dialog closes when tapped outside only where it is shown as a popover, which is
-    // not on macOS or visionOS.
-    #if !os(macOS) && !os(visionOS)
+    // not on macOS, visionOS or tvOS.
+    #if !os(macOS) && !os(visionOS) && !os(tvOS)
     @UITest
     func dismissesADialog(app: XCUIApplication) throws {
         try app[AlertsID.shareButton].tap()

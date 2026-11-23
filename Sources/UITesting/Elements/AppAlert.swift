@@ -137,8 +137,6 @@ public struct AppAlert {
         }
     }
 
-    // tvOS has no touch screen, so XCTest has no taps, drags or swipes there.
-    #if !os(tvOS)
     /// Taps the button with a label, once it is showing.
     ///
     /// ```swift
@@ -210,7 +208,7 @@ public struct AppAlert {
                 line: line
             )
         }
-        dismissRegion.tapOrClick()
+        tapOrClick(dismissRegion)
         _ = ExpectationPolling().wait(timeout: .seconds(2), until: { !element.exists })
     }
 
@@ -236,11 +234,20 @@ public struct AppAlert {
             noun: noun
         )
         switch choice {
-        case .success(let position): buttons[position].element.tapOrClick()
+        case .success(let position): tapOrClick(buttons[position].element)
         case .failure(let error): try fail(error.message, filePath: filePath, line: line)
         }
     }
-    #endif
+
+    /// Taps an element of the alert: a tap, a click on macOS, or the remote moving the
+    /// focus to it and selecting it on tvOS, where the app says what has the focus.
+    private func tapOrClick(_ target: XCUIElement) {
+        #if os(tvOS)
+        target.tapOrClick(in: app)
+        #else
+        target.tapOrClick()
+        #endif
+    }
 
     private func wait(
         inOrderTo intent: String,
@@ -345,7 +352,9 @@ enum AppAlertText {
     /// The title is the first text and the message is the one after it.
     static func message(title: String, texts: [String]) -> String? {
         // watchOS reports the title a second time, after the message.
-        let rest = texts.first == title ? Array(texts.dropFirst()) : texts
+        // tvOS reports the title with a full stop after it.
+        let isTitle = texts.first.map { $0 == title || (!title.isEmpty && $0 == title + ".") } ?? false
+        let rest = isTitle ? Array(texts.dropFirst()) : texts
         return rest.first { !$0.isEmpty && $0 != title }
     }
 }

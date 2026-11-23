@@ -16,7 +16,7 @@ struct LabelsView: View {
                 Text(signedInAs.map { "Signed in as \($0)" } ?? "Welcome back")
 
                 TextField("Email", text: $email)
-                    #if !os(watchOS)
+                    #if !os(watchOS) && !os(tvOS)
                     .textFieldStyle(.roundedBorder)
                     #endif
                     #if os(iOS)

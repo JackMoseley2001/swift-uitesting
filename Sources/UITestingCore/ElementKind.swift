@@ -211,6 +211,8 @@ public enum ElementKinds {
         public static var elementType: ElementType {
             #if os(macOS)
                 .outline
+            #elseif os(tvOS)
+                .table
             #else
                 .collectionView
             #endif
