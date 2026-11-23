@@ -52,13 +52,51 @@ struct SystemAlertRulesTests {
     }
 
     @Test
-    func ruleForAServiceAnswersEveryAlertOfASystemThatMarksNothing() {
+    func ruleForAServiceAnswersAnAlertThatNothingIsKnownAbout() {
         let rules = SystemAlertRules(rules: [SystemAlertRule(answer: .deny, services: ["kTCCServiceCamera"])])
+        let buttons = Self.unmarkedButtons
 
-        #Testing::expect(rules.unmarkedPosition == 0)
-        // Where alerts are marked, an alert without an identifier is not the camera's.
-        let marked = rules.positionOfButton(inAlertWithIdentifier: "", buttons: Self.unmarkedButtons, marked: true)
-        #Testing::expect(marked == nil)
+        #Testing::expect(rules.positionOfButton(inAlertWithIdentifier: nil, buttons: buttons, marked: false) == 0)
+        // An alert that is known to be for none of the permissions is not the camera's.
+        #Testing::expect(rules.positionOfButton(inAlertWithIdentifier: "", buttons: buttons, marked: false) == nil)
+    }
+
+    @Test
+    func unmarkedAlertIsToldApartByItsTitle() {
+        let formats = [
+            "kTCCServiceMicrophone": "“%@” Would Like to Access the Microphone",
+            "kTCCServiceCamera": "“%@” Would Like to Access the Camera"
+        ]
+        let title = "“Demo” Would Like to Access the Microphone"
+        let identifier = { (services: [String]) in
+            SystemAlertTitles.identifier(forAlertTitled: title, services: services) { formats[$0] }
+        }
+
+        #Testing::expect(identifier(["kTCCServiceCamera", "kTCCServiceMicrophone"]) == "kTCCServiceMicrophone-alert")
+        // The alert is for none of the permissions that were asked about.
+        #Testing::expect(identifier(["kTCCServiceCamera"]) == "")
+        #Testing::expect(identifier([]) == "")
+        // The system has no title for one of them, so the alert could be for it.
+        #Testing::expect(identifier(["kTCCServiceCamera", "kTCCServicePhotos"]) == nil)
+    }
+
+    @Test
+    func titleMatchesInAnyLanguageAndWithAnyAppName() {
+        let french = "« %@ » souhaite accéder au micro."
+
+        #Testing::expect(SystemAlertTitles.matches("« Démo » souhaite accéder au micro.", format: french))
+        #Testing::expect(!SystemAlertTitles.matches("« Démo » souhaite accéder à l’appareil photo.", format: french))
+        // The name of the app has to be there, and so does a place for it.
+        #Testing::expect(!SystemAlertTitles.matches("« » souhaite", format: "« %@ » souhaite"))
+        #Testing::expect(!SystemAlertTitles.matches("Anything", format: "%@"))
+        #Testing::expect(!SystemAlertTitles.matches("No place for a name", format: "No place for a name"))
+    }
+
+    @Test
+    func keyOfATitleIsMadeFromTheNameOfThePermission() {
+        #Testing::expect(
+            SystemAlertTitles.key(forService: "kTCCServiceMicrophone") == "REQUEST_ACCESS_SERVICE_kTCCServiceMicrophone"
+        )
     }
 
     @Test

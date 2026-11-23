@@ -62,11 +62,6 @@ final class SystemAlertTests: XCTestCase {
     }
 }
 
-/// Whether the system marks an alert with the resource it asks for, which it does from iOS 27.
-private var alertsSayWhatTheyAskFor: Bool {
-    if #available(iOS 27, *) { true } else { false }
-}
-
 /// Tests that leave the answer to a trait.
 @UITestSuite(traits: .example(.permission), .systemAlerts(.allow, for: .microphone), .animationsDisabled)
 final class SystemAlertTraitTests: XCTestCase {
@@ -104,9 +99,7 @@ final class SystemAlertTraitTests: XCTestCase {
         #expect(app[PermissionID.status].label == "Denied", within: .seconds(5))
     }
 
-    // Before iOS 27 an alert does not say which resource it asks for, and a trait for
-    // one resource answers them all.
-    @UITest(traits: .systemAlerts(.deny, for: .camera), .enabled(if: alertsSayWhatTheyAskFor))
+    @UITest(traits: .systemAlerts(.deny, for: .camera))
     func aTraitForAnotherResourceDoesNotAnswerThisAlert(app: XCUIApplication) throws {
         try app[PermissionID.askButton].tap()
 
