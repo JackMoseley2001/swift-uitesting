@@ -163,6 +163,9 @@ jobs:
 
       - name: Show failure details
         if: failure()
+        # A simulator that has stopped answering makes simctl wait for it without end,
+        # and the steps after this one upload the results.
+        timeout-minutes: 5
         run: |
           # The formatted log shows only the first line of each failure message, so print
           # everything xcodebuild logged for each test that failed.
