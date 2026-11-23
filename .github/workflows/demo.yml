@@ -86,8 +86,11 @@ jobs:
     name: Demo UI tests (${{ matrix.platform }})
     needs: plan
     runs-on: ${{ matrix.runner }}
-    # The suite takes longest on a watch, where scrolling is slow, and on visionOS.
-    timeout-minutes: 45
+    # The suite takes longest on a watch, where scrolling is slow, and on visionOS,
+    # and a slow runner takes several times as long as a fast one. The limit is above
+    # that of the step that runs the tests, so that a run that is stopped there still
+    # uploads its results.
+    timeout-minutes: 70
     strategy:
       fail-fast: false
       matrix:
@@ -129,8 +132,11 @@ jobs:
           exit 1
 
       - name: Run UI tests
+        timeout-minutes: 55
         run: |
           set -o pipefail
+          # A test that hangs is stopped after five minutes and fails, so that the log
+          # names it; without that, the whole job runs out of time and says nothing.
           # A simulator on a freshly started runner is sometimes not ready when the tests
           # begin. Try again in that case only; a failing test is never retried.
           for attempt in 1 2 3; do
@@ -141,6 +147,9 @@ jobs:
               -destination "$DESTINATION" \
               -skipMacroValidation \
               -resultBundlePath Demo.xcresult \
+              -test-timeouts-enabled YES \
+              -default-test-execution-time-allowance 300 \
+              -maximum-test-execution-time-allowance 300 \
               2>&1 | tee xcodebuild.log | xcbeautify --renderer github-actions; then
               exit 0
             fi
@@ -158,13 +167,15 @@ jobs:
           # The formatted log shows only the first line of each failure message, so print
           # everything xcodebuild logged for each test that failed.
           awk '/^Test Case .* started\.$/ { lines = "" } { lines = lines $0 "\n" } /^Test Case .* failed \(/ { printf "%s\n", lines }' xcodebuild.log | head -n 400 || true
+          # Where the run stopped, for one that ran out of time.
+          tail -n 60 xcodebuild.log || true
           xcrun simctl runtime list || true
           xcrun simctl list devices available || true
           ls -lt ~/Library/Logs/DiagnosticReports 2>/dev/null | head -n 10 || true
 
       # The result bundle has the screen and the element hierarchy at each failure.
       # It is uploaded as one archive, because its files have names that an artifact
-      # cannot.
+      # cannot, beside the log of xcodebuild.
       - name: Archive the results
         if: failure()
         run: |
@@ -177,6 +188,8 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: Results (${{ matrix.platform }})
-          path: Demo.xcresult.tar.gz
+          path: |
+            Demo.xcresult.tar.gz
+            xcodebuild.log
           if-no-files-found: ignore
           retention-days: 7
