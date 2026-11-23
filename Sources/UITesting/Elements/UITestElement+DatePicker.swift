@@ -79,7 +79,7 @@ extension UITestElement where Kind == ElementKinds.DatePicker {
             // The calendar is found by a button that it keeps, because the element
             // has to be found again after the button that shows the years is renamed.
             let nextMonth = "DatePicker.NextMonth"
-            let shown = Self.pickerInFront(in: app, containing: .button, identifier: nextMonth) {
+            let shown = Self.pickerInFront(in: app, containing: .button, identifier: nextMonth, within: timeout) {
                 $0.buttons[nextMonth]
             }
             guard let shown else {
@@ -175,7 +175,7 @@ extension UITestElement where Kind == ElementKinds.DatePicker {
         if !isInline {
             let buttons = element.buttons
             (buttons.count > 1 ? buttons.element(boundBy: buttons.count - 1) : buttons.firstMatch).tap()
-            let shown = Self.pickerInFront(in: app, containing: .pickerWheel, identifier: nil) {
+            let shown = Self.pickerInFront(in: app, containing: .pickerWheel, identifier: nil, within: timeout) {
                 $0.pickerWheels.firstMatch
             }
             guard let shown else {
@@ -326,12 +326,13 @@ extension UITestElement where Kind == ElementKinds.DatePicker {
     /// - Parameters:
     ///   - type: The type of an element that the picker has to contain.
     ///   - identifier: The identifier of that element, if it has to have one.
+    ///   - timeout: How long to wait for the picker to show.
     ///   - part: Returns the element inside a picker that shows whether it is in front.
     private static func pickerInFront(
         in app: XCUIApplication,
         containing type: XCUIElement.ElementType,
         identifier: String?,
-        within timeout: Duration = .seconds(3),
+        within timeout: Duration,
         part: (XCUIElement) -> XCUIElement
     ) -> XCUIElement? {
         let pickers = app.datePickers.containing(type, identifier: identifier)
