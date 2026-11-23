@@ -118,12 +118,37 @@ enum ControlState {
         return abs(now - target) <= tolerance ? nil : .some(now)
     }
 
+    /// How far past the target a slider's thumb is taken back, when a drag to the
+    /// target would be shorter than what a drag goes past its aim.
+    static let sliderRunUp = 0.15
+
+    /// Returns where to let go of a slider's thumb for it to end on the target, when
+    /// the drag before went past its aim by the given amount.
+    ///
+    /// A target at either end is aimed at as it is, because the thumb cannot go past
+    /// an end.
+    static func sliderAim(from now: Double, to target: Double, overshoot: Double) -> Double {
+        guard overshoot > 0, target > 0, target < 1 else { return target }
+        let direction: Double = target < now ? -1 : 1
+        let aim = target - direction * overshoot
+        // Nothing is left to drag. The thumb goes through the target to its far side.
+        guard (aim - now) * direction > 0 else { return min(max(target + direction * sliderRunUp, 0), 1) }
+        return aim
+    }
+
     /// Moves a slider to a position by dragging its thumb, checking where it lands.
     ///
     /// Each round reads where the slider is and drags the thumb by the distance that
     /// is left, so an error in one drag is made up by the next. If a drag leaves the
     /// slider where it was, it did not take hold of the thumb, and the slider is
     /// nudged another way before the next round.
+    ///
+    /// On a slow simulator every drag carries the thumb a little past where it was
+    /// let go, by about the same amount each time, so a drag by the distance that is
+    /// left goes past the target again, from the other side. Each drag is therefore
+    /// aimed short of the target by what the drag before went past its aim. When
+    /// that leaves nothing to drag, the thumb is first taken back through the target
+    /// by ``sliderRunUp``, so that the next drag is long enough to be aimed.
     ///
     /// - Parameters:
     ///   - target: The position wanted, between 0 and 1.
@@ -137,17 +162,25 @@ enum ControlState {
     static func adjustSlider(
         to target: Double,
         tolerance: Double,
-        maximumMoves: Int = 5,
+        maximumMoves: Int = 6,
         position: () -> Double?,
         drag: (_ from: Double, _ to: Double) -> Void,
         nudge: (Double) -> Void
     ) -> Double?? {
+        var overshoot = 0.0
         for _ in 0..<maximumMoves {
             guard let now = position() else { return .some(nil) }
             if abs(now - target) <= tolerance { return nil }
 
-            drag(now, target)
-            if position() == now { nudge(target) }
+            let aim = sliderAim(from: now, to: target, overshoot: overshoot)
+            drag(now, aim)
+            guard let landed = position() else { return .some(nil) }
+            if landed == now {
+                nudge(target)
+                continue
+            }
+            // How far the thumb went past its aim, in the direction it was dragged.
+            overshoot = max(0, (landed - aim) * (aim < now ? -1 : 1))
         }
         guard let end = position() else { return .some(nil) }
         return abs(end - target) <= tolerance ? nil : .some(end)

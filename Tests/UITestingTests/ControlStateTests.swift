@@ -209,9 +209,47 @@ struct ControlStateTests {
     func sliderThatOvershootsIsDraggedAgain() throws {
         let slider = Slider(overshoot: 0.06)
 
+        // The second drag takes the thumb back through the target, and the third is aimed.
         #Testing::expect(slider.adjust(to: 0.8) == nil)
-        #Testing::expect(slider.drags == 2)
+        #Testing::expect(slider.drags == 3)
         #Testing::expect(abs(try #Testing::require(slider.position) - 0.8) <= 0.02)
+    }
+
+    @Test
+    func sliderThatGoesPastEveryAimByTheSameAmountIsAimedShort() {
+        // What a slow simulator does: 50% to 83%, then 75%, then 83%, and so on.
+        var position = 0.5
+        var drags = 0
+
+        let failure = ControlState.adjustSlider(
+            to: 0.8,
+            tolerance: 0.02,
+            position: { position },
+            drag: { from, to in
+                drags += 1
+                guard to != from else { return }
+                position = min(max(position + (to - from) + (to < from ? -0.04 : 0.04), 0), 1)
+            },
+            nudge: { _ in }
+        )
+
+        #Testing::expect(failure == nil)
+        #Testing::expect(drags == 3)
+    }
+
+    @Test
+    func sliderIsAimedShortByWhatTheLastDragWentPast() {
+        #Testing::expect(ControlState.sliderAim(from: 0.5, to: 0.8, overshoot: 0) == 0.8)
+        #Testing::expect(abs(ControlState.sliderAim(from: 0.5, to: 0.8, overshoot: 0.03) - 0.77) < 0.0001)
+        #Testing::expect(abs(ControlState.sliderAim(from: 0.95, to: 0.8, overshoot: 0.03) - 0.83) < 0.0001)
+        // An end cannot be gone past.
+        #Testing::expect(ControlState.sliderAim(from: 0.5, to: 1, overshoot: 0.03) == 1)
+    }
+
+    @Test
+    func sliderTooNearToBeAimedIsTakenThroughTheTargetFirst() {
+        #Testing::expect(abs(ControlState.sliderAim(from: 0.83, to: 0.8, overshoot: 0.03) - 0.65) < 0.0001)
+        #Testing::expect(abs(ControlState.sliderAim(from: 0.77, to: 0.8, overshoot: 0.05) - 0.95) < 0.0001)
     }
 
     @Test
@@ -235,7 +273,7 @@ struct ControlStateTests {
             nudge: { _ in }
         )
 
-        #Testing::expect(failure == .some(0.7))
+        #Testing::expect(failure == .some(0.9))
     }
 
     @Test
