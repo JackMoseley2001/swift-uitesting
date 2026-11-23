@@ -43,12 +43,41 @@ struct SystemAlertRulesTests {
     }
 
     @Test
-    func unmarkedAlertIsAnsweredByItsPositions() {
+    func unmarkedAlertIsAnsweredOnlyWithSomethingToFallBackOn() {
         let allow = SystemAlertRules(rules: [SystemAlertRule(answer: .allow)])
-        let deny = SystemAlertRules(rules: [SystemAlertRule(answer: .deny)])
+        let allowOrLabel = SystemAlertRules(rules: [SystemAlertRule(answer: .allow(orTap: "Allow"))])
+        let denyOrIndex = SystemAlertRules(rules: [SystemAlertRule(answer: .deny(orTapButtonAt: 0))])
 
-        #Testing::expect(allow.unmarkedPosition == 1)
-        #Testing::expect(deny.unmarkedPosition == 0)
+        #Testing::expect(allow.unmarkedPosition == nil)
+        #Testing::expect(allowOrLabel.unmarkedPosition == 1)
+        #Testing::expect(denyOrIndex.unmarkedPosition == 0)
+    }
+
+    @Test
+    func traitWithNothingToFallBackOnIsAProblemOnASystemThatMarksNothing() {
+        let allow = SystemAlertRule(answer: .allow)
+        let deny = SystemAlertRule(answer: .deny)
+
+        #Testing::expect(SystemAlertsTrait.problem(with: allow, marked: true) == nil)
+        let allowProblem = SystemAlertsTrait.problem(with: allow, marked: false) ?? ""
+        let denyProblem = SystemAlertsTrait.problem(with: deny, marked: false) ?? ""
+        #Testing::expect(allowProblem.contains(".systemAlerts(.allow(orTapButtonAt: 1))"))
+        #Testing::expect(denyProblem.contains(".systemAlerts(.deny(orTapButtonAt: 0))"))
+    }
+
+    @Test
+    func traitThatCanAnswerIsNoProblemOnASystemThatMarksNothing() {
+        let rules = [
+            SystemAlertRule(answer: .allow(orTap: "Allow")),
+            SystemAlertRule(answer: .deny(orTapButtonAt: 0)),
+            SystemAlertRule(answer: .button("OK")),
+            // A rule for a resource answers nothing there, and the test's log says so.
+            SystemAlertRule(answer: .allow, services: ["kTCCServiceCamera"])
+        ]
+
+        for rule in rules {
+            #Testing::expect(SystemAlertsTrait.problem(with: rule, marked: false) == nil)
+        }
     }
 
     @Test
@@ -63,7 +92,7 @@ struct SystemAlertRulesTests {
     @Test
     func ruleForEveryAlertStillAnswersBehindARuleForAServiceThatCannotApply() {
         let rules = SystemAlertRules(rules: [
-            SystemAlertRule(answer: .allow),
+            SystemAlertRule(answer: .allow(orTapButtonAt: 1)),
             SystemAlertRule(answer: .deny, services: ["kTCCServiceCamera"])
         ])
 

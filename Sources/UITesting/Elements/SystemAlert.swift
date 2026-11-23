@@ -79,16 +79,25 @@ public struct SystemAlert {
     /// Taps the button that gives the app what it asked for, once the alert is showing.
     ///
     /// The button is found by the identifier the system gives it, so this does not
-    /// depend on the language of the device. Before iOS 27 the system gives it none,
-    /// and it is found by its position in an alert with two buttons. On an alert with
-    /// several ways to allow, such as the one for location, use
-    /// ``tap(_:within:filePath:line:)`` to say which.
+    /// depend on the language of the device. The system gives it one from iOS 27, and
+    /// only on some alerts. Where an alert may not say which of its buttons allows,
+    /// give a label or a position to fall back on, with
+    /// ``allow(orTap:within:filePath:line:)`` or
+    /// ``allow(orTapButtonAt:within:filePath:line:)``, or check for iOS 27 yourself:
+    ///
+    /// ```swift
+    /// if #available(iOS 27, *) {
+    ///     try SystemAlert.current.allow()
+    /// } else {
+    ///     try SystemAlert.current.tap("Allow")
+    /// }
+    /// ```
     ///
     /// - Parameter timeout: How long to wait for the alert. The default is the test's
     ///   ``UITestTrait/actionTimeout(_:)``.
     /// - Throws: ``RequirementFailedError`` if no alert shows in time, or the alert does
-    ///   not say which button allows. The failure is recorded at the line of the call,
-    ///   and the test ends.
+    ///   not say which button allows, as none does before iOS 27. The failure is
+    ///   recorded at the line of the call, and the test ends.
     public func allow(
         within timeout: Duration? = nil,
         filePath: StaticString = #filePath,
@@ -97,23 +106,130 @@ public struct SystemAlert {
         try tap(.allow, within: timeout, filePath: filePath, line: line)
     }
 
+    /// Taps the button that gives the app what it asked for, or the button with a
+    /// label if the alert does not say which of its buttons allows.
+    ///
+    /// ```swift
+    /// try SystemAlert.current.allow(orTap: "Allow")
+    /// ```
+    ///
+    /// The label is in the language of the device. It is used before iOS 27, where no
+    /// alert says which button allows, and on the alerts that do not say on iOS 27.
+    ///
+    /// - Parameters:
+    ///   - label: The label of the button to fall back on.
+    ///   - timeout: How long to wait for the alert. The default is the test's
+    ///     ``UITestTrait/actionTimeout(_:)``.
+    /// - Throws: ``RequirementFailedError`` if no alert shows in time, or the alert has
+    ///   neither button. The failure is recorded at the line of the call, and the test
+    ///   ends.
+    public func allow(
+        orTap label: String,
+        within timeout: Duration? = nil,
+        filePath: StaticString = #filePath,
+        line: UInt = #line
+    ) throws {
+        try tap(.either(.allow, or: .label(label)), within: timeout, filePath: filePath, line: line)
+    }
+
+    /// Taps the button that gives the app what it asked for, or the button at a
+    /// position if the alert does not say which of its buttons allows.
+    ///
+    /// ```swift
+    /// try SystemAlert.current.allow(orTapButtonAt: 1)
+    /// ```
+    ///
+    /// The position counts from 0 in the order of ``buttons``, and does not depend on
+    /// the language of the device.
+    ///
+    /// - Parameters:
+    ///   - index: The position of the button to fall back on.
+    ///   - timeout: How long to wait for the alert. The default is the test's
+    ///     ``UITestTrait/actionTimeout(_:)``.
+    /// - Throws: ``RequirementFailedError`` if no alert shows in time, or the alert has
+    ///   neither button. The failure is recorded at the line of the call, and the test
+    ///   ends.
+    public func allow(
+        orTapButtonAt index: Int,
+        within timeout: Duration? = nil,
+        filePath: StaticString = #filePath,
+        line: UInt = #line
+    ) throws {
+        try tap(.either(.allow, or: .index(index)), within: timeout, filePath: filePath, line: line)
+    }
+
     /// Taps the button that refuses what the app asked for, once the alert is showing.
     ///
     /// The button is found by the identifier the system gives it, so this does not
-    /// depend on the language of the device. Before iOS 27 the system gives it none,
-    /// and it is found by its position in an alert with two buttons.
+    /// depend on the language of the device. The system gives it one from iOS 27, and
+    /// only on some alerts. Where an alert may not say which of its buttons refuses,
+    /// give a label or a position to fall back on, with
+    /// ``deny(orTap:within:filePath:line:)`` or
+    /// ``deny(orTapButtonAt:within:filePath:line:)``, or check for iOS 27 yourself as
+    /// for ``allow(within:filePath:line:)``.
     ///
     /// - Parameter timeout: How long to wait for the alert. The default is the test's
     ///   ``UITestTrait/actionTimeout(_:)``.
     /// - Throws: ``RequirementFailedError`` if no alert shows in time, or the alert does
-    ///   not say which button refuses. The failure is recorded at the line of the call,
-    ///   and the test ends.
+    ///   not say which button refuses, as none does before iOS 27. The failure is
+    ///   recorded at the line of the call, and the test ends.
     public func deny(
         within timeout: Duration? = nil,
         filePath: StaticString = #filePath,
         line: UInt = #line
     ) throws {
         try tap(.deny, within: timeout, filePath: filePath, line: line)
+    }
+
+    /// Taps the button that refuses what the app asked for, or the button with a
+    /// label if the alert does not say which of its buttons refuses.
+    ///
+    /// ```swift
+    /// try SystemAlert.current.deny(orTap: "Don’t Allow")
+    /// ```
+    ///
+    /// The label is in the language of the device.
+    ///
+    /// - Parameters:
+    ///   - label: The label of the button to fall back on.
+    ///   - timeout: How long to wait for the alert. The default is the test's
+    ///     ``UITestTrait/actionTimeout(_:)``.
+    /// - Throws: ``RequirementFailedError`` if no alert shows in time, or the alert has
+    ///   neither button. The failure is recorded at the line of the call, and the test
+    ///   ends.
+    public func deny(
+        orTap label: String,
+        within timeout: Duration? = nil,
+        filePath: StaticString = #filePath,
+        line: UInt = #line
+    ) throws {
+        try tap(.either(.deny, or: .label(label)), within: timeout, filePath: filePath, line: line)
+    }
+
+    /// Taps the button that refuses what the app asked for, or the button at a
+    /// position if the alert does not say which of its buttons refuses.
+    ///
+    /// ```swift
+    /// try SystemAlert.current.deny(orTapButtonAt: 0)
+    /// ```
+    ///
+    /// The position counts from 0 in the order of ``buttons``, and does not depend on
+    /// the language of the device.
+    ///
+    /// - Parameters:
+    ///   - index: The position of the button to fall back on.
+    ///   - timeout: How long to wait for the alert. The default is the test's
+    ///     ``UITestTrait/actionTimeout(_:)``.
+    /// - Throws: ``RequirementFailedError`` if no alert shows in time, or the alert has
+    ///   neither button. The failure is recorded at the line of the call, and the test
+    ///   ends.
+    public func deny(
+        orTapButtonAt index: Int,
+        within timeout: Duration? = nil,
+        filePath: StaticString = #filePath,
+        line: UInt = #line
+    ) throws {
+        try tap(.either(.deny, or: .index(index)), within: timeout, filePath: filePath, line: line)
     }
 
     /// Waits for a system alert to show.

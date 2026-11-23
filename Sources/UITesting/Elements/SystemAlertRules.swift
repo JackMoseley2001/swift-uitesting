@@ -1,29 +1,58 @@
 /// How to answer a system alert.
-public enum SystemAlertAnswer: Sendable, Equatable {
+///
+/// `.allow` and `.deny` find their button by an identifier, which the system gives it
+/// from iOS 27. Before that no alert says which of its buttons allows, so give a label
+/// or a position to fall back on:
+///
+/// ```swift
+/// .systemAlerts(.allow(orTap: "Allow"))
+/// .systemAlerts(.deny(orTapButtonAt: 0))
+/// ```
+public struct SystemAlertAnswer: Sendable, Equatable {
+    /// The button that gives this answer.
+    let button: SystemAlertButton
+
     /// Give the app what it asked for.
     ///
     /// This is for alerts that say which of their buttons allows. See ``SystemAlert``
-    /// for the ones that do.
-    case allow
+    /// for the ones that do. No alert does before iOS 27.
+    public static let allow = Self(button: .allow)
 
     /// Refuse what the app asked for.
     ///
     /// This is for alerts that say which of their buttons refuses. See ``SystemAlert``
-    /// for the ones that do.
-    case deny
+    /// for the ones that do. No alert does before iOS 27.
+    public static let deny = Self(button: .deny)
 
     /// Tap the button with a label, such as "Allow While Using App".
     ///
     /// This is for any alert that has a button with this label.
-    case button(String)
+    public static func button(_ label: String) -> Self {
+        Self(button: .label(label))
+    }
 
-    /// The button that gives this answer.
-    var button: SystemAlertButton {
-        switch self {
-        case .allow: .allow
-        case .deny: .deny
-        case .button(let label): .label(label)
-        }
+    /// Give the app what it asked for, and tap the button with a label in an alert
+    /// that does not say which of its buttons allows.
+    public static func allow(orTap label: String) -> Self {
+        Self(button: .either(.allow, or: .label(label)))
+    }
+
+    /// Give the app what it asked for, and tap the button at a position in an alert
+    /// that does not say which of its buttons allows. The position counts from 0.
+    public static func allow(orTapButtonAt index: Int) -> Self {
+        Self(button: .either(.allow, or: .index(index)))
+    }
+
+    /// Refuse what the app asked for, and tap the button with a label in an alert
+    /// that does not say which of its buttons refuses.
+    public static func deny(orTap label: String) -> Self {
+        Self(button: .either(.deny, or: .label(label)))
+    }
+
+    /// Refuse what the app asked for, and tap the button at a position in an alert
+    /// that does not say which of its buttons refuses. The position counts from 0.
+    public static func deny(orTapButtonAt index: Int) -> Self {
+        Self(button: .either(.deny, or: .index(index)))
     }
 }
 

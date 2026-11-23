@@ -9,7 +9,12 @@ final class SystemAlertTests: XCTestCase {
     func allowingGivesTheAppAccess(app: XCUIApplication) throws {
         try app[PermissionID.askButton].tap()
 
-        try SystemAlert.current.allow()
+        // An alert says which of its buttons allows from iOS 27 only.
+        if #available(iOS 27, *) {
+            try SystemAlert.current.allow()
+        } else {
+            try SystemAlert.current.tap("Allow")
+        }
 
         #expect(app[PermissionID.status].label == "Allowed", within: .seconds(3))
         #expect(!SystemAlert.current.isShowing)
@@ -19,7 +24,8 @@ final class SystemAlertTests: XCTestCase {
     func denyingRefusesTheApp(app: XCUIApplication) throws {
         try app[PermissionID.askButton].tap()
 
-        try SystemAlert.current.deny()
+        // The position is for an alert that does not say which of its buttons refuses.
+        try SystemAlert.current.deny(orTapButtonAt: 0)
 
         #expect(app[PermissionID.status].label == "Denied", within: .seconds(3))
     }
@@ -54,7 +60,7 @@ final class SystemAlertTests: XCTestCase {
     func aTraitForAResourceLeavesTheAlertToTheTestBeforeIOS27(app: XCUIApplication) throws {
         try app[PermissionID.askButton].tap()
 
-        try SystemAlert.current.allow()
+        try SystemAlert.current.allow(orTap: "Allow")
 
         #expect(app[PermissionID.status].label == "Allowed", within: .seconds(3))
     }
@@ -62,7 +68,7 @@ final class SystemAlertTests: XCTestCase {
     @UITest
     func theAnswerIsKeptUntilItIsReset(context: UITestContext) throws {
         try context.app[PermissionID.askButton].tap()
-        try SystemAlert.current.allow()
+        try SystemAlert.current.allow(orTap: "Allow")
         #expect(context.app[PermissionID.status].label == "Allowed", within: .seconds(3))
 
         try context.relaunch()
@@ -122,11 +128,12 @@ final class SystemAlertTraitTests: XCTestCase {
     }
 }
 
-/// Tests that leave the answer to a trait for every alert, which works on any version.
+/// Tests that leave the answer to a trait for every alert, which works on any version
+/// with a label or a position to fall back on.
 @UITestSuite(
     traits: .example(.permission),
     .resetAuthorization(for: .microphone),
-    .systemAlerts(.allow),
+    .systemAlerts(.allow(orTapButtonAt: 1)),
     .animationsDisabled
 )
 final class SystemAlertEveryAlertTraitTests: XCTestCase {
@@ -138,7 +145,7 @@ final class SystemAlertEveryAlertTraitTests: XCTestCase {
         #expect(!SystemAlert.current.isShowing)
     }
 
-    @UITest(traits: .systemAlerts(.deny))
+    @UITest(traits: .systemAlerts(.deny(orTap: "Don’t Allow")))
     func aTestCanOverrideItsSuite(app: XCUIApplication) throws {
         try app[PermissionID.askButton].tap()
 

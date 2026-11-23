@@ -29,10 +29,27 @@ public struct SystemAlertsTrait: UITestTrait, SystemAlertAnswering {
         for resource in resources {
             context.app.resetAuthorizationStatus(for: resource)
         }
+        if let problem = Self.problem(with: systemAlertRule, marked: SystemAlertChoice.systemMarksAlerts) {
+            throw SystemAlertChoiceError(message: problem)
+        }
         if !SystemAlertChoice.systemMarksAlerts, !systemAlertRule.services.isEmpty {
             // The test's log says why the alert was left, for whoever reads a failure.
             XCTContext.runActivity(named: Self.notAnsweredNote) { _ in }
         }
+    }
+
+    /// Returns what is wrong with a rule that could answer no alert on this system,
+    /// or `nil` if it can.
+    ///
+    /// `.allow` and `.deny` with nothing to fall back on need an alert that marks its
+    /// buttons, which none does before iOS 27. A rule for named resources is left
+    /// alone, because it answers nothing there in any case.
+    static func problem(with rule: SystemAlertRule, marked: Bool) -> String? {
+        guard !marked, rule.services.isEmpty, rule.answer.button.needsMarkedButtons else { return nil }
+        let name = rule.answer == .allow ? "allow" : "deny"
+        return "The .systemAlerts(.\(name)) trait cannot answer an alert before iOS 27, where no alert says "
+            + "which button allows or refuses. Give a label or a position to fall back on, "
+            + "as in .systemAlerts(.\(name)(orTapButtonAt: \(name == "allow" ? 1 : 0)))"
     }
 
     /// What the test's log says where a trait for named resources answers nothing.
@@ -63,6 +80,11 @@ extension UITestTrait where Self == SystemAlertsTrait {
     /// `.allow` and `.deny` work in any language, on the alerts that say which of their
     /// buttons allows and which refuses. On iOS 27.2 these are the alerts for the
     /// camera, the microphone and photos, and the alert for contacts for `.deny` only.
+    ///
+    /// Before iOS 27 no alert says which of its buttons allows. Give `.allow` and
+    /// `.deny` a label or a position to fall back on there, as in
+    /// `.systemAlerts(.allow(orTapButtonAt: 1))`. Without one, the test fails before
+    /// the launch with a message that says so.
     ///
     /// With resources, the trait answers alerts from iOS 27 only. Before that an alert
     /// does not say which resource it asks for, so the trait resets the resources and
