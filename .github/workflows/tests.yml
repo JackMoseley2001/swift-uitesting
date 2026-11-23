@@ -5,6 +5,8 @@ on:
     types: [opened, synchronize, reopened]
   push:
     branches: [main]
+  # By hand, from the Actions tab or with `gh workflow run`, on any branch.
+  workflow_dispatch:
 
 concurrency:
   group: tests-${{ github.event.pull_request.number || github.ref }}
