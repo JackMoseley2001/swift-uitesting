@@ -1,7 +1,10 @@
 .DS_Store
 /.build
 /.swiftpm
+# The versions that dependencies resolve to depend on the Xcode that resolves them,
+# so they are not pinned: not for the package, and not for the demo.
 /Package.resolved
+Examples/Demo/Demo.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
 /*.xcodeproj
 xcuserdata/
 DerivedData/

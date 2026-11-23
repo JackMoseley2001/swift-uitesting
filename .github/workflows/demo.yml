@@ -1,12 +1,38 @@
 name: Demo UI Tests
 
 on:
+  # A pull request or a push runs the tests only when it changes something that they
+  # build: the libraries, the demo, the manifests or this workflow. Documentation and
+  # the package's unit tests are none of those.
   pull_request:
     types: [opened, synchronize, reopened]
+    paths:
+      - Sources/**
+      - Examples/**
+      - Package.swift
+      - Package@swift-*.swift
+      - .github/workflows/demo.yml
+      - "!**/*.md"
   push:
     branches: [main]
-  # By hand, from the Actions tab or with `gh workflow run`, on any branch.
+    paths:
+      - Sources/**
+      - Examples/**
+      - Package.swift
+      - Package@swift-*.swift
+      - .github/workflows/demo.yml
+      - "!**/*.md"
+  # By hand, from the Actions tab or with `gh workflow run`, on any branch. This is the
+  # only way to run the tests on the older versions.
   workflow_dispatch:
+    inputs:
+      versions:
+        description: Which versions of each platform to run the tests on
+        type: choice
+        options:
+          - all
+          - latest
+        default: all
 
 concurrency:
   group: demo-${{ github.event.pull_request.number || github.ref }}
@@ -16,71 +42,56 @@ permissions:
   contents: read
 
 jobs:
+  plan:
+    name: Choose the versions
+    runs-on: ubuntu-latest
+    outputs:
+      rows: ${{ steps.rows.outputs.rows }}
+    steps:
+      - name: Choose the versions
+        id: rows
+        env:
+          # A pull request and a push run the latest version of each platform. A run by
+          # hand runs every version, unless it asks for the latest only.
+          VERSIONS: ${{ inputs.versions || 'latest' }}
+        # One version of iOS from each major version that a runner image has simulators
+        # for, with an Xcode and an iPhone that the same image has for it. No image has
+        # an iOS 16 or iOS 17 simulator. macOS is the Mac that the job runs on. watchOS,
+        # visionOS and tvOS have a row for each major version in the same way. The row
+        # with the newest version of a platform has `latest`.
+        run: |
+          rows=$(jq -c --arg versions "$VERSIONS" \
+            'map(select($versions == "all" or .latest)) | map(del(.latest))' <<'JSON'
+          [
+            {"platform": "iOS 18.5", "xcode": "16.4", "runner": "macos-15", "destination": "platform=iOS Simulator,name=iPhone 16,OS=18.5"},
+            {"platform": "iOS 26.5", "xcode": "26.6", "runner": "macos-26", "destination": "platform=iOS Simulator,name=iPhone 17,OS=26.5"},
+            {"platform": "iOS 27", "xcode": "27.1", "runner": "xcode-27", "destination": "platform=iOS Simulator,name=iPhone 17", "latest": true},
+            {"platform": "macOS", "xcode": "27.1", "runner": "xcode-27", "destination": "platform=macOS", "latest": true},
+            {"platform": "watchOS 11.5", "xcode": "16.4", "runner": "macos-15", "destination": "platform=watchOS Simulator,name=Apple Watch Series 10 (46mm),OS=11.5"},
+            {"platform": "watchOS 26.5", "xcode": "26.6", "runner": "macos-26", "destination": "platform=watchOS Simulator,name=Apple Watch Series 11 (46mm),OS=26.5"},
+            {"platform": "watchOS 27.2", "xcode": "27.2", "runner": "xcode-27", "destination": "platform=watchOS Simulator,name=Apple Watch Series 12 (46mm),OS=27.2", "latest": true},
+            {"platform": "visionOS 2.5", "xcode": "16.4", "runner": "macos-15", "destination": "platform=visionOS Simulator,name=Apple Vision Pro,OS=2.5"},
+            {"platform": "visionOS 26.5", "xcode": "26.6", "runner": "macos-26", "destination": "platform=visionOS Simulator,name=Apple Vision Pro,OS=26.5"},
+            {"platform": "visionOS 27.2", "xcode": "27.2", "runner": "xcode-27", "destination": "platform=visionOS Simulator,name=Apple Vision Pro,OS=27.2", "latest": true},
+            {"platform": "tvOS 18.5", "xcode": "16.4", "runner": "macos-15", "destination": "platform=tvOS Simulator,name=Apple TV 4K (3rd generation),OS=18.5"},
+            {"platform": "tvOS 26.5", "xcode": "26.6", "runner": "macos-26", "destination": "platform=tvOS Simulator,name=Apple TV 4K (3rd generation),OS=26.5"},
+            {"platform": "tvOS 27.2", "xcode": "27.2", "runner": "xcode-27", "destination": "platform=tvOS Simulator,name=Apple TV 4K (4th generation),OS=27.2", "latest": true}
+          ]
+          JSON
+          )
+          echo "rows=$rows" >> "$GITHUB_OUTPUT"
+          echo "$rows" | jq -r '.[].platform'
+
   ui-test:
     name: Demo UI tests (${{ matrix.platform }})
+    needs: plan
     runs-on: ${{ matrix.runner }}
     # The suite takes longest on a watch, where scrolling is slow, and on visionOS.
     timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
-        # One version of iOS from each major version that a runner image has simulators
-        # for, with an Xcode and an iPhone that the same image has for it. No image has
-        # an iOS 16 or iOS 17 simulator. macOS is the Mac that the job runs on. watchOS,
-        # visionOS and tvOS have a row for each major version in the same way.
-        include:
-          - platform: iOS 18.5
-            xcode: "16.4"
-            runner: macos-15
-            destination: platform=iOS Simulator,name=iPhone 16,OS=18.5
-          - platform: iOS 26.5
-            xcode: "26.6"
-            runner: macos-26
-            destination: platform=iOS Simulator,name=iPhone 17,OS=26.5
-          - platform: iOS 27
-            xcode: "27.1"
-            runner: xcode-27
-            destination: platform=iOS Simulator,name=iPhone 17
-          - platform: macOS
-            xcode: "27.1"
-            runner: xcode-27
-            destination: platform=macOS
-          - platform: watchOS 11.5
-            xcode: "16.4"
-            runner: macos-15
-            destination: platform=watchOS Simulator,name=Apple Watch Series 10 (46mm),OS=11.5
-          - platform: watchOS 26.5
-            xcode: "26.6"
-            runner: macos-26
-            destination: platform=watchOS Simulator,name=Apple Watch Series 11 (46mm),OS=26.5
-          - platform: watchOS 27.2
-            xcode: "27.2"
-            runner: xcode-27
-            destination: platform=watchOS Simulator,name=Apple Watch Series 12 (46mm),OS=27.2
-          - platform: visionOS 2.5
-            xcode: "16.4"
-            runner: macos-15
-            destination: platform=visionOS Simulator,name=Apple Vision Pro,OS=2.5
-          - platform: visionOS 26.5
-            xcode: "26.6"
-            runner: macos-26
-            destination: platform=visionOS Simulator,name=Apple Vision Pro,OS=26.5
-          - platform: visionOS 27.2
-            xcode: "27.2"
-            runner: xcode-27
-            destination: platform=visionOS Simulator,name=Apple Vision Pro,OS=27.2
-          - platform: tvOS 18.5
-            xcode: "16.4"
-            runner: macos-15
-            destination: platform=tvOS Simulator,name=Apple TV 4K (3rd generation),OS=18.5
-          - platform: tvOS 26.5
-            xcode: "26.6"
-            runner: macos-26
-            destination: platform=tvOS Simulator,name=Apple TV 4K (3rd generation),OS=26.5
-          - platform: tvOS 27.2
-            xcode: "27.2"
-            runner: xcode-27
-            destination: platform=tvOS Simulator,name=Apple TV 4K (4th generation),OS=27.2
+        include: ${{ fromJSON(needs.plan.outputs.rows) }}
     env:
       DESTINATION: ${{ matrix.destination }}
     steps:
@@ -109,11 +120,13 @@ jobs:
           # A simulator on a freshly started runner is sometimes not ready when the tests
           # begin. Try again in that case only; a failing test is never retried.
           for attempt in 1 2 3; do
+            rm -rf Demo.xcresult
             if xcodebuild test-without-building \
               -project Examples/Demo/Demo.xcodeproj \
               -scheme Demo \
               -destination "$DESTINATION" \
               -skipMacroValidation \
+              -resultBundlePath Demo.xcresult \
               2>&1 | tee xcodebuild.log | xcbeautify --renderer github-actions; then
               exit 0
             fi
@@ -134,3 +147,22 @@ jobs:
           xcrun simctl runtime list || true
           xcrun simctl list devices available || true
           ls -lt ~/Library/Logs/DiagnosticReports 2>/dev/null | head -n 10 || true
+
+      # The result bundle has the screen and the element hierarchy at each failure.
+      # It is uploaded as one archive, because its files have names that an artifact
+      # cannot.
+      - name: Archive the results
+        if: failure()
+        run: |
+          if [ -d Demo.xcresult ]; then
+            COPYFILE_DISABLE=1 tar -czf Demo.xcresult.tar.gz Demo.xcresult
+          fi
+
+      - name: Upload the results
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: Results (${{ matrix.platform }})
+          path: Demo.xcresult.tar.gz
+          if-no-files-found: ignore
+          retention-days: 7
