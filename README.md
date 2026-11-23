@@ -1721,3 +1721,7 @@ The `UITestingTests` target needs Swift 6.3 or later, because its files import b
 Two workflows run on every pull request: one runs the package's tests, and the other
 builds the demo and runs its UI tests on a simulator. A third builds the documentation
 website and publishes it when `main` changes.
+
+## Licence
+
+This package is released under the MIT licence. See [LICENSE](LICENSE).
