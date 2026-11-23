@@ -224,12 +224,23 @@ swift test --disable-experimental-prebuilts
 The flag makes SwiftPM build swift-syntax from source. With the prebuilt swift-syntax it
 downloads for macros, the macro test bundle fails to link.
 
+The code is checked with [SwiftLint](https://github.com/realm/SwiftLint), with the rules
+in `.swiftlint.yml`. Install it with `brew install swiftlint`, and run it from the root of
+the repository:
+
+```bash
+swiftlint lint --strict
+```
+
+`swiftlint lint --fix` corrects what it can itself. The Lint workflow runs the same check
+on every pull request.
+
 The `UITestingTests` target needs Swift 6.3 or later, because its files import both
 `Testing` and `UITesting`. The libraries and the other test targets build with Swift 6.0.
 
-Two workflows run on every pull request: one runs the package's tests, and the other
-builds the demo and runs its UI tests on a simulator. A third builds the documentation
-website and publishes it when `main` changes.
+Three workflows run on every pull request: one runs the package's tests, one builds the
+demo and runs its UI tests on a simulator, and one lints the code. A fourth builds the
+documentation website and publishes it when `main` changes.
 
 To build that website on a Mac, with both catalogs and a first page that lists the two
 libraries and the tutorials:

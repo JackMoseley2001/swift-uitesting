@@ -1,0 +1,35 @@
+name: Lint
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [main]
+  # By hand, from the Actions tab or with `gh workflow run`, on any branch.
+  workflow_dispatch:
+
+concurrency:
+  group: lint-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  swiftlint:
+    name: SwiftLint
+    # SwiftLint only reads the source, so it runs on Linux, in the image that SwiftLint
+    # publishes for each version. The tag is the version that the code is linted with.
+    runs-on: ubuntu-latest
+    container: ghcr.io/realm/swiftlint:0.65.1
+    timeout-minutes: 10
+    steps:
+      - name: Check out
+        uses: actions/checkout@v7
+
+      - name: Show version
+        run: swiftlint version
+
+      - name: Lint
+        # --strict makes a warning fail the job, as an error does.
+        run: swiftlint lint --strict --reporter github-actions-logging

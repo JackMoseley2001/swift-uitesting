@@ -70,8 +70,7 @@ enum DatePickerValues {
         if values.count == 4 {
             skipped = 1
         } else if values.count == 3, !periodTitles.contains(values[0]),
-            values.dropFirst().allSatisfy({ leadingNumber(in: $0) != nil })
-        {
+            values.dropFirst().allSatisfy({ leadingNumber(in: $0) != nil }) {
             skipped = 1
         }
         let values = Array(values.dropFirst(skipped))

@@ -52,13 +52,17 @@ enum MessageSend {
         switch last {
         case .handled:
             return nil
+
         case .noConnection:
             return "\(summary): the app did not connect within \(time). "
                 + "Is it running, and does it receive a message with onUITestMessage or UITestMessages?"
+
         case .noReceiver:
             return "\(summary): nothing in the app was receiving this message after \(time)"
+
         case .failed(let reason):
             return "The app failed to handle \(message): \(reason)"
+
         case .noReply:
             return "\(summary): the app did not finish handling it within \(time)"
         }

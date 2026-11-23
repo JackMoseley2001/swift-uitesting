@@ -44,7 +44,7 @@ struct BuiltInTraitTests {
                 "UICTContentSizeCategoryAccessibilityL",
                 "UICTContentSizeCategoryAccessibilityXL",
                 "UICTContentSizeCategoryAccessibilityXXL",
-                "UICTContentSizeCategoryAccessibilityXXXL",
+                "UICTContentSizeCategoryAccessibilityXXXL"
             ]
         )
     }
@@ -56,7 +56,7 @@ struct BuiltInTraitTests {
             .userDefault("isPremium", false),
             .userDefault("launchCount", 3),
             .userDefault("textScale", 1.5),
-            .userDefault("theme", "dark"),
+            .userDefault("theme", "dark")
         ])
 
         #Testing::expect(
@@ -65,7 +65,7 @@ struct BuiltInTraitTests {
                 "-isPremium", "NO",
                 "-launchCount", "3",
                 "-textScale", "1.5",
-                "-theme", "dark",
+                "-theme", "dark"
             ]
         )
     }

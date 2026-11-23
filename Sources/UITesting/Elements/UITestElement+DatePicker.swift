@@ -106,7 +106,7 @@ extension UITestElement where Kind == ElementKinds.DatePicker {
         }
         let monthWheel = wheels.element(boundBy: positions.month)
         let yearWheel = wheels.element(boundBy: positions.year)
-        if "\(monthWheel.value ?? "")" != monthName {
+        if monthName != "\(monthWheel.value ?? "")" {
             monthWheel.adjust(toPickerWheelValue: monthName)
         }
         if "\(yearWheel.value ?? "")" != "\(year)" {

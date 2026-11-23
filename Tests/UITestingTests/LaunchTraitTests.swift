@@ -8,7 +8,7 @@ struct LaunchTraitTests {
     func launchArgumentAppendsAnArgument() throws {
         let launch = try LaunchConfiguration(applying: [
             .launchArgument("--skip-onboarding"),
-            .launchArguments(["-AppleLanguages", "(fr)"]),
+            .launchArguments(["-AppleLanguages", "(fr)"])
         ])
 
         #Testing::expect(launch.arguments == ["--skip-onboarding", "-AppleLanguages", "(fr)"])
@@ -27,7 +27,7 @@ struct LaunchTraitTests {
     func laterEnvironmentValueReplacesAnEarlierOne() throws {
         let launch = try LaunchConfiguration(applying: [
             .environment("THEME", "light"),
-            .environment("THEME", "dark"),
+            .environment("THEME", "dark")
         ])
 
         #Testing::expect(launch.environment["THEME"] == "dark")
@@ -47,7 +47,7 @@ struct LaunchTraitTests {
     func laterPayloadReplacesAnEarlierOneOfTheSameType() throws {
         let launch = try LaunchConfiguration(applying: [
             .launch(AuthState(isLoggedIn: false)),
-            .launch(AuthState(isLoggedIn: true)),
+            .launch(AuthState(isLoggedIn: true))
         ])
 
         let traits = LaunchTraits(arguments: launch.arguments, environment: launch.environment)

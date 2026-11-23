@@ -11,7 +11,7 @@ struct SystemAlertRulesTests {
     private func buttons(for service: String) -> [SystemAlertButtonInfo] {
         [
             SystemAlertButtonInfo(label: "Don’t Allow", identifier: "\(service)-deny-button"),
-            SystemAlertButtonInfo(label: "Allow", identifier: "\(service)-allow-button"),
+            SystemAlertButtonInfo(label: "Allow", identifier: "\(service)-allow-button")
         ]
     }
 
@@ -19,7 +19,7 @@ struct SystemAlertRulesTests {
     private let locationButtons = [
         SystemAlertButtonInfo(label: "Allow Once"),
         SystemAlertButtonInfo(label: "Allow While Using App"),
-        SystemAlertButtonInfo(label: "Don’t Allow"),
+        SystemAlertButtonInfo(label: "Don’t Allow")
     ]
 
     private func position(_ rules: [SystemAlertRule], inAlert identifier: String) -> Int? {
@@ -58,7 +58,7 @@ struct SystemAlertRulesTests {
     func laterRuleOverridesAnEarlierOne() {
         let rules = [
             SystemAlertRule(answer: .allow),
-            SystemAlertRule(answer: .deny, services: ["kTCCServiceMicrophone"]),
+            SystemAlertRule(answer: .deny, services: ["kTCCServiceMicrophone"])
         ]
 
         #Testing::expect(position(rules, inAlert: microphone) == 0)
@@ -69,7 +69,7 @@ struct SystemAlertRulesTests {
     func laterRuleForEveryAlertOverridesAnEarlierNamedOne() {
         let rules = [
             SystemAlertRule(answer: .deny, services: ["kTCCServiceMicrophone"]),
-            SystemAlertRule(answer: .allow),
+            SystemAlertRule(answer: .allow)
         ]
 
         #Testing::expect(position(rules, inAlert: microphone) == 1)
@@ -93,7 +93,7 @@ struct SystemAlertRulesTests {
     func ruleForALabelLeavesOtherAlertsToEarlierRules() {
         let rules = SystemAlertRules(rules: [
             SystemAlertRule(answer: .deny),
-            SystemAlertRule(answer: .button("Allow While Using App")),
+            SystemAlertRule(answer: .button("Allow While Using App"))
         ])
 
         #Testing::expect(rules.positionOfButton(inAlertWithIdentifier: "", buttons: locationButtons) == 1)
@@ -105,14 +105,14 @@ struct SystemAlertRulesTests {
         let rules = UITestRunner.systemAlertRules(from: [
             .systemAlerts(.allow),
             .launchArgument("--flag"),
-            .systemAlerts(.deny, for: .microphone, .camera),
+            .systemAlerts(.deny, for: .microphone, .camera)
         ])
 
         #Testing::expect(
             rules
                 == SystemAlertRules(rules: [
                     SystemAlertRule(answer: .allow),
-                    SystemAlertRule(answer: .deny, services: ["kTCCServiceMicrophone", "kTCCServiceCamera"]),
+                    SystemAlertRule(answer: .deny, services: ["kTCCServiceMicrophone", "kTCCServiceCamera"])
                 ])
         )
     }
@@ -121,14 +121,14 @@ struct SystemAlertRulesTests {
     func traitForAResourceWhoseAlertHasNoNameIsForEveryAlert() {
         let rules = UITestRunner.systemAlertRules(from: [
             .systemAlerts(.button("OK"), for: .calendar),
-            .systemAlerts(.allow, for: .camera, .calendar),
+            .systemAlerts(.allow, for: .camera, .calendar)
         ])
 
         #Testing::expect(
             rules
                 == SystemAlertRules(rules: [
                     SystemAlertRule(answer: .button("OK")),
-                    SystemAlertRule(answer: .allow),
+                    SystemAlertRule(answer: .allow)
                 ])
         )
     }

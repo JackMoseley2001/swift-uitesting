@@ -33,6 +33,7 @@ public protocol UITestMessage: Codable, Sendable {
 }
 
 extension UITestMessage {
+    /// The name of the type, unless the type provides a name of its own.
     public static var messageName: String {
         String(describing: Self.self)
     }

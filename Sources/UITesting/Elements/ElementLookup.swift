@@ -25,7 +25,7 @@ extension XCUIElement {
     public subscript<Kind: ElementKind>(id: ElementID<Kind>) -> UITestElement<Kind> {
         let identifier = id.accessibilityIdentifier
         return UITestElement(
-            element: descendants(matching: XCUIElement.ElementType(Kind.elementType))[identifier],
+            element: descendants(matching: Self.ElementType(Kind.elementType))[identifier],
             accessibilityIdentifier: identifier,
             elementOfAnyKind: Kind.elementType == .any ? nil : descendants(matching: .any)[identifier],
             scope: self,

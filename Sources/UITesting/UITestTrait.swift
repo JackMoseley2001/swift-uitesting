@@ -102,12 +102,16 @@ public protocol UITestTrait: Sendable {
 }
 
 extension UITestTrait {
+    /// Does nothing, for a trait that does not change the launch.
     public func prepare(_ launch: inout LaunchConfiguration) throws {}
 
+    /// Does nothing, for a trait with nothing to do before the app is launched.
     @MainActor public func willLaunch(_ context: UITestContext) async throws {}
 
+    /// Does nothing, for a trait with nothing to do once the app is running.
     @MainActor public func setUp(_ context: UITestContext) async throws {}
 
+    /// Does nothing, for a trait with nothing to undo after the test.
     @MainActor public func tearDown(_ context: UITestContext) async throws {}
 }
 

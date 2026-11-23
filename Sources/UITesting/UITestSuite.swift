@@ -21,5 +21,6 @@ public protocol UITestSuite: XCTestCase {
 }
 
 extension UITestSuite {
+    /// No traits, unless the suite provides its own.
     public static var suiteTraits: [any UITestTrait] { [] }
 }

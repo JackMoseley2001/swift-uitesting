@@ -55,8 +55,8 @@ struct LabelsView: View {
 /// An address on the labels example.
 private struct Address: Identifiable, Equatable {
     static let all = [
-        Address(name: "Home", street: "1 Orchard Lane"),
-        Address(name: "Work", street: "2 Station Road"),
+        Self(name: "Home", street: "1 Orchard Lane"),
+        Self(name: "Work", street: "2 Station Road")
     ]
 
     let name: String

@@ -671,7 +671,7 @@ struct UITestMacroTests {
     func worksTogetherWithUITestSuite() {
         assertMacro([
             MacroName.uiTest: MacroSpec(type: UITestMacro.self),
-            MacroName.uiTestSuite: MacroSpec(type: UITestSuiteMacro.self, conformances: ["UITestSuite"]),
+            MacroName.uiTestSuite: MacroSpec(type: UITestSuiteMacro.self, conformances: ["UITestSuite"])
         ]) {
             """
             @UITestSuite(traits: .loggedOut)

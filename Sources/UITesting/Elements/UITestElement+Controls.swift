@@ -52,7 +52,7 @@ extension UITestElement where Kind: SwitchKind {
                     #if !os(tvOS)
                     element.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).tapOrClick()
                     #endif
-                },
+                }
             ],
             wait: { polling.wait(timeout: settling, until: { self.isOn == isOn }) == .met }
         )

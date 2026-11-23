@@ -87,6 +87,7 @@ extension UITestContext {
     public func open(_ url: URL, within timeout: Duration? = nil) {
         switch LinkOpening(appState: app.runState) {
         case .throughTheSystem: XCUIDevice.shared.system.open(url)
+
         case .byLaunchingTheApp:
             app.open(url)
             app.waitForFirstWindow(within: timeout)
@@ -129,9 +130,11 @@ extension XCUIApplication {
         switch state {
         case .notRunning: .notRunning
         case .runningBackground: .background
+
         #if !os(macOS)
         case .runningBackgroundSuspended: .background
         #endif
+
         case .runningForeground: .foreground
         case .unknown: .unknown
         @unknown default: .unknown

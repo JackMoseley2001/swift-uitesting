@@ -28,11 +28,13 @@ struct ExpectationFailure: Equatable, Sendable {
         switch outcome {
         case .timedOut(let timeout):
             lines = ["\(summary) after \(describe(timeout)): \(expression)"]
+
         case .cancelled(let timeout):
             lines = [
                 "\(summary): \(expression)",
-                "The wait was cancelled before its timeout of \(describe(timeout)) had passed.",
+                "The wait was cancelled before its timeout of \(describe(timeout)) had passed."
             ]
+
         case .met, .notMet:
             lines = ["\(summary): \(expression)"]
         }

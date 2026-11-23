@@ -33,6 +33,7 @@ public protocol LaunchPayload: Codable, Sendable {
 }
 
 extension LaunchPayload {
+    /// The name of the type, unless the type provides a key of its own.
     public static var launchKey: String {
         String(describing: Self.self)
     }

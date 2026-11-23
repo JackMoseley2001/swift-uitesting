@@ -7,7 +7,7 @@ struct SystemAlertChoiceTests {
     private let title = "Allow “Demo” to access your microphone?"
     private let buttons = [
         SystemAlertButtonInfo(label: "Don’t Allow", identifier: "kTCCServiceMicrophone-deny-button"),
-        SystemAlertButtonInfo(label: "Allow", identifier: "kTCCServiceMicrophone-allow-button"),
+        SystemAlertButtonInfo(label: "Allow", identifier: "kTCCServiceMicrophone-allow-button")
     ]
 
     private func position(
@@ -39,7 +39,7 @@ struct SystemAlertChoiceTests {
     func allowAndRefuseDoNotDependOnTheLabels() {
         let french = [
             SystemAlertButtonInfo(label: "Refuser", identifier: "kTCCServiceCamera-deny-button"),
-            SystemAlertButtonInfo(label: "Autoriser", identifier: "kTCCServiceCamera-allow-button"),
+            SystemAlertButtonInfo(label: "Autoriser", identifier: "kTCCServiceCamera-allow-button")
         ]
 
         #Testing::expect(position(of: .allow, in: french) == .success(1))
@@ -103,7 +103,7 @@ struct SystemAlertChoiceTests {
     func buttonsWithTheSameLabelButDifferentIdentifiersAreKept() {
         let reported = [
             SystemAlertButtonInfo(label: "Allow", identifier: "first"),
-            SystemAlertButtonInfo(label: "Allow", identifier: "second"),
+            SystemAlertButtonInfo(label: "Allow", identifier: "second")
         ]
 
         #Testing::expect(SystemAlertChoice.positionsWithoutRepeats(in: reported) == [0, 1])

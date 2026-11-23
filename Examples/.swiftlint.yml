@@ -1,0 +1,6 @@
+# The demo and its UI tests may force unwrap: a nil there is a failed test.
+disabled_rules:
+  - force_unwrapping
+  # A comparison with an empty value shows what the value was when it fails.
+  - empty_collection_literal
+  - empty_string

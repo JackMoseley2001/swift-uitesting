@@ -56,8 +56,8 @@ public struct SystemAlert {
     public let element: XCUIElement
 
     /// The system alert that is showing, or the next one to show.
-    public static var current: SystemAlert {
-        SystemAlert(element: XCUIApplication(bundleIdentifier: "com.apple.springboard").alerts.firstMatch)
+    public static var current: Self {
+        Self(element: XCUIApplication(bundleIdentifier: "com.apple.springboard").alerts.firstMatch)
     }
 
     /// Whether a system alert is showing, read without waiting.

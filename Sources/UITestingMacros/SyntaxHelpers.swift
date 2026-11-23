@@ -71,6 +71,7 @@ extension VariableDeclSyntax {
         switch accessors.accessors {
         case .getter:
             return true
+
         case .accessors(let list):
             // `willSet` and `didSet` are observers on a stored property.
             return list.contains { accessor in

@@ -46,6 +46,8 @@ public struct LaunchConfiguration: Sendable, Equatable {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.sortedKeys]
         let data = try encoder.encode(payload)
+        // What a JSON encoder writes is always UTF-8.
+        // swiftlint:disable:next optional_data_string_conversion
         environment[LaunchEnvironmentKey.payload(Payload.launchKey)] = String(decoding: data, as: UTF8.self)
     }
 

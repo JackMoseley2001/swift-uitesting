@@ -89,7 +89,7 @@ public struct UITestMacro: PeerMacro {
         let call = [
             effects?.throwsClause != nil ? "try " : "",
             effects?.asyncSpecifier != nil ? "await " : "",
-            "self.\(function.name.text)(\(arguments.joined(separator: ", ")))",
+            "self.\(function.name.text)(\(arguments.joined(separator: ", ")))"
         ].joined()
 
         let traits = node.traitExpressions.map(\.trimmedDescription).joined(separator: ", ")
@@ -190,29 +190,29 @@ struct UITestDiagnostic: DiagnosticMessage {
     let id: String
     let message: String
 
-    static let requiresInstanceMethod = UITestDiagnostic(
+    static let requiresInstanceMethod = Self(
         id: "requiresInstanceMethod",
         message: "'@\(MacroName.uiTest)' can only be applied to an instance method"
     )
 
-    static let requiresSuite = UITestDiagnostic(
+    static let requiresSuite = Self(
         id: "requiresSuite",
         message: "'@\(MacroName.uiTest)' can only be used in a class marked '@\(MacroName.uiTestSuite)'"
     )
 
-    static let isGeneric = UITestDiagnostic(
+    static let isGeneric = Self(
         id: "isGeneric",
         message: "'@\(MacroName.uiTest)' cannot be applied to a generic function"
     )
 
-    static let returnsValue = UITestDiagnostic(
+    static let returnsValue = Self(
         id: "returnsValue",
         message: "'@\(MacroName.uiTest)' cannot be applied to a function that returns a value"
     )
 
-    static func unsupportedParameter(_ parameter: FunctionParameterSyntax) -> UITestDiagnostic {
+    static func unsupportedParameter(_ parameter: FunctionParameterSyntax) -> Self {
         let name = (parameter.secondName ?? parameter.firstName).text
-        return UITestDiagnostic(
+        return Self(
             id: "unsupportedParameter",
             message: """
                 '@\(MacroName.uiTest)' cannot provide a value for parameter '\(name)'; \
@@ -221,7 +221,7 @@ struct UITestDiagnostic: DiagnosticMessage {
         )
     }
 
-    static let noArgumentParameter = UITestDiagnostic(
+    static let noArgumentParameter = Self(
         id: "noArgumentParameter",
         message: """
             '@\(MacroName.uiTest)' has arguments, but the function has no parameter to receive them; \
@@ -229,9 +229,9 @@ struct UITestDiagnostic: DiagnosticMessage {
             """
     )
 
-    static func secondArgumentParameter(_ parameter: FunctionParameterSyntax) -> UITestDiagnostic {
+    static func secondArgumentParameter(_ parameter: FunctionParameterSyntax) -> Self {
         let name = (parameter.secondName ?? parameter.firstName).text
-        return UITestDiagnostic(
+        return Self(
             id: "secondArgumentParameter",
             message: """
                 '@\(MacroName.uiTest)' cannot provide a value for parameter '\(name)'; \
@@ -241,8 +241,8 @@ struct UITestDiagnostic: DiagnosticMessage {
         )
     }
 
-    static func nameStartsWithTest(_ name: String) -> UITestDiagnostic {
-        UITestDiagnostic(
+    static func nameStartsWithTest(_ name: String) -> Self {
+        Self(
             id: "nameStartsWithTest",
             message: """
                 XCTest would also run '\(name)()' directly, without launching the app; \
@@ -262,8 +262,8 @@ struct UITestFixIt: FixItMessage {
     let id: String
     let message: String
 
-    static func rename(to name: String) -> UITestFixIt {
-        UITestFixIt(id: "rename", message: "Rename to '\(name)'")
+    static func rename(to name: String) -> Self {
+        Self(id: "rename", message: "Rename to '\(name)'")
     }
 
     var fixItID: MessageID {

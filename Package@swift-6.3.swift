@@ -10,16 +10,16 @@ let package = Package(
         .macOS(.v13),
         .tvOS(.v16),
         .watchOS(.v9),
-        .visionOS(.v1),
+        .visionOS(.v1)
     ],
     products: [
         .library(name: "UITesting", targets: ["UITesting"]),
-        .library(name: "UITestingCore", targets: ["UITestingCore"]),
+        .library(name: "UITestingCore", targets: ["UITestingCore"])
     ],
     dependencies: [
         .package(url: "https://github.com/swiftlang/swift-syntax", "600.0.0"..<"605.0.0"),
         .package(url: "https://github.com/pointfreeco/swift-macro-testing", "0.7.0"..<"1.0.0"),
-        .package(url: "https://github.com/pointfreeco/swift-custom-dump", "1.0.0"..<"2.0.0"),
+        .package(url: "https://github.com/pointfreeco/swift-custom-dump", "1.0.0"..<"2.0.0")
     ],
     targets: [
         .target(name: "UITestingCore"),
@@ -28,7 +28,7 @@ let package = Package(
             dependencies: [
                 "UITestingCore",
                 "UITestingMacros",
-                .product(name: "CustomDump", package: "swift-custom-dump"),
+                .product(name: "CustomDump", package: "swift-custom-dump")
             ]
         ),
         .macro(
@@ -39,7 +39,7 @@ let package = Package(
                 .product(name: "SwiftOperators", package: "swift-syntax"),
                 .product(name: "SwiftSyntax", package: "swift-syntax"),
                 .product(name: "SwiftSyntaxBuilder", package: "swift-syntax"),
-                .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
+                .product(name: "SwiftSyntaxMacros", package: "swift-syntax")
             ]
         ),
         .testTarget(
@@ -55,8 +55,8 @@ let package = Package(
             dependencies: [
                 "UITestingMacros",
                 .product(name: "MacroTesting", package: "swift-macro-testing"),
-                .product(name: "SwiftSyntaxMacroExpansion", package: "swift-syntax"),
+                .product(name: "SwiftSyntaxMacroExpansion", package: "swift-syntax")
             ]
-        ),
+        )
     ]
 )

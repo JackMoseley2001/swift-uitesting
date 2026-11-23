@@ -57,7 +57,7 @@ final class UITestRunnerTests {
         #Testing::expect(
             events == [
                 "willLaunch a", "willLaunch b", "launch",
-                "setUp a", "setUp b", "body", "tearDown b", "tearDown a",
+                "setUp a", "setUp b", "body", "tearDown b", "tearDown a"
             ]
         )
         #Testing::expect(additionalErrors.isEmpty)
@@ -99,7 +99,7 @@ final class UITestRunnerTests {
         #Testing::expect(
             events == [
                 "willLaunch a", "willLaunch b", "willLaunch c", "launch",
-                "setUp a", "setUp b", "tearDown c", "tearDown b", "tearDown a",
+                "setUp a", "setUp b", "tearDown c", "tearDown b", "tearDown a"
             ]
         )
     }

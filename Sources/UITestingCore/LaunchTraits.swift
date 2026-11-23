@@ -26,9 +26,9 @@ public struct LaunchTraits: Sendable {
     /// an instance with ``init(processInfo:)`` instead.
     public static let current: LaunchTraits = {
         #if DEBUG
-            LaunchTraits(processInfo: .processInfo)
+            Self(processInfo: .processInfo)
         #else
-            LaunchTraits()
+            Self()
         #endif
     }()
 

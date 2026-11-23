@@ -30,11 +30,14 @@ enum TypeName {
             switch qualifiedName[index] {
             case "<", "(", "[":
                 depth += 1
+
             case ">", ")", "]":
                 depth -= 1
+
             case "." where depth == 0:
                 components.append(qualifiedName[start..<index])
                 start = qualifiedName.index(after: index)
+
             default:
                 break
             }

@@ -9,7 +9,7 @@ public enum ScrollDirection: Hashable, Sendable {
     case right
 
     /// The direction that undoes this one.
-    public var opposite: ScrollDirection {
+    public var opposite: Self {
         switch self {
         case .up: .down
         case .down: .up

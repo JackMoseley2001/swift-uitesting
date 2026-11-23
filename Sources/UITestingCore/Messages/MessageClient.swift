@@ -55,7 +55,10 @@ package final class MessageClient {
     }
 
     private func receive(on connection: NWConnection) {
-        connection.receive(minimumIncompleteLength: 1, maximumLength: 1 << 16) { [weak self] data, _, isComplete, error in
+        connection.receive(
+            minimumIncompleteLength: 1,
+            maximumLength: 1 << 16
+        ) { [weak self] data, _, isComplete, error in
             MainActor.assumeIsolated {
                 guard let self, self.connection === connection else { return }
                 for line in self.lines.append(data ?? Data()) {

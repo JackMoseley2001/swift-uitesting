@@ -50,6 +50,7 @@ struct ElementIDTests {
     func argumentTellsRowsApart() {
         #expect(InboxID.row(1234).accessibilityIdentifier == "InboxID.row(1234)")
         #expect(InboxID.row(1234) != InboxID.row(1235))
+        // swiftlint:disable:next identical_operands
         #expect(InboxID.row(1234) == InboxID.row(1234))
         #expect(InboxID.list.accessibilityIdentifier == "InboxID.list")
     }
@@ -114,7 +115,7 @@ struct ElementIDTests {
         let kinds: [any ElementKind.Type] = [
             ElementKinds.TextField.self, ElementKinds.SecureTextField.self,
             ElementKinds.TextView.self, ElementKinds.SearchField.self,
-            ElementKinds.Button.self, ElementKinds.StaticText.self,
+            ElementKinds.Button.self, ElementKinds.StaticText.self
         ]
 
         #expect(kinds.map { $0 is any TextEntryKind.Type } == [true, true, true, true, false, false])
@@ -170,7 +171,7 @@ struct ElementIDTests {
             ElementKinds.Alert.self, ElementKinds.Sheet.self, ElementKinds.Window.self,
             ElementKinds.Group.self, ElementKinds.WebView.self, ElementKinds.Map.self,
             ElementKinds.ProgressIndicator.self, ElementKinds.ActivityIndicator.self,
-            ElementKinds.PageIndicator.self, ElementKinds.Keyboard.self, ElementKinds.Key.self,
+            ElementKinds.PageIndicator.self, ElementKinds.Keyboard.self, ElementKinds.Key.self
         ]
 
         #expect(Set(kinds.map { $0.elementType }) == Set(ElementType.allCases))
