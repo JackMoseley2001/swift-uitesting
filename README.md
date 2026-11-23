@@ -67,10 +67,10 @@ iOS 16 and iOS 17 are supported but not tested in CI, because its runners do not
 simulators for them. The demo builds for iOS 16.4, so its UI tests can be run on those
 versions from a Mac that has the simulators.
 
-See [Testing a Mac app](Sources/UITesting/Documentation.docc/Articles/TestingAMacApp.md),
-[Testing a watch app](Sources/UITesting/Documentation.docc/Articles/TestingAWatchApp.md),
-[Testing a visionOS app](Sources/UITesting/Documentation.docc/Articles/TestingAVisionApp.md) and
-[Testing a tvOS app](Sources/UITesting/Documentation.docc/Articles/TestingATVApp.md) for what is different there. The features
+See [Testing a Mac app](https://jackmoseley2001.github.io/swift-uitesting/documentation/uitesting/testingamacapp/),
+[Testing a watch app](https://jackmoseley2001.github.io/swift-uitesting/documentation/uitesting/testingawatchapp/),
+[Testing a visionOS app](https://jackmoseley2001.github.io/swift-uitesting/documentation/uitesting/testingavisionapp/) and
+[Testing a tvOS app](https://jackmoseley2001.github.io/swift-uitesting/documentation/uitesting/testingatvapp/) for what is different there. The features
 that are marked as needing iOS 16.4 are not available on iOS 16.0 to 16.3.
 
 ## Installation
@@ -147,36 +147,37 @@ final class AccountTests: XCTestCase {
 
 ## Documentation
 
-Everything else is in the documentation: each library has a DocC catalog with an
-article for each topic, and every public symbol has a documentation comment.
+Everything else is in the [documentation](https://jackmoseley2001.github.io/swift-uitesting/):
+each library has a DocC catalog with an article for each topic, and every public symbol
+has a documentation comment.
 
 | For | Read |
 |---|---|
-| Suites, tests and running a test with several arguments | [Writing suites and tests](Sources/UITesting/Documentation.docc/Articles/WritingTests.md) |
-| `#expect` and `#require`, waiting, and files that also import Swift Testing | [Expectations](Sources/UITesting/Documentation.docc/Articles/Expectations.md) |
-| The built-in traits, fixing the date and choosing where the device is | [Traits](Sources/UITesting/Documentation.docc/Articles/Traits.md) |
-| Launch arguments, environment and typed data | [Configuring the launch](Sources/UITesting/Documentation.docc/Articles/ConfiguringTheLaunch.md) |
-| Skipping a test, with a reason or a condition | [Skipping tests](Sources/UITesting/Documentation.docc/Articles/SkippingTests.md) |
-| Traits of your own | [Writing your own traits](Sources/UITesting/Documentation.docc/Articles/WritingTraits.md) |
-| Reading in the app what a test launched it with | [Reading launch data in the app](Sources/UITestingCore/Documentation.docc/Articles/ReadingLaunchData.md) |
-| Typed identifiers that the app and its tests share, and identifiers for lists | [Element identifiers](Sources/UITestingCore/Documentation.docc/Articles/ElementIdentifiers.md) |
-| Finding elements by identifier, or by label where there is none | [Finding elements](Sources/UITesting/Documentation.docc/Articles/FindingElements.md) |
-| Actions that wait, the title of a screen and going back | [Acting on elements](Sources/UITesting/Documentation.docc/Articles/ActingOnElements.md) |
-| Typing, replacing and clearing text | [Entering text](Sources/UITesting/Documentation.docc/Articles/EnteringText.md) |
-| Switches, sliders, steppers, pickers and date pickers | [Controls and date pickers](Sources/UITesting/Documentation.docc/Articles/Controls.md) |
-| Scrolling to an element, pull to refresh and swipe actions | [Scrolling and swiping](Sources/UITesting/Documentation.docc/Articles/ScrollingAndSwiping.md) |
-| The app's own alerts and confirmation dialogs | [Alerts and dialogs](Sources/UITesting/Documentation.docc/Articles/AlertsAndDialogs.md) |
-| Permission alerts from the system, answered in a test or with a trait | [System alerts and permissions](Sources/UITesting/Documentation.docc/Articles/SystemAlerts.md) |
-| Relaunching, and launching the app yourself | [Launching and relaunching the app](Sources/UITesting/Documentation.docc/Articles/LaunchingAndRelaunching.md) |
-| Sending the app to the background, ending it and opening links | [Leaving the app and opening links](Sources/UITesting/Documentation.docc/Articles/LeavingTheAppAndOpeningLinks.md) |
-| Sending the running app a typed message from a test | [Sending messages to the running app](Sources/UITesting/Documentation.docc/Articles/SendingMessages.md) |
-| Receiving those messages in the app | [Receiving messages from a UI test](Sources/UITestingCore/Documentation.docc/Articles/ReceivingMessages.md) |
-| Running the app without animations | [Running without animations](Sources/UITestingCore/Documentation.docc/Articles/RunningWithoutAnimations.md) |
-| Named steps, and what a failed test attaches | [Steps and failures](Sources/UITesting/Documentation.docc/Articles/StepsAndFailures.md) |
-| What is different in a Mac app | [Testing a Mac app](Sources/UITesting/Documentation.docc/Articles/TestingAMacApp.md) |
-| What is different in a watch app | [Testing a watch app](Sources/UITesting/Documentation.docc/Articles/TestingAWatchApp.md) |
-| What is different in a visionOS app | [Testing a visionOS app](Sources/UITesting/Documentation.docc/Articles/TestingAVisionApp.md) |
-| What is different in a tvOS app | [Testing a tvOS app](Sources/UITesting/Documentation.docc/Articles/TestingATVApp.md) |
+| Suites, tests and running a test with several arguments | [Writing suites and tests](https://jackmoseley2001.github.io/swift-uitesting/documentation/uitesting/writingtests/) |
+| `#expect` and `#require`, waiting, and files that also import Swift Testing | [Expectations](https://jackmoseley2001.github.io/swift-uitesting/documentation/uitesting/expectations/) |
+| The built-in traits, fixing the date and choosing where the device is | [Traits](https://jackmoseley2001.github.io/swift-uitesting/documentation/uitesting/traits/) |
+| Launch arguments, environment and typed data | [Configuring the launch](https://jackmoseley2001.github.io/swift-uitesting/documentation/uitesting/configuringthelaunch/) |
+| Skipping a test, with a reason or a condition | [Skipping tests](https://jackmoseley2001.github.io/swift-uitesting/documentation/uitesting/skippingtests/) |
+| Traits of your own | [Writing your own traits](https://jackmoseley2001.github.io/swift-uitesting/documentation/uitesting/writingtraits/) |
+| Reading in the app what a test launched it with | [Reading launch data in the app](https://jackmoseley2001.github.io/swift-uitesting/documentation/uitestingcore/readinglaunchdata/) |
+| Typed identifiers that the app and its tests share, and identifiers for lists | [Element identifiers](https://jackmoseley2001.github.io/swift-uitesting/documentation/uitestingcore/elementidentifiers/) |
+| Finding elements by identifier, or by label where there is none | [Finding elements](https://jackmoseley2001.github.io/swift-uitesting/documentation/uitesting/findingelements/) |
+| Actions that wait, the title of a screen and going back | [Acting on elements](https://jackmoseley2001.github.io/swift-uitesting/documentation/uitesting/actingonelements/) |
+| Typing, replacing and clearing text | [Entering text](https://jackmoseley2001.github.io/swift-uitesting/documentation/uitesting/enteringtext/) |
+| Switches, sliders, steppers, pickers and date pickers | [Controls and date pickers](https://jackmoseley2001.github.io/swift-uitesting/documentation/uitesting/controls/) |
+| Scrolling to an element, pull to refresh and swipe actions | [Scrolling and swiping](https://jackmoseley2001.github.io/swift-uitesting/documentation/uitesting/scrollingandswiping/) |
+| The app's own alerts and confirmation dialogs | [Alerts and dialogs](https://jackmoseley2001.github.io/swift-uitesting/documentation/uitesting/alertsanddialogs/) |
+| Permission alerts from the system, answered in a test or with a trait | [System alerts and permissions](https://jackmoseley2001.github.io/swift-uitesting/documentation/uitesting/systemalerts/) |
+| Relaunching, and launching the app yourself | [Launching and relaunching the app](https://jackmoseley2001.github.io/swift-uitesting/documentation/uitesting/launchingandrelaunching/) |
+| Sending the app to the background, ending it and opening links | [Leaving the app and opening links](https://jackmoseley2001.github.io/swift-uitesting/documentation/uitesting/leavingtheappandopeninglinks/) |
+| Sending the running app a typed message from a test | [Sending messages to the running app](https://jackmoseley2001.github.io/swift-uitesting/documentation/uitesting/sendingmessages/) |
+| Receiving those messages in the app | [Receiving messages from a UI test](https://jackmoseley2001.github.io/swift-uitesting/documentation/uitestingcore/receivingmessages/) |
+| Running the app without animations | [Running without animations](https://jackmoseley2001.github.io/swift-uitesting/documentation/uitestingcore/runningwithoutanimations/) |
+| Named steps, and what a failed test attaches | [Steps and failures](https://jackmoseley2001.github.io/swift-uitesting/documentation/uitesting/stepsandfailures/) |
+| What is different in a Mac app | [Testing a Mac app](https://jackmoseley2001.github.io/swift-uitesting/documentation/uitesting/testingamacapp/) |
+| What is different in a watch app | [Testing a watch app](https://jackmoseley2001.github.io/swift-uitesting/documentation/uitesting/testingawatchapp/) |
+| What is different in a visionOS app | [Testing a visionOS app](https://jackmoseley2001.github.io/swift-uitesting/documentation/uitesting/testingavisionapp/) |
+| What is different in a tvOS app | [Testing a tvOS app](https://jackmoseley2001.github.io/swift-uitesting/documentation/uitesting/testingatvapp/) |
 
 There are also tutorials that build a suite step by step: writing your first UI test,
 acting on the app and waiting for it, talking to the app during a test, and writing a
