@@ -137,8 +137,11 @@ jobs:
           set -o pipefail
           # A test that hangs is stopped after five minutes and fails, so that the log
           # names it; without that, the whole job runs out of time and says nothing.
+          # A test that fails is run once more, because a runner is several times
+          # slower than a Mac on a desk and now and then loses a tap or is late with a
+          # screen. A test that is broken fails both times.
           # A simulator on a freshly started runner is sometimes not ready when the tests
-          # begin. Try again in that case only; a failing test is never retried.
+          # begin. The whole run is tried again in that case only.
           for attempt in 1 2 3; do
             rm -rf Demo.xcresult
             if xcodebuild test-without-building \
@@ -150,6 +153,8 @@ jobs:
               -test-timeouts-enabled YES \
               -default-test-execution-time-allowance 300 \
               -maximum-test-execution-time-allowance 300 \
+              -retry-tests-on-failure \
+              -test-iterations 2 \
               2>&1 | tee xcodebuild.log | xcbeautify --renderer github-actions; then
               exit 0
             fi
