@@ -120,7 +120,7 @@ struct ElementWaitTests {
     @Test
     func lastActionTimeoutTraitWins() {
         let traits: [any UITestTrait] = [
-            .actionTimeout(.seconds(2)), .launchArgument("--flag"), .actionTimeout(.seconds(20)),
+            .actionTimeout(.seconds(2)), .launchArgument("--flag"), .actionTimeout(.seconds(20))
         ]
 
         #Testing::expect(ActionTimeout.timeout(from: traits) == .seconds(20))

@@ -32,7 +32,7 @@ struct ElementFamilyMatchTests {
                 UnprefixedConversationID.row(1).accessibilityIdentifier,
                 "Other.ConversationID.row(1)",
                 "conversationid.row(1)",
-                "",
+                ""
             ]
 
             for identifier in others {

@@ -8,6 +8,6 @@ struct UITestingPlugin: CompilerPlugin {
         UITestMacro.self,
         ExpectMacro.self,
         RequireMacro.self,
-        RequireValueMacro.self,
+        RequireValueMacro.self
     ]
 }

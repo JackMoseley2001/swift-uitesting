@@ -32,6 +32,7 @@ enum ElementReference: Equatable {
         switch self {
         case .identifier:
             return "\(other) has this identifier. Is the identifier declared as the wrong kind?"
+
         case .label:
             return "\(other) has this label. Should the lookup be for that kind?"
         }
@@ -44,6 +45,7 @@ enum ElementReference: Equatable {
         case .identifier:
             "the element was looked up in a query, "
                 + "so the app it belongs to is not known. Look it up in the app, as in app[id]"
+
         case .label:
             "the element was looked up in an element that is not the app and was not found in it, "
                 + "so the app it belongs to is not known. Look it up in the app, or in an element found in the app"

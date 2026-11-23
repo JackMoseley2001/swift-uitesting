@@ -77,10 +77,19 @@ struct ElementIDFamilyTests {
         let id = UUID(uuidString: "E621E1F8-C36C-495A-93FC-0C247A3E6E5F")!
 
         #expect(ThreadID.row(1234).accessibilityIdentifier.hasPrefix(ThreadID.row.accessibilityIdentifierPrefix))
-        #expect(ThreadID.replyButton("").accessibilityIdentifier.hasPrefix(ThreadID.replyButton.accessibilityIdentifierPrefix))
+        #expect(
+            ThreadID.replyButton("").accessibilityIdentifier
+                .hasPrefix(ThreadID.replyButton.accessibilityIdentifierPrefix)
+        )
         #expect(ThreadID.draft(id).accessibilityIdentifier.hasPrefix(ThreadID.draft.accessibilityIdentifierPrefix))
-        #expect(ThreadID.deleteButton(7).accessibilityIdentifier.hasPrefix(ThreadID.deleteButton.accessibilityIdentifierPrefix))
-        #expect(UnprefixedThreadID.row(7).accessibilityIdentifier.hasPrefix(UnprefixedThreadID.row.accessibilityIdentifierPrefix))
+        #expect(
+            ThreadID.deleteButton(7).accessibilityIdentifier
+                .hasPrefix(ThreadID.deleteButton.accessibilityIdentifierPrefix)
+        )
+        #expect(
+            UnprefixedThreadID.row(7).accessibilityIdentifier
+                .hasPrefix(UnprefixedThreadID.row.accessibilityIdentifierPrefix)
+        )
     }
 
     @Test

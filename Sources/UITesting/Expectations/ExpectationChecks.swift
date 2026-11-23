@@ -236,7 +236,8 @@ public func __expectEqual<Value>(
     }
 }
 
-/// Checks that two values are equal for `#expect`, and reports how they differ if they are not, suspending the task while it waits.
+/// Checks that two values are equal for `#expect`, and reports how they differ if they are not,
+/// suspending the task while it waits.
 @_documentation(visibility: private)
 public func __expectEqual<Value>(
     _ lhs: () throws -> Value,
@@ -344,7 +345,8 @@ public func __require(
     }
 }
 
-/// Checks a condition for `#require`, and reports a failure and throws if it does not hold, suspending the task while it waits.
+/// Checks a condition for `#require`, and reports a failure and throws if it does not hold,
+/// suspending the task while it waits.
 @_documentation(visibility: private)
 public func __require(
     _ condition: () throws -> Bool,
@@ -506,13 +508,15 @@ public func __requireValue<Value>(
     switch result {
     case .success(let value):
         return value
+
     case .failure(let error):
         ExpectationReporter.report(message: error.message, filePath: filePath, line: line)
         throw error
     }
 }
 
-/// Returns an optional value for `#require`, or reports a failure and throws if it is `nil`, suspending the task while it waits.
+/// Returns an optional value for `#require`, or reports a failure and throws if it is `nil`,
+/// suspending the task while it waits.
 @_documentation(visibility: private)
 public func __requireValue<Value>(
     _ value: () throws -> Value?,
@@ -533,6 +537,7 @@ public func __requireValue<Value>(
     switch result {
     case .success(let value):
         return value
+
     case .failure(let error):
         ExpectationReporter.report(message: error.message, filePath: filePath, line: line)
         throw error

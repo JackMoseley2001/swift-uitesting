@@ -16,19 +16,19 @@ struct ExpectationKind {
     /// What the first argument of the macro is called in diagnostics.
     let argumentName: String
 
-    static let expect = ExpectationKind(
+    static let expect = Self(
         function: RuntimeName.qualifiedExpect,
         equalityFunction: RuntimeName.qualifiedExpectEqual,
         argumentName: "condition"
     )
 
-    static let require = ExpectationKind(
+    static let require = Self(
         function: RuntimeName.qualifiedRequire,
         equalityFunction: RuntimeName.qualifiedRequireEqual,
         argumentName: "condition"
     )
 
-    static let requireValue = ExpectationKind(
+    static let requireValue = Self(
         function: RuntimeName.qualifiedRequireValue,
         equalityFunction: nil,
         argumentName: "value"
@@ -54,14 +54,22 @@ enum ExpectationExpansion {
         // happens when the macro is written with a module name, which older versions do not understand.
         guard let subject = node.arguments.first?.expression else {
             throw DiagnosticsError(
-                diagnostics: [Diagnostic(node: node, message: ExpectationDiagnostic.missingArgument(kind.argumentName, of: name))]
+                diagnostics: [
+                    Diagnostic(node: node, message: ExpectationDiagnostic.missingArgument(kind.argumentName, of: name))
+                ]
             )
         }
 
         // The argument runs in a closure that is not `async`.
-        if let awaitKeyword = subject.tokens(viewMode: .sourceAccurate).first(where: { $0.tokenKind == .keyword(.await) }) {
+        let tokens = subject.tokens(viewMode: .sourceAccurate)
+        if let awaitKeyword = tokens.first(where: { $0.tokenKind == .keyword(.await) }) {
             throw DiagnosticsError(
-                diagnostics: [Diagnostic(node: awaitKeyword, message: ExpectationDiagnostic.awaitInArgument(kind.argumentName, of: name))]
+                diagnostics: [
+                    Diagnostic(
+                        node: awaitKeyword,
+                        message: ExpectationDiagnostic.awaitInArgument(kind.argumentName, of: name)
+                    )
+                ]
             )
         }
 
@@ -144,8 +152,8 @@ struct ExpectationDiagnostic: DiagnosticMessage {
     /// - Parameters:
     ///   - argument: What the macro's first argument is called.
     ///   - name: The name the macro was written with.
-    static func missingArgument(_ argument: String, of name: String) -> ExpectationDiagnostic {
-        ExpectationDiagnostic(
+    static func missingArgument(_ argument: String, of name: String) -> Self {
+        Self(
             id: "missingArgument",
             message: """
                 '#\(name)' could not read its \(argument); \
@@ -155,16 +163,16 @@ struct ExpectationDiagnostic: DiagnosticMessage {
         )
     }
 
-    static func awaitInArgument(_ argument: String, of name: String) -> ExpectationDiagnostic {
-        ExpectationDiagnostic(
+    static func awaitInArgument(_ argument: String, of name: String) -> Self {
+        Self(
             id: "awaitInArgument",
             message: "'#\(name)' cannot await inside its \(argument); await the value first and pass the result",
             severity: .error
         )
     }
 
-    static func constantCondition(name: String) -> ExpectationDiagnostic {
-        ExpectationDiagnostic(
+    static func constantCondition(name: String) -> Self {
+        Self(
             id: "constantCondition",
             message: "'#\(name)' is given a constant, so it will always have the same result",
             severity: .warning

@@ -107,6 +107,7 @@ public protocol ElementIDs {
 }
 
 extension ElementIDs {
+    /// The name of the group, unless the group provides a prefix of its own.
     public static var namespace: String? {
         TypeName.withoutModule(Self.self)
     }

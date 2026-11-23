@@ -24,7 +24,9 @@ public struct NowTrait: UITestTrait {
     public func prepare(_ launch: inout LaunchConfiguration) throws {
         guard let date else {
             throw LaunchSettingError(
-                message: "\"\(source.text)\" is not a date and time in ISO 8601 format, such as \"2026-03-14T09:30:00Z\"")
+                message: "\"\(source.text)\" is not a date and time in ISO 8601 format, "
+                    + "such as \"2026-03-14T09:30:00Z\""
+            )
         }
         launch.setNow(date)
     }

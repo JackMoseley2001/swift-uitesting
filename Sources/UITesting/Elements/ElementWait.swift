@@ -24,7 +24,7 @@ struct ElementProbe {
 
     /// How many elements the lookup matches, for a lookup that can match several, such
     /// as one by label. Read once the element exists, and when it never appeared.
-    var matchCount: (() -> Int)? = nil
+    var matchCount: (() -> Int)?
 }
 
 /// Waits for an element to meet a requirement, and describes what went wrong if it does not.
@@ -81,6 +81,7 @@ enum ElementWait {
             switch requirement {
             case .absent:
                 return !probe.exists()
+
             case .exists, .enabled:
                 guard probe.exists() else { return false }
                 // XCTest fails a read of an element that is matched more than once, so
@@ -99,8 +100,10 @@ enum ElementWait {
         switch requirement {
         case .absent:
             return "\(summary): the \(kind) was still there after \(time)"
+
         case .enabled where probe.exists():
             return "\(summary): the \(kind) was still disabled after \(time)"
+
         case .exists, .enabled:
             if let count = probe.matchCount?(), count > 1 {
                 return "\(summary): \(element.reasonForMatching(count))"

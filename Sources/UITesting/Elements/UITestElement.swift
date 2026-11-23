@@ -59,7 +59,7 @@ public struct UITestElement<Kind: ElementKind> {
     let app: XCUIApplication?
 
     /// What the element was looked up by, when that was its label and not an identifier.
-    var labelMatch: LabelMatch? = nil
+    var labelMatch: LabelMatch?
 
     /// The label of the element, read without waiting.
     ///

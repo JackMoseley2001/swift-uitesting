@@ -66,8 +66,10 @@ enum SystemAlertChoice {
             switch button {
             case .label(let label):
                 buttons.firstIndex { $0.label == label }
+
             case .index(let index):
                 buttons.indices.contains(index) ? index : nil
+
             case .allow, .deny:
                 button.identifierSuffix.flatMap { suffix in
                     buttons.firstIndex { $0.identifier.hasSuffix(suffix) }
@@ -120,13 +122,13 @@ struct AlertNoun: Equatable, Sendable {
     var short: String
 
     /// An alert that the system shows over the app.
-    static let systemAlert = AlertNoun(full: "system alert", short: "alert")
+    static let systemAlert = Self(full: "system alert", short: "alert")
 
     /// An alert that the app presents.
-    static let alert = AlertNoun(full: "alert", short: "alert")
+    static let alert = Self(full: "alert", short: "alert")
 
     /// A confirmation dialog or action sheet that the app presents.
-    static let dialog = AlertNoun(full: "dialog", short: "dialog")
+    static let dialog = Self(full: "dialog", short: "dialog")
 }
 
 /// Why a system alert has no button that a test asked for.

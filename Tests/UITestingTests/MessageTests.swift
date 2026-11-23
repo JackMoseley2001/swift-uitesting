@@ -69,7 +69,9 @@ struct MessageSequenceTests {
         let receivers = MessageReceivers()
         var received: [String] = []
         let reading = Task {
-            let messages = UITestMessageSequence(deliveries: UITestMessages.deliveries(of: RenameUser.self, in: receivers))
+            let messages = UITestMessageSequence(
+                deliveries: UITestMessages.deliveries(of: RenameUser.self, in: receivers)
+            )
             for await message in messages {
                 await Task.yield()
                 received.append(message.name)
@@ -179,7 +181,9 @@ struct MessageLinesTests {
         var lines = MessageLines()
 
         #Testing::expect(lines.append(Data("{\"a\"".utf8)) == [])
-        #Testing::expect(lines.append(Data(":1}\n{\"b\":2}\n{\"c\"".utf8)) == [Data("{\"a\":1}".utf8), Data("{\"b\":2}".utf8)])
+        #Testing::expect(
+            lines.append(Data(":1}\n{\"b\":2}\n{\"c\"".utf8)) == [Data("{\"a\":1}".utf8), Data("{\"b\":2}".utf8)]
+        )
         #Testing::expect(lines.append(Data(":3}\n".utf8)) == [Data("{\"c\":3}".utf8)])
     }
 }

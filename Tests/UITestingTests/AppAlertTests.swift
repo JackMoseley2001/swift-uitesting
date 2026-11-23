@@ -24,7 +24,8 @@ struct AppAlertTests {
         // watchOS reports the title again after the other text.
         let title = "Delete the draft?"
 
-        #Testing::expect(AppAlertText.message(title: title, texts: [title, "This cannot be undone.", title]) == "This cannot be undone.")
+        let message = AppAlertText.message(title: title, texts: [title, "This cannot be undone.", title])
+        #Testing::expect(message == "This cannot be undone.")
         #Testing::expect(AppAlertText.message(title: title, texts: [title, title]) == nil)
     }
 

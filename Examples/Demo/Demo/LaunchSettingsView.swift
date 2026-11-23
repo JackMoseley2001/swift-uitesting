@@ -17,7 +17,11 @@ struct LaunchSettingsView: View {
                     UserDefaults.standard.bool(forKey: DefaultsKey.showsBetaFeatures) ? "on" : "off",
                     LaunchSettingsID.betaFeatures
                 )
-                row("Orientation", verticalSizeClass == .compact ? "landscape" : "portrait", LaunchSettingsID.orientation)
+                row(
+                    "Orientation",
+                    verticalSizeClass == .compact ? "landscape" : "portrait",
+                    LaunchSettingsID.orientation
+                )
                 row("Text size", "\(dynamicTypeSize)", LaunchSettingsID.textSize)
                 row("Time zone", TimeZone.current.identifier, LaunchSettingsID.timeZone)
                 row(
@@ -28,7 +32,9 @@ struct LaunchSettingsView: View {
                 // The day in the time zone of the app, which is where the two settings meet.
                 row(
                     "Today",
-                    LaunchTraits.current.now.formatted(Date.ISO8601FormatStyle(timeZone: .current).year().month().day()),
+                    LaunchTraits.current.now.formatted(
+                        Date.ISO8601FormatStyle(timeZone: .current).year().month().day()
+                    ),
                     LaunchSettingsID.today
                 )
             }

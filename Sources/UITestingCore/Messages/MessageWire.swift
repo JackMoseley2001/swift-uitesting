@@ -52,7 +52,7 @@ package struct MessageLines {
     package mutating func append(_ data: Data) -> [Data] {
         buffer.append(data)
         var lines: [Data] = []
-        while let newline = buffer.firstIndex(of: MessageLines.newline) {
+        while let newline = buffer.firstIndex(of: Self.newline) {
             lines.append(buffer[buffer.startIndex..<newline])
             buffer = Data(buffer[buffer.index(after: newline)...])
         }

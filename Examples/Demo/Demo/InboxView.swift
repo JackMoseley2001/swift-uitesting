@@ -12,7 +12,7 @@ struct InboxView: View {
     @State private var messages = [
         Message(id: 1, subject: "Welcome"),
         Message(id: 2, subject: "Invoice"),
-        Message(id: 3, subject: "Reminder"),
+        Message(id: 3, subject: "Reminder")
     ]
     @State private var lastAction = "Nothing yet"
 

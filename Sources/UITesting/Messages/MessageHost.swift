@@ -99,6 +99,7 @@ final class MessageHost: @unchecked Sendable {
             case .handled: return .handled
             case .noReceiver: return .noReceiver
             case .failed(let reason): return .failed(reason)
+
             // An app that went away before it answered is one to wait for again,
             // such as across a relaunch.
             case nil: return self.connection === connection ? .noReply : .noConnection
@@ -122,9 +123,11 @@ final class MessageHost: @unchecked Sendable {
                 switch state {
                 case .ready:
                     isConnected = true
+
                 case .failed, .cancelled:
                     self.connection = nil
                     isConnected = false
+
                 default:
                     break
                 }

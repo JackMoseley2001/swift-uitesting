@@ -6,7 +6,7 @@ import XCTest
 @UITestSuite(traits: .launchArgument("--suite"))
 final class SuiteWithGeneratedTests: XCTestCase {
     /// Keeps XCTest from running the generated tests, which would try to launch an app.
-    override class var defaultTestSuite: XCTestSuite {
+    override static var defaultTestSuite: XCTestSuite {
         XCTestSuite(name: "SuiteWithGeneratedTests")
     }
 
@@ -39,7 +39,7 @@ struct UITestMacroTests {
                 "test_takingBoth",
                 "test_takingTheApp",
                 "test_takingTheContext",
-                "test_withoutParameters",
+                "test_withoutParameters"
             ]
         )
     }

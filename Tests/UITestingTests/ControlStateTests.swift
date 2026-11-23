@@ -144,7 +144,7 @@ struct ControlStateTests {
                     attempts.append("switch")
                     state = true
                 },
-                { attempts.append("never") },
+                { attempts.append("never") }
             ],
             wait: { state }
         )

@@ -108,6 +108,9 @@ private func memberName(_ name: String = #function) -> String {
     name
 }
 
+// The names and kinds of type below are what the tests are about.
+// swiftlint:disable convenience_type identifier_name
+
 enum MemberNames {
     static let storedLet = memberName()
     nonisolated(unsafe) static var storedVar = memberName()
@@ -133,6 +136,8 @@ struct StructNames {
 final class ClassNames {
     static let stored = memberName()
 }
+
+// swiftlint:enable convenience_type identifier_name
 
 enum NestedNames {
     enum ID {

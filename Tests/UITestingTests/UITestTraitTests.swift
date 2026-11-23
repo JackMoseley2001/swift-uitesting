@@ -65,7 +65,9 @@ struct UITestTraitTests {
         let relaunch = try launch.applying([.launch(AuthState(isLoggedIn: false))])
 
         #Testing::expect(LaunchTraits(environment: launch.environment)[AuthState.self] == AuthState(isLoggedIn: true))
-        #Testing::expect(LaunchTraits(environment: relaunch.environment)[AuthState.self] == AuthState(isLoggedIn: false))
+        #Testing::expect(
+            LaunchTraits(environment: relaunch.environment)[AuthState.self] == AuthState(isLoggedIn: false)
+        )
     }
 
     @Test
