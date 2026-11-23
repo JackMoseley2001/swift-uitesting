@@ -18,7 +18,9 @@ final class LabelsTests: XCTestCase {
         try app.button("Continue").waitToAppear()
         #expect(!app.button("Continue").isEnabled)
 
-        try app.textField("Email").enter("ada@example.com")
+        // This is the first test to type on a watch, and a simulator that has just
+        // started can take longer than the usual limit to show its screen to type on.
+        try app.textField("Email").enter("ada@example.com", within: .seconds(20))
         try app.button("Continue").tap()
 
         try app.staticText("Signed in as ada@example.com").waitToAppear()

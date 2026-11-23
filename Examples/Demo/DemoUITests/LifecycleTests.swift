@@ -45,7 +45,9 @@ final class LifecycleTests: XCTestCase {
 
         context.open(DemoLink.order(42))
 
-        #expect(app[LifecycleID.openedLink].label == "uitestingdemo://orders/42")
+        // The app is given the link a moment after the call returns, and after it has
+        // drawn its first screen when the link launched it.
+        #expect(app[LifecycleID.openedLink].label == "uitestingdemo://orders/42", within: .seconds(5))
         #expect(app[LifecycleID.backgroundCount].label == "1")
     }
     #endif
@@ -60,7 +62,7 @@ final class LifecycleTests: XCTestCase {
 
         context.open(DemoLink.order(7))
 
-        #expect(app[LifecycleID.openedLink].label == "uitestingdemo://orders/7")
+        #expect(app[LifecycleID.openedLink].label == "uitestingdemo://orders/7", within: .seconds(5))
     }
     #endif
 
@@ -75,7 +77,7 @@ final class LifecycleTests: XCTestCase {
 
         try context.relaunch(opening: DemoLink.order(3))
 
-        #expect(app[LifecycleID.openedLink].label == "uitestingdemo://orders/3")
+        #expect(app[LifecycleID.openedLink].label == "uitestingdemo://orders/3", within: .seconds(5))
         #expect(app[LifecycleID.backgroundCount].label == "0")
     }
     #endif
