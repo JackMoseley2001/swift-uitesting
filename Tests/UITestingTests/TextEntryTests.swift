@@ -108,4 +108,58 @@ struct TextEntryTests {
         #Testing::expect(TextEntry.deletion(of: "") == "")
         #Testing::expect(TextEntry.deletion(of: "👩‍💻é") == TextEntry.deletion(of: "ab"))
     }
+
+    /// Polling whose clock moves on by a second each time it is read.
+    private var polling: ExpectationPolling {
+        let clock = SteppingClock()
+        return ExpectationPolling(
+            interval: .seconds(1), now: { clock.advance() }, sleep: { _ in }, betweenEvaluations: {}
+        )
+    }
+
+    @Test
+    func fieldIsNotTappedAgainWhenTheScreenToTypeOnShows() {
+        var taps = 0
+
+        let showed = TextEntry.waitForInput(
+            within: .seconds(20), polling: polling, isShowing: { true }, tapAgain: { taps += 1 }
+        )
+
+        #Testing::expect(showed)
+        #Testing::expect(taps == 0)
+    }
+
+    @Test
+    func fieldIsTappedAgainWhenTheScreenToTypeOnDoesNotShow() {
+        var taps = 0
+
+        let showed = TextEntry.waitForInput(
+            within: .seconds(20), polling: polling, isShowing: { taps == 1 }, tapAgain: { taps += 1 }
+        )
+
+        #Testing::expect(showed)
+        #Testing::expect(taps == 1)
+    }
+
+    @Test
+    func waitEndsWhenTheScreenToTypeOnNeverShows() {
+        var taps = 0
+
+        let showed = TextEntry.waitForInput(
+            within: .seconds(10), polling: polling, isShowing: { false }, tapAgain: { taps += 1 }
+        )
+
+        #Testing::expect(!showed)
+        #Testing::expect(taps == 2)
+    }
+}
+
+/// A clock that moves on by a second each time it is read.
+private final class SteppingClock {
+    private var instant = ContinuousClock.now
+
+    func advance() -> ContinuousClock.Instant {
+        instant += .seconds(1)
+        return instant
+    }
 }

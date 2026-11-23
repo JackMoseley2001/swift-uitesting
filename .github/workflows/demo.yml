@@ -144,7 +144,7 @@ jobs:
               2>&1 | tee xcodebuild.log | xcbeautify --renderer github-actions; then
               exit 0
             fi
-            if ! grep -qE "simulator runtime is not available|Failed to establish communication with the test runner" xcodebuild.log; then
+            if ! grep -qE "simulator runtime is not available|Failed to establish communication with the test runner|Failed to install or launch the test runner" xcodebuild.log; then
               exit 1
             fi
             echo "::warning::The simulator was not ready on attempt $attempt."

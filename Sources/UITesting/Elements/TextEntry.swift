@@ -51,4 +51,32 @@ enum TextEntry {
         }
         return true
     }
+
+    /// How long the screen to type on is waited for before the field is tapped again.
+    static let inputPatience = Duration.seconds(4)
+
+    /// Waits for the screen to type on that watchOS opens when a field is tapped, and
+    /// taps the field again each time the screen has not shown for a while.
+    ///
+    /// - Parameters:
+    ///   - timeout: How long to wait for the screen in all.
+    ///   - polling: What checks for the screen.
+    ///   - isShowing: Whether the screen to type on is showing.
+    ///   - tapAgain: Taps the field again.
+    /// - Returns: Whether the screen showed.
+    static func waitForInput(
+        within timeout: Duration,
+        polling: ExpectationPolling = ExpectationPolling(),
+        isShowing: () -> Bool,
+        tapAgain: () -> Void
+    ) -> Bool {
+        var remaining = timeout
+        while true {
+            let patience = min(inputPatience, remaining)
+            if polling.wait(timeout: patience, until: isShowing) == .met { return true }
+            remaining -= patience
+            guard remaining > .zero else { return false }
+            tapAgain()
+        }
+    }
 }

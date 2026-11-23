@@ -143,7 +143,15 @@ extension UITestElement where Kind: TextEntryKind {
         let host = app.otherElements[TextEntry.watchInputIdentifier].firstMatch
         let view = host.textViews.firstMatch
         let timeout = timeout ?? ActionTimeout.current
-        guard ExpectationPolling().wait(timeout: timeout, until: { view.exists }) == .met else {
+        // A tap on a field of a screen that has just shown is sometimes lost, and the
+        // screen to type on never opens. The field is tapped again while it is still
+        // the one on the screen.
+        let showed = TextEntry.waitForInput(
+            within: timeout,
+            isShowing: { view.exists },
+            tapAgain: { if !host.exists, element.exists { element.tapOrClick() } }
+        )
+        guard showed else {
             let failure = "Could not \(intent) \(reference.name): "
                 + "the screen to type on did not show within \(ExpectationFailure.describe(timeout))"
             ExpectationReporter.report(message: failure, filePath: filePath, line: line)
