@@ -30,11 +30,17 @@ jobs:
           HOSTING_BASE_PATH: ${{ github.event.repository.name }}
         run: scripts/build-docs.sh site
 
+      - name: Archive the site
+        # The page of a symbol such as `actionTimeout(_:)` has a colon in its file name,
+        # which an artifact does not allow. The site is uploaded as one archive instead.
+        # COPYFILE_DISABLE keeps the files that macOS adds for extended attributes out.
+        run: COPYFILE_DISABLE=1 tar -cf site.tar -C site .
+
       - name: Upload the site
         uses: actions/upload-artifact@v7
         with:
           name: documentation-site
-          path: site
+          path: site.tar
           if-no-files-found: error
           retention-days: 1
 
@@ -54,7 +60,12 @@ jobs:
         uses: actions/download-artifact@v8
         with:
           name: documentation-site
-          path: site
+
+      - name: Unpack the site
+        run: |
+          mkdir site
+          tar -xf site.tar -C site
+          test -f site/index.html
 
       - name: Upload the site for GitHub Pages
         uses: actions/upload-pages-artifact@v5
