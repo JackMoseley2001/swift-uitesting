@@ -61,6 +61,13 @@ needs `com.apple.security.network.client` to connect to the test.
 UI tests of a Mac app use the pointer and the keyboard of the Mac they run on, so
 leave it alone while they run.
 
+```bash
+xcodebuild test -project Examples/Demo/Demo.xcodeproj -scheme Demo \
+  -destination "platform=macOS" -skipMacroValidation
+```
+
+runs the demo's UI tests against the demo as a Mac app.
+
 ## Topics
 
 ### Clicking
