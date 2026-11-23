@@ -85,12 +85,7 @@ extension UITestElement where Kind: TextEntryKind {
     ///
     /// The result is checked, so this does not depend on where the tap put the cursor.
     private func empty(with keyboard: TextKeyboard) -> Bool {
-        TextEntry.clear(
-            text: keyboard.text,
-            moveToEnd: keyboard.moveToEnd,
-            selectAll: keyboard.selectAll,
-            type: keyboard.type
-        )
+        TextEntry.clear(text: keyboard.text, moveToEnd: keyboard.moveToEnd, type: keyboard.type)
     }
 
     private func failToClear(filePath: StaticString, line: UInt) throws -> Never {
@@ -181,8 +176,7 @@ extension UITestElement where Kind: TextEntryKind {
             text: { text },
             type: { element.typeText($0) },
             moveToEnd: { tapAfterLastCharacter() },
-            finish: {},
-            selectAll: selectAll
+            finish: {}
         )
         #endif
     }
@@ -205,24 +199,18 @@ extension UITestElement where Kind: TextEntryKind {
     ///
     /// This is a guess about the field's layout, so it is only used by
     /// ``clear(within:filePath:line:)``, which checks what the field holds afterwards.
-    /// Selects all of the text with the keyboard, on visionOS only.
-    ///
-    /// Before visionOS 26 the keys that go to the end of the text do not move the
-    /// cursor of an editor for several lines, so its text is selected to be deleted.
-    private var selectAll: (() -> Void)? {
-        #if os(visionOS)
-        { element.typeKey(XCUIKeyboardKey(rawValue: "a"), modifierFlags: .command) }
-        #else
-        nil
-        #endif
-    }
-
     private func tapAfterLastCharacter() {
         #if os(visionOS)
         // On visionOS a tap in a field puts the cursor at the start of the text, and a
         // tap away from the text takes the keyboard from the field. The keys that go
-        // to the end of the text are used there.
+        // to the end of the text are used there. Before visionOS 27 the simulator
+        // drops the Command key, which leaves a key that goes down one line, so the
+        // key is then pressed once for each line of the text as well. It does nothing
+        // at the end of the text.
         element.typeKey(.downArrow, modifierFlags: .command)
+        for _ in 0..<TextEntry.downKeys(toEndOf: text) {
+            element.typeKey(.downArrow, modifierFlags: [])
+        }
         #else
         element.coordinate(withNormalizedOffset: CGVector(dx: 0.98, dy: 0.9)).tapOrClick()
         #endif
@@ -274,8 +262,4 @@ struct TextKeyboard {
 
     /// Ends the typing. On watchOS this closes the screen to type on.
     let finish: () -> Void
-
-    /// Selects all of the text, where the platform has a way to that does not depend
-    /// on where the cursor is.
-    var selectAll: (() -> Void)?
 }

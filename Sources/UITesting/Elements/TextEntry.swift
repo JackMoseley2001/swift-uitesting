@@ -23,41 +23,36 @@ enum TextEntry {
         String(repeating: deleteKey, count: text.count)
     }
 
+    /// Returns how many times the key that goes down a line is pressed to take the
+    /// cursor from anywhere in the given text to its end.
+    ///
+    /// It is once for each line, because the key takes the cursor of the last line to
+    /// the end of it. A line that is too long for the field takes more, which a later
+    /// round of ``clear(text:moveToEnd:type:)`` makes up for.
+    static func downKeys(toEndOf text: String) -> Int {
+        text.split(separator: "\n", omittingEmptySubsequences: false).count
+    }
+
     /// Empties a field without relying on where its cursor is.
     ///
     /// Deleting removes what is before the cursor. The first round deletes from
     /// wherever the cursor is. If text is left, it was after the cursor, so each later
-    /// round moves the cursor towards the end first. When a round that moved the
-    /// cursor removed nothing, all of the text is selected and deleted, where there is
-    /// a way to select it. It stops when the field is empty, or when that removed
-    /// nothing either.
+    /// round moves the cursor towards the end first. It stops when the field is
+    /// empty, or when a round that moved the cursor removed nothing.
     ///
     /// - Parameters:
     ///   - text: Reads the text in the field.
     ///   - moveToEnd: Moves the cursor towards the end of the text.
-    ///   - selectAll: Selects all of the text, if the platform has a way to.
     ///   - type: Types keys into the field.
     /// - Returns: Whether the field ended up empty.
-    static func clear(
-        text: () -> String,
-        moveToEnd: () -> Void,
-        selectAll: (() -> Void)? = nil,
-        type: (String) -> Void
-    ) -> Bool {
+    static func clear(text: () -> String, moveToEnd: () -> Void, type: (String) -> Void) -> Bool {
         var remaining = text()
         var hasMoved = false
-        var hasSelected = false
         while !remaining.isEmpty {
             type(deletion(of: remaining))
 
             let now = text()
-            if now.count >= remaining.count, hasMoved {
-                guard let selectAll, !hasSelected else { return false }
-                hasSelected = true
-                selectAll()
-                type(deleteKey)
-                return text().isEmpty
-            }
+            if now.count >= remaining.count, hasMoved { return false }
             remaining = now
             if !remaining.isEmpty {
                 moveToEnd()

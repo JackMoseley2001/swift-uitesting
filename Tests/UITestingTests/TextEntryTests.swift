@@ -95,33 +95,10 @@ struct TextEntryTests {
     }
 
     @Test
-    func clearingSelectsAllOfTheTextWhenMovingTheCursorDeletedNothing() {
-        var text = "One\nTwo"
-        var isSelected = false
-        var moves = 0
-
-        let isEmpty = TextEntry.clear(
-            text: { text },
-            moveToEnd: { moves += 1 },
-            selectAll: { isSelected = true },
-            // The cursor is at the start and does not move, so only a selection is deleted.
-            type: { _ in if isSelected { text = "" } }
-        )
-
-        #Testing::expect(isEmpty)
-        #Testing::expect(moves == 1)
-    }
-
-    @Test
-    func clearingGivesUpWhenSelectingAllOfTheTextDeletedNothingEither() {
-        var selections = 0
-
-        let isEmpty = TextEntry.clear(
-            text: { "One" }, moveToEnd: {}, selectAll: { selections += 1 }, type: { _ in }
-        )
-
-        #Testing::expect(!isEmpty)
-        #Testing::expect(selections == 1)
+    func downKeyIsPressedOnceForEachLineOfTheText() {
+        #Testing::expect(TextEntry.downKeys(toEndOf: "One") == 1)
+        #Testing::expect(TextEntry.downKeys(toEndOf: "One\nTwo") == 2)
+        #Testing::expect(TextEntry.downKeys(toEndOf: "One\n\nThree\n") == 4)
     }
 
     @Test

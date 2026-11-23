@@ -55,6 +55,12 @@ enum ScrollSearch {
         return false
     }
 
+    /// The speed of a swipe that scrolls on visionOS, in points a second.
+    ///
+    /// At this speed and below, a swipe moves a list by about a third of its height,
+    /// and the content does not carry on once the swipe ends.
+    static let visionSwipeVelocity = 300.0
+
     /// Returns what a description of a hierarchy of elements says about where they
     /// are, without what changes from one reading to the next.
     ///

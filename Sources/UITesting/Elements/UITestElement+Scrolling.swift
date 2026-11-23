@@ -117,7 +117,8 @@ extension XCUIElement {
     ///
     /// The drag is slow and holds at its end, so the content does not carry on moving
     /// and nothing is skipped. On macOS, where a drag does not scroll, this turns the
-    /// scroll wheel by half the size of the element. On visionOS it is a slow swipe.
+    /// scroll wheel by half the size of the element. On visionOS it is two short, slow
+    /// swipes.
     fileprivate func drag(towards direction: ScrollDirection) {
         #if os(macOS)
         let size = frame.size
@@ -128,12 +129,19 @@ extension XCUIElement {
         case .left: scroll(byDeltaX: size.width / 2, deltaY: 0)
         }
         #elseif os(visionOS)
-        // A drag that holds at its end moves nothing on visionOS. A slow swipe does.
-        switch direction {
-        case .down: swipeUp(velocity: .slow)
-        case .up: swipeDown(velocity: .slow)
-        case .right: swipeLeft(velocity: .slow)
-        case .left: swipeRight(velocity: .slow)
+        // A drag that holds at its end moves nothing on visionOS. A swipe does, but at
+        // the speed that XCTest calls slow the content carries on, and before
+        // visionOS 26 it goes a whole screen, which takes rows past before they can be
+        // seen. A slower swipe moves a third of that and does not carry on, so two are
+        // made.
+        let velocity = XCUIGestureVelocity(ScrollSearch.visionSwipeVelocity)
+        for _ in 0..<2 {
+            switch direction {
+            case .down: swipeUp(velocity: velocity)
+            case .up: swipeDown(velocity: velocity)
+            case .right: swipeLeft(velocity: velocity)
+            case .left: swipeRight(velocity: velocity)
+            }
         }
         #else
         // A drag upwards starts lower on a watch. Before watchOS 26 the bar at the top
