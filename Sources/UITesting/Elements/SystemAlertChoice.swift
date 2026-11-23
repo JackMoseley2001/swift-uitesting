@@ -49,6 +49,28 @@ enum SystemAlertChoice {
         buttons.indices.filter { !buttons[..<$0].contains(buttons[$0]) }
     }
 
+    /// Whether the system marks its alerts and their buttons with identifiers. It does
+    /// from iOS 27. Before that an alert says nothing about what it asks for, or about
+    /// which of its buttons allows.
+    static var systemMarksAlerts: Bool {
+        if #available(iOS 27, *) { true } else { false }
+    }
+
+    /// Returns the position of the button that allows or refuses, in an alert of a
+    /// system that does not mark its buttons.
+    ///
+    /// Such an alert is taken to be one that asks for a permission with two buttons,
+    /// which has the one that refuses first in every language. An alert with another
+    /// number of buttons has several ways to allow, and no position is returned.
+    static func unmarkedPosition(of button: SystemAlertButton, buttonCount: Int) -> Int? {
+        guard buttonCount == 2 else { return nil }
+        switch button {
+        case .deny: return 0
+        case .allow: return 1
+        case .label, .index: return nil
+        }
+    }
+
     /// Returns the position of the button, or a description of why the alert has no such button.
     ///
     /// - Parameters:
@@ -56,11 +78,14 @@ enum SystemAlertChoice {
     ///   - title: The title of the alert, used in the description of a failure.
     ///   - buttons: The alert's buttons, in order.
     ///   - noun: What to call the alert in the description of a failure.
+    ///   - marked: Whether the system marks the buttons that allow and refuse with
+    ///     identifiers. If it does not, they are found by their positions.
     static func position(
         of button: SystemAlertButton,
         inAlertTitled title: String,
         withButtons buttons: [SystemAlertButtonInfo],
-        noun: AlertNoun = .systemAlert
+        noun: AlertNoun = .systemAlert,
+        marked: Bool = systemMarksAlerts
     ) -> Result<Int, SystemAlertChoiceError> {
         let position: Int? =
             switch button {
@@ -71,8 +96,12 @@ enum SystemAlertChoice {
                 buttons.indices.contains(index) ? index : nil
 
             case .allow, .deny:
-                button.identifierSuffix.flatMap { suffix in
-                    buttons.firstIndex { $0.identifier.hasSuffix(suffix) }
+                if marked {
+                    button.identifierSuffix.flatMap { suffix in
+                        buttons.firstIndex { $0.identifier.hasSuffix(suffix) }
+                    }
+                } else {
+                    unmarkedPosition(of: button, buttonCount: buttons.count)
                 }
             }
         if let position {

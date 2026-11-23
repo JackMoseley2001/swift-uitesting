@@ -38,7 +38,8 @@ final class SystemAlertTests: XCTestCase {
         try app[PermissionID.askButton].tap()
         let alert = SystemAlert.current
         try alert.waitToAppear()
-        #expect(alert.title.contains("microphone"))
+        // The title has "Microphone" before iOS 27.
+        #expect(alert.title.lowercased().contains("microphone"))
         #expect(alert.buttons.count == 2)
 
         try alert.tapButton(at: 0)
@@ -59,6 +60,11 @@ final class SystemAlertTests: XCTestCase {
         #expect(context.app[PermissionID.status].label == "Allowed", within: .seconds(3))
         #expect(!SystemAlert.current.isShowing)
     }
+}
+
+/// Whether the system marks an alert with the resource it asks for, which it does from iOS 27.
+private var alertsSayWhatTheyAskFor: Bool {
+    if #available(iOS 27, *) { true } else { false }
 }
 
 /// Tests that leave the answer to a trait.
@@ -98,7 +104,9 @@ final class SystemAlertTraitTests: XCTestCase {
         #expect(app[PermissionID.status].label == "Denied", within: .seconds(5))
     }
 
-    @UITest(traits: .systemAlerts(.deny, for: .camera))
+    // Before iOS 27 an alert does not say which resource it asks for, and a trait for
+    // one resource answers them all.
+    @UITest(traits: .systemAlerts(.deny, for: .camera), .enabled(if: alertsSayWhatTheyAskFor))
     func aTraitForAnotherResourceDoesNotAnswerThisAlert(app: XCUIApplication) throws {
         try app[PermissionID.askButton].tap()
 

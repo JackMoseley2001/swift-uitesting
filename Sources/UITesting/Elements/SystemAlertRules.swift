@@ -36,8 +36,11 @@ struct SystemAlertRule: Equatable, Sendable {
     var services: [String] = []
 
     /// Whether the rule is for an alert with an identifier such as "kTCCServiceMicrophone-alert".
-    func isFor(alertWithIdentifier identifier: String) -> Bool {
-        services.isEmpty || services.contains { identifier.hasPrefix("\($0)-") }
+    ///
+    /// On a system that does not mark its alerts, no alert says which permission it
+    /// asks for, so a rule is for every alert there.
+    func isFor(alertWithIdentifier identifier: String, marked: Bool) -> Bool {
+        services.isEmpty || !marked || services.contains { identifier.hasPrefix("\($0)-") }
     }
 }
 
@@ -51,12 +54,23 @@ struct SystemAlertRules: Equatable, Sendable {
     /// The last rule that is for the alert, and whose button the alert has, decides.
     /// So a test can override its suite, and a rule for a label does not get in the
     /// way of alerts without that label.
+    ///
+    /// - Parameters:
+    ///   - identifier: The identifier of the alert.
+    ///   - buttons: The alert's buttons, in order.
+    ///   - marked: Whether the system marks its alerts and their buttons with identifiers.
     func positionOfButton(
         inAlertWithIdentifier identifier: String,
-        buttons: [SystemAlertButtonInfo]
+        buttons: [SystemAlertButtonInfo],
+        marked: Bool = SystemAlertChoice.systemMarksAlerts
     ) -> Int? {
-        for rule in rules.reversed() where rule.isFor(alertWithIdentifier: identifier) {
-            let choice = SystemAlertChoice.position(of: rule.answer.button, inAlertTitled: "", withButtons: buttons)
+        for rule in rules.reversed() where rule.isFor(alertWithIdentifier: identifier, marked: marked) {
+            let choice = SystemAlertChoice.position(
+                of: rule.answer.button,
+                inAlertTitled: "",
+                withButtons: buttons,
+                marked: marked
+            )
             if case .success(let position) = choice {
                 return position
             }

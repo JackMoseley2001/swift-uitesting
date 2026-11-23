@@ -79,8 +79,10 @@ public struct SystemAlert {
     /// Taps the button that gives the app what it asked for, once the alert is showing.
     ///
     /// The button is found by the identifier the system gives it, so this does not
-    /// depend on the language of the device. On an alert with several ways to allow,
-    /// such as the one for location, use ``tap(_:within:filePath:line:)`` to say which.
+    /// depend on the language of the device. Before iOS 27 the system gives it none,
+    /// and it is found by its position in an alert with two buttons. On an alert with
+    /// several ways to allow, such as the one for location, use
+    /// ``tap(_:within:filePath:line:)`` to say which.
     ///
     /// - Parameter timeout: How long to wait for the alert. The default is the test's
     ///   ``UITestTrait/actionTimeout(_:)``.
@@ -98,7 +100,8 @@ public struct SystemAlert {
     /// Taps the button that refuses what the app asked for, once the alert is showing.
     ///
     /// The button is found by the identifier the system gives it, so this does not
-    /// depend on the language of the device.
+    /// depend on the language of the device. Before iOS 27 the system gives it none,
+    /// and it is found by its position in an alert with two buttons.
     ///
     /// - Parameter timeout: How long to wait for the alert. The default is the test's
     ///   ``UITestTrait/actionTimeout(_:)``.
@@ -214,8 +217,24 @@ public struct SystemAlert {
             withButtons: buttons.map(\.info)
         )
         switch choice {
-        case .success(let position): buttons[position].element.tap()
+        case .success(let position): tapUntilAnswered(buttons[position].element)
         case .failure(let error): try fail(error.message, filePath: filePath, line: line)
+        }
+    }
+
+    /// Taps a button of the alert, and once more if the alert takes no notice.
+    ///
+    /// An alert that is still coming onto the screen can be found before it answers to
+    /// a tap, and the tap is then lost. The second tap is only for an alert with the
+    /// same title that still has the button a second later.
+    private func tapUntilAnswered(_ button: XCUIElement) {
+        let title = element.label
+        button.tap()
+        let answered = ExpectationPolling().wait(timeout: .seconds(1)) {
+            !element.exists || element.label != title
+        }
+        if answered != .met, button.exists {
+            button.tap()
         }
     }
 

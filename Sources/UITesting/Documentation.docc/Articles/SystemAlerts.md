@@ -46,6 +46,10 @@ the alert has no button with this label. Its buttons are: "Don’t Allow", "Allo
   | Photos | Yes, as "Allow Full Access" | Yes |
   | Contacts | No. Its other button is "Continue". | Yes |
   | Location, notifications | No. Use the label. | No. Use the label. |
+
+  Before iOS 27 no alert marks its buttons. There `allow()` and `deny()` work on an
+  alert with two buttons, where the first refuses and the second allows in every
+  language, and fail on an alert with more, such as the one for location.
 - **Labels are in the language of the device.** The system writes them, and a trait
   such as `.language("fr")` changes the app's language but not the alert's. Labels use
   a typographic apostrophe, as in "Don’t Allow".
@@ -106,7 +110,9 @@ func recordsAVideo(app: XCUIApplication) throws {
 
 - **A trait for the camera, the microphone, photos or contacts answers only those
   alerts.** The alerts for other resources cannot be told apart, so a trait that names
-  one of them answers every alert that has its button.
+  one of them answers every alert that has its button. Before iOS 27 no alert says
+  which resource it asks for, so there a trait for any resource answers every alert
+  that has its button.
 - **When the answer is given.** While an action or expectation of this library waits,
   and when the alert gets in the way of an action on the app. An alert that no trait
   answers is left for the test to answer with `SystemAlert`.

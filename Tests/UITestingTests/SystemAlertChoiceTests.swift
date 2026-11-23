@@ -14,7 +14,53 @@ struct SystemAlertChoiceTests {
         of button: SystemAlertButton,
         in buttons: [SystemAlertButtonInfo]? = nil
     ) -> Result<Int, SystemAlertChoiceError> {
-        SystemAlertChoice.position(of: button, inAlertTitled: title, withButtons: buttons ?? self.buttons)
+        SystemAlertChoice.position(
+            of: button,
+            inAlertTitled: title,
+            withButtons: buttons ?? self.buttons,
+            marked: true
+        )
+    }
+
+    /// The position of a button in an alert of a system that marks nothing, as before iOS 27.
+    private func unmarkedPosition(
+        of button: SystemAlertButton,
+        in buttons: [SystemAlertButtonInfo]
+    ) -> Result<Int, SystemAlertChoiceError> {
+        SystemAlertChoice.position(of: button, inAlertTitled: title, withButtons: buttons, marked: false)
+    }
+
+    @Test
+    func unmarkedAlertWithTwoButtonsHasTheOneThatRefusesFirst() {
+        let buttons = [SystemAlertButtonInfo(label: "Refuser"), SystemAlertButtonInfo(label: "Autoriser")]
+
+        #Testing::expect(unmarkedPosition(of: .deny, in: buttons) == .success(0))
+        #Testing::expect(unmarkedPosition(of: .allow, in: buttons) == .success(1))
+    }
+
+    @Test
+    func unmarkedAlertWithSeveralWaysToAllowDoesNotSayWhichButtonAllows() {
+        let buttons = [
+            SystemAlertButtonInfo(label: "Allow Once"),
+            SystemAlertButtonInfo(label: "Allow While Using App"),
+            SystemAlertButtonInfo(label: "Don’t Allow")
+        ]
+
+        for button in [SystemAlertButton.allow, .deny] {
+            guard case .failure(let error) = unmarkedPosition(of: button, in: buttons) else {
+                Issue.record("\(button.description) was found")
+                continue
+            }
+            #Testing::expect(error.message.contains("does not say which of its buttons that is"))
+        }
+    }
+
+    @Test
+    func unmarkedAlertStillFindsAButtonByItsLabelAndItsPosition() {
+        let buttons = [SystemAlertButtonInfo(label: "Don’t Allow"), SystemAlertButtonInfo(label: "Allow")]
+
+        #Testing::expect(unmarkedPosition(of: .label("Allow"), in: buttons) == .success(1))
+        #Testing::expect(unmarkedPosition(of: .index(0), in: buttons) == .success(0))
     }
 
     @Test

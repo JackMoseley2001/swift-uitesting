@@ -37,7 +37,9 @@ this label. Its buttons are: "Cancel", "Delete"
   elements and fails.
 - **A dialog shown as a popover has no cancel button.** iOS 27 shows a confirmation
   dialog this way on an iPhone, and leaves out the button with the `cancel` role. Use
-  `dismiss()`, which runs that button's action.
+  `dismiss()`, which runs that button's action. Before iOS 26 the dialog is an action
+  sheet with the button, and `dismiss()` taps the screen outside it, which does the
+  same.
 - **Sheets have nothing of their own.** The content of a `sheet` is ordinary elements
   with no container around them, so look them up in the app as usual.
 

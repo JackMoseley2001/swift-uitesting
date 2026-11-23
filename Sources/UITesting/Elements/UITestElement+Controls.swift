@@ -357,11 +357,11 @@ extension UITestElement where Kind == ElementKinds.Stepper {
         let buttons = element.buttons
         _ = ExpectationPolling().wait(timeout: .seconds(1), until: { named.exists || buttons.count == 2 })
         if named.exists {
-            named.tapOrClick()
+            tapHalf(named)
             return
         }
         if buttons.count == 2 {
-            buttons.element(boundBy: step == .increment ? 1 : 0).tapOrClick()
+            tapHalf(buttons.element(boundBy: step == .increment ? 1 : 0))
             return
         }
 
@@ -373,6 +373,22 @@ extension UITestElement where Kind == ElementKinds.Stepper {
         let x = control.minX + control.width * (step == .increment ? 0.75 : 0.25) - whole.minX
         let y = control.midY - whole.minY
         element.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: x, dy: y)).tapOrClick()
+    }
+
+    /// Taps one of the stepper's two buttons.
+    private func tapHalf(_ button: XCUIElement) {
+        #if os(watchOS)
+        // watchOS sometimes says that a button of a stepper cannot be tapped though it
+        // is on the screen, and XCTest then refuses to tap it. A tap at the place of
+        // the button is not refused. A button that is off the screen is left to
+        // XCTest, which brings it onto the screen first.
+        let screen = (app ?? RunningTest.appUnderTest?.app)?.frame
+        if !button.isHittable, let screen, screen.contains(button.frame) {
+            button.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+            return
+        }
+        #endif
+        button.tapOrClick()
     }
 }
 #endif
