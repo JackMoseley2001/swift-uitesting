@@ -47,7 +47,7 @@ This is pre-release software. There is no tagged version yet, and the API may ch
 - Swift 6.0 or later (Xcode 16 or later).
 - iOS 16, macOS 13, tvOS 16, watchOS 9 or visionOS 1.
 
-CI covers that range on every pull request and on `main`:
+CI covers that range:
 
 | What runs | With |
 |---|---|
@@ -62,6 +62,9 @@ CI covers that range on every pull request and on `main`:
 The latest Xcode of each major version is used, and each version of iOS is tested with
 the Xcode of its own year. With Xcode 16.4, which has Swift 6.1, the package's tests
 leave out one target that needs Swift 6.3.
+
+A pull request runs the demo's UI tests on the latest version of each platform. The
+older versions are run by hand, from the Actions tab.
 
 iOS 16 and iOS 17 are supported but not tested in CI, because its runners do not have
 simulators for them. The demo builds for iOS 16.4, so its UI tests can be run on those
