@@ -176,11 +176,23 @@ struct TextEntryTests {
         var taps = 0
 
         let showed = TextEntry.waitForInput(
-            within: .seconds(10), polling: polling, isShowing: { false }, tapAgain: { taps += 1 }
+            within: .seconds(25), polling: polling, isShowing: { false }, tapAgain: { taps += 1 }
         )
 
         #Testing::expect(!showed)
         #Testing::expect(taps == 2)
+    }
+
+    @Test
+    func fieldIsNotTappedAgainWhileTheScreenToTypeOnMayStillBeOpening() {
+        var taps = 0
+
+        let showed = TextEntry.waitForInput(
+            within: TextEntry.inputPatience, polling: polling, isShowing: { false }, tapAgain: { taps += 1 }
+        )
+
+        #Testing::expect(!showed)
+        #Testing::expect(taps == 0)
     }
 }
 

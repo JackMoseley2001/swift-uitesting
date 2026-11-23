@@ -147,14 +147,17 @@ extension UITestElement where Kind: TextEntryKind {
         #if os(watchOS)
         let host = app.otherElements[TextEntry.watchInputIdentifier].firstMatch
         let view = host.textViews.firstMatch
-        let timeout = timeout ?? ActionTimeout.current
+        // The screen to type on is the system's, and a slow simulator takes longer to
+        // open it than an action waits for an element of the app.
+        let timeout = max(timeout ?? ActionTimeout.current, TextEntry.inputAllowance)
         // A tap on a field of a screen that has just shown is sometimes lost, and the
-        // screen to type on never opens. The field is tapped again while it is still
-        // the one on the screen.
+        // screen to type on never opens. The field is tapped again, but only while
+        // nothing covers it: a tap on a field that the screen to type on is coming
+        // over lands on a key of its keyboard.
         let showed = TextEntry.waitForInput(
             within: timeout,
             isShowing: { view.exists },
-            tapAgain: { if !host.exists, element.exists { element.tapOrClick() } }
+            tapAgain: { if !host.exists, element.exists, element.isHittable { element.tapOrClick() } }
         )
         guard showed else {
             let failure = "Could not \(intent) \(reference.name): "

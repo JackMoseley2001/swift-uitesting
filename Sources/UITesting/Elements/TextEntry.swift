@@ -68,7 +68,15 @@ enum TextEntry {
     }
 
     /// How long the screen to type on is waited for before the field is tapped again.
-    static let inputPatience = Duration.seconds(4)
+    ///
+    /// A slow simulator takes several seconds to open the screen. A second tap that
+    /// comes while it opens lands on its keyboard and types a letter, so this is
+    /// longer than the screen takes there.
+    static let inputPatience = Duration.seconds(10)
+
+    /// The least time the screen to type on is waited for in all, however short the
+    /// time is that the action was given for its field.
+    static let inputAllowance = Duration.seconds(15)
 
     /// Waits for the screen to type on that watchOS opens when a field is tapped, and
     /// taps the field again each time the screen has not shown for a while.

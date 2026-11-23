@@ -10,7 +10,7 @@ from an iOS one, and the library takes up the differences:
 
 | In an iOS app | In a watch app | What the library does |
 |---|---|---|
-| A field is typed into where it is. | A tap on a field opens a screen with a keyboard, and the field has the text when that screen is closed. | `enter(_:)`, `replaceText(with:)` and `clear()` type on that screen and close it with its button for done. |
+| A field is typed into where it is. | A tap on a field opens a screen with a keyboard, and the field has the text when that screen is closed. | `enter(_:)`, `replaceText(with:)` and `clear()` type on that screen and close it with its button for done. They wait for the screen for at least 15 seconds, whatever time the action is given, because a slow simulator takes several seconds to open it. |
 | Return submits a field. | A field is submitted whenever the screen to type on is closed. | `submit()` opens that screen and closes it. Every action that types submits the field as well. |
 | An alert is an alert, and a confirmation dialog is a sheet. | Both are a screen with a table, with the title as the first text inside. | `app.alert` and `app.dialog` both find it, and `title`, `message` and `buttons` read it. |
 | The button that cancels a dialog is one of its buttons. | It is a button to close the dialog, in the bar above it. | `app.dialog.dismiss()` taps it. |
