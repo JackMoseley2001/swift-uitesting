@@ -48,6 +48,17 @@ final class SystemAlertTests: XCTestCase {
         #expect(app[PermissionID.status].label == "Denied", within: .seconds(3))
     }
 
+    // Before iOS 27 a trait for a resource resets it and answers nothing, so that the
+    // test answers the alert itself.
+    @UITest(traits: .systemAlerts(.deny, for: .microphone), .enabled(if: !alertsSayWhatTheyAskFor))
+    func aTraitForAResourceLeavesTheAlertToTheTestBeforeIOS27(app: XCUIApplication) throws {
+        try app[PermissionID.askButton].tap()
+
+        try SystemAlert.current.allow()
+
+        #expect(app[PermissionID.status].label == "Allowed", within: .seconds(3))
+    }
+
     @UITest
     func theAnswerIsKeptUntilItIsReset(context: UITestContext) throws {
         try context.app[PermissionID.askButton].tap()
@@ -62,8 +73,19 @@ final class SystemAlertTests: XCTestCase {
     }
 }
 
-/// Tests that leave the answer to a trait.
-@UITestSuite(traits: .example(.permission), .systemAlerts(.allow, for: .microphone), .animationsDisabled)
+/// Whether the system marks an alert with the resource it asks for, which it does from iOS 27.
+private var alertsSayWhatTheyAskFor: Bool {
+    if #available(iOS 27, *) { true } else { false }
+}
+
+/// Tests that leave the answer to a trait for one resource. Such a trait answers alerts
+/// from iOS 27 only, because before that an alert does not say what it asks for.
+@UITestSuite(
+    traits: .example(.permission),
+    .systemAlerts(.allow, for: .microphone),
+    .animationsDisabled,
+    .enabled(if: alertsSayWhatTheyAskFor)
+)
 final class SystemAlertTraitTests: XCTestCase {
     @UITest
     func theTraitAnswersWhileAnExpectationWaits(app: XCUIApplication) throws {
@@ -92,18 +114,42 @@ final class SystemAlertTraitTests: XCTestCase {
         #expect(app[PermissionID.status].label == "Allowed", within: .seconds(5))
     }
 
-    @UITest(traits: .systemAlerts(.button("Don’t Allow")))
-    func aTraitCanAnswerByLabel(app: XCUIApplication) throws {
-        try app[PermissionID.askButton].tap()
-
-        #expect(app[PermissionID.status].label == "Denied", within: .seconds(5))
-    }
-
     @UITest(traits: .systemAlerts(.deny, for: .camera))
     func aTraitForAnotherResourceDoesNotAnswerThisAlert(app: XCUIApplication) throws {
         try app[PermissionID.askButton].tap()
 
         #expect(app[PermissionID.status].label == "Allowed", within: .seconds(5))
+    }
+}
+
+/// Tests that leave the answer to a trait for every alert, which works on any version.
+@UITestSuite(
+    traits: .example(.permission),
+    .resetAuthorization(for: .microphone),
+    .systemAlerts(.allow),
+    .animationsDisabled
+)
+final class SystemAlertEveryAlertTraitTests: XCTestCase {
+    @UITest
+    func theTraitAnswersTheAlert(app: XCUIApplication) throws {
+        try app[PermissionID.askButton].tap()
+
+        #expect(app[PermissionID.status].label == "Allowed", within: .seconds(5))
+        #expect(!SystemAlert.current.isShowing)
+    }
+
+    @UITest(traits: .systemAlerts(.deny))
+    func aTestCanOverrideItsSuite(app: XCUIApplication) throws {
+        try app[PermissionID.askButton].tap()
+
+        #expect(app[PermissionID.status].label == "Denied", within: .seconds(5))
+    }
+
+    @UITest(traits: .systemAlerts(.button("Don’t Allow")))
+    func aTraitCanAnswerByLabel(app: XCUIApplication) throws {
+        try app[PermissionID.askButton].tap()
+
+        #expect(app[PermissionID.status].label == "Denied", within: .seconds(5))
     }
 }
 #endif

@@ -245,17 +245,8 @@ public struct SystemAlert {
     func answer(with rules: SystemAlertRules) -> Bool {
         guard element.exists else { return false }
         let buttons = buttonElements()
-        // Where the system does not mark its alerts, the title says what one asks for.
-        let identifier =
-            SystemAlertChoice.systemMarksAlerts
-            ? element.identifier
-            : SystemAlertTitles.identifier(
-                forAlertTitled: element.label,
-                services: rules.rules.flatMap(\.services),
-                format: SystemAlertTitles.systemFormat
-            )
         let position = rules.positionOfButton(
-            inAlertWithIdentifier: identifier,
+            inAlertWithIdentifier: element.identifier,
             buttons: buttons.map(\.info)
         )
         guard let position else { return false }

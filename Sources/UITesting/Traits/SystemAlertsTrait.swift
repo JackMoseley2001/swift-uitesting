@@ -29,7 +29,16 @@ public struct SystemAlertsTrait: UITestTrait, SystemAlertAnswering {
         for resource in resources {
             context.app.resetAuthorizationStatus(for: resource)
         }
+        if !SystemAlertChoice.systemMarksAlerts, !systemAlertRule.services.isEmpty {
+            // The test's log says why the alert was left, for whoever reads a failure.
+            XCTContext.runActivity(named: Self.notAnsweredNote) { _ in }
+        }
     }
+
+    /// What the test's log says where a trait for named resources answers nothing.
+    static let notAnsweredNote =
+        "The .systemAlerts trait for named resources answers alerts from iOS 27 only. "
+        + "Answer the alert in the test with SystemAlert.current"
 }
 
 extension UITestTrait where Self == SystemAlertsTrait {
@@ -54,6 +63,11 @@ extension UITestTrait where Self == SystemAlertsTrait {
     /// `.allow` and `.deny` work in any language, on the alerts that say which of their
     /// buttons allows and which refuses. On iOS 27.2 these are the alerts for the
     /// camera, the microphone and photos, and the alert for contacts for `.deny` only.
+    ///
+    /// With resources, the trait answers alerts from iOS 27 only. Before that an alert
+    /// does not say which resource it asks for, so the trait resets the resources and
+    /// leaves the alert for the test to answer with ``SystemAlert``. Without resources
+    /// it answers every alert on any version.
     ///
     /// The alerts for location and notifications do not say. Answer them by label,
     /// which is in the language of the device:

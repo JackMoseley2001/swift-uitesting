@@ -111,9 +111,13 @@ func recordsAVideo(app: XCUIApplication) throws {
 
 - **A trait for the camera, the microphone, photos or contacts answers only those
   alerts.** The alerts for other resources cannot be told apart, so a trait that names
-  one of them answers every alert that has its button. Before iOS 27 an alert
-  is told apart by its title, which the system has for each of these four resources in
-  each language.
+  one of them answers every alert that has its button.
+- **A trait that names resources answers alerts from iOS 27 only.** Before iOS 27 no
+  alert says which resource it asks for, so the trait could not leave the alerts of
+  other resources alone. On those versions it still resets the resources, and leaves
+  the alert for the test to answer, with `try SystemAlert.current.allow()` for example.
+  A trait without resources, such as `.systemAlerts(.allow)`, answers every alert on
+  any version.
 - **When the answer is given.** While an action or expectation of this library waits,
   and when the alert gets in the way of an action on the app. An alert that no trait
   answers is left for the test to answer with `SystemAlert`.
