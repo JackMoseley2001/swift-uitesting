@@ -164,6 +164,18 @@ jobs:
           # Starts the simulator if it is not running, and waits until it has finished.
           xcrun simctl bootstatus "$device" -b
 
+      - name: Show the runner's load before the tests
+        # How many cores and how much memory the runner has, how busy it is, and what
+        # is using it. A runner is several times slower than a Mac on a desk, and this
+        # is here to show why.
+        continue-on-error: true
+        timeout-minutes: 2
+        run: |
+          echo "Cores: $(sysctl -n hw.ncpu), memory: $(( $(sysctl -n hw.memsize) / 1073741824 )) GB"
+          uptime
+          memory_pressure | tail -n 1
+          top -l 2 -n 12 -o cpu -stats pid,command,cpu,mem | tail -n 24
+
       - name: Run UI tests
         timeout-minutes: 55
         env:
@@ -203,6 +215,19 @@ jobs:
             sleep 45
           done
           exit 1
+
+      - name: Show the runner's load after the tests
+        if: always()
+        # How many cores and how much memory the runner has, how busy it is, and what
+        # is using it. A runner is several times slower than a Mac on a desk, and this
+        # is here to show why.
+        continue-on-error: true
+        timeout-minutes: 2
+        run: |
+          echo "Cores: $(sysctl -n hw.ncpu), memory: $(( $(sysctl -n hw.memsize) / 1073741824 )) GB"
+          uptime
+          memory_pressure | tail -n 1
+          top -l 2 -n 12 -o cpu -stats pid,command,cpu,mem | tail -n 24
 
       - name: Show failure details
         if: failure()
