@@ -233,9 +233,10 @@ on every pull request.
 The `UITestingTests` target needs Swift 6.3 or later, because its files import both
 `Testing` and `UITesting`. The libraries and the other test targets build with Swift 6.0.
 
-Three workflows run on every pull request: one runs the package's tests, one builds the
-demo and runs its UI tests on a simulator, and one lints the code. A fourth builds the
-documentation website and publishes it when `main` changes.
+Two workflows run on every pull request: one runs the package's tests and builds the
+libraries for every platform, and one lints the code. A third builds the documentation
+website and publishes it when `main` changes. The demo's UI tests are not run there, so
+run them on a Mac before a pull request that changes the libraries or the demo.
 
 To build that website on a Mac, with both catalogs and a first page that lists the two
 libraries and the tutorials:
