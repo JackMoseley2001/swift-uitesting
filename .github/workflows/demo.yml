@@ -167,9 +167,12 @@ jobs:
           # indexes, fetches assets and draws its wallpaper, and with the build just
           # over that takes every core of the runner. The tests wait, for five minutes
           # at most, until a third of the processor is idle.
-          for check in $(seq 1 30); do
+          # A check takes far longer than its ten seconds on a runner that busy, so
+          # the limit is on the time and not on the number of checks.
+          SECONDS=0
+          while [ "$SECONDS" -lt 300 ]; do
             idle=$(top -l 2 -n 0 -s 10 | awk '/^CPU usage/ { idle = $7 } END { print int(idle) }')
-            echo "Idle: $idle%"
+            echo "Idle: $idle% after $SECONDS seconds"
             if [ "$idle" -ge 33 ]; then
               break
             fi
@@ -186,6 +189,11 @@ jobs:
           uptime
           memory_pressure | tail -n 1
           top -l 2 -n 12 -o cpu -stats pid,command,cpu,mem | tail -n 24
+          # The processor each side takes in all: the simulator's own processes, which
+          # run from its runtime, and everything else on the runner.
+          ps -Ao %cpu=,comm= | awk '
+            { side = ($0 ~ /CoreSimulator|simruntime|RuntimeRoot/) ? "simulator" : "runner"; cpu[side] += $1; count[side]++ }
+            END { for (side in cpu) printf "%s: %d processes, %d%% of a core\n", side, count[side], cpu[side] }'
 
       - name: Run UI tests
         timeout-minutes: 55
@@ -239,6 +247,11 @@ jobs:
           uptime
           memory_pressure | tail -n 1
           top -l 2 -n 12 -o cpu -stats pid,command,cpu,mem | tail -n 24
+          # The processor each side takes in all: the simulator's own processes, which
+          # run from its runtime, and everything else on the runner.
+          ps -Ao %cpu=,comm= | awk '
+            { side = ($0 ~ /CoreSimulator|simruntime|RuntimeRoot/) ? "simulator" : "runner"; cpu[side] += $1; count[side]++ }
+            END { for (side in cpu) printf "%s: %d processes, %d%% of a core\n", side, count[side], cpu[side] }'
 
       - name: Show failure details
         if: failure()
