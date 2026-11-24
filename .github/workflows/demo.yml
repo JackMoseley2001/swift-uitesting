@@ -166,6 +166,11 @@ jobs:
 
       - name: Run UI tests
         timeout-minutes: 55
+        env:
+          # xcodebuild keeps what it prints until the end when its output is a pipe,
+          # so the log of this step would say nothing while the tests run. With this
+          # it prints each line as it happens.
+          NSUnbufferedIO: "YES"
         run: |
           set -o pipefail
           # A test that hangs is stopped after five minutes and fails, so that the log
