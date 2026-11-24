@@ -73,16 +73,18 @@ final class DatesTests: XCTestCase {
     }
 
     @UITest
-    func setsADateOnWheelsThatShowATimeAsWell(app: XCUIApplication) throws {
+    func aDateOnWheelsThatShowATimeAsWellIsAFailureThatSaysSo(app: XCUIApplication) throws {
         let picker = try app[DatesID.dateAndTimeWheelPicker].scrollIntoView()
 
-        // The wheel for the day is turned in steps to a date this far away.
-        try picker.setDate(year: 2024, month: 2, day: 29)
-        #expect(app[DatesID.dateAndTimeWheel].label == "2024-02-29 22:13")
+        // The failure is the point of this test, so it is expected. XCTest can only turn
+        // the wheel for the day in one region, so the library does not turn it.
+        let options = XCTExpectedFailure.Options()
+        options.issueMatcher = { $0.compactDescription.contains("shows a time as well cannot be set") }
+        XCTExpectFailure("The picker has one wheel for the day, and none for the month or the year", options: options) {
+            try? picker.setDate(year: 2024, month: 2, day: 29)
+        }
 
-        try picker.setDate(year: 2023, month: 12, day: 31)
-        try picker.setTime(hour: 9, minute: 0)
-        #expect(app[DatesID.dateAndTimeWheel].label == "2023-12-31 09:00")
+        #expect(app[DatesID.dateAndTimeWheel].label == "2023-11-14 22:13")
     }
 
     @UITest(traits: .locale("en_GB"))

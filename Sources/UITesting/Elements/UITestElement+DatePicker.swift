@@ -18,15 +18,9 @@ extension UITestElement where Kind == ElementKinds.DatePicker {
     /// For a picker with the `wheel` style that shows a date only, it turns the wheels
     /// for the year, the month and the day.
     ///
-    /// A picker with the `wheel` style that shows a time as well has a single wheel
-    /// for the day, which shows it as "Tue, Nov 14". It takes a day up to 49 days from
-    /// the one it is on, so it is turned in several steps to a date that is further
-    /// away, and the app is given each date on the way. The wheel does not show the
-    /// year, so the picker is taken to be on the date nearest to the one asked for
-    /// that reads the same. That is right for a date within two years of the picker's
-    /// own, and can be wrong for one further away.
-    /// XCTest can only turn that wheel when the app runs in the language and region of
-    /// the device.
+    /// A picker with the `wheel` style that shows a time as well has no wheels for
+    /// the month and the year, only one for the day, and its date cannot be set. Its
+    /// time can, with ``setTime(hour:minute:locale:within:filePath:line:)``.
     ///
     /// - Parameters:
     ///   - year: The year.
@@ -278,44 +272,19 @@ extension UITestElement where Kind == ElementKinds.DatePicker {
         }
 
         // A picker that shows a time as well has one wheel for the day, before the
-        // wheels for the time.
+        // wheels for the time. XCTest can only turn it where it shows a day as the
+        // United States writes it, so it is not turned at all.
         let periods = DatePickerValues.periodTitles(locale: locale)
-        guard let time = DatePickerValues.timeWheels(values: start, periodTitles: periods), time.hour > 0 else {
-            try fail(failure("the picker's wheels are not those of a date"), filePath: filePath, line: line)
-        }
-        let dayWheel = DatePickerValues.DayWheel(locale: locale)
-        let parts = DateComponents(year: year, month: month, day: day, hour: 12)
-        guard
-            let target = dayWheel.calendar.date(from: parts),
-            dayWheel.calendar.dateComponents([.month, .day], from: target) == DateComponents(month: month, day: day)
-        else {
-            try fail("\(summary): there is no such date", filePath: filePath, line: line)
-        }
-        guard let shown = dayWheel.date(showing: start[0], nearestTo: target) else {
+        if let time = DatePickerValues.timeWheels(values: start, periodTitles: periods), time.hour > 0 {
             try fail(
                 failure(
-                    "the picker's wheel for the day shows no year, and no date within "
-                        + "\(DatePickerValues.DayWheel.furthestDay) days of the one asked for reads as "
-                        + "\"\(start[0])\" in the language \"\(locale.identifier)\""),
+                    "the date of a picker with the wheel style that shows a time as well cannot be set. "
+                        + "Use a picker that shows a calendar, or one with wheels for a date only"),
                 filePath: filePath,
                 line: line
             )
         }
-        let wheel = wheels.element(boundBy: 0)
-        for date in dayWheel.turns(from: shown, to: target) {
-            wheel.adjust(toPickerWheelValue: dayWheel.title(on: date))
-            let expected = dayWheel.value(on: date)
-            let isTurned = ExpectationPolling().wait(timeout: .seconds(2)) {
-                dayWheel.shows(values().first ?? "", on: date)
-            }
-            guard isTurned == .met else {
-                try fail(
-                    failure("the wheel for the day did not turn to \"\(expected)\""),
-                    filePath: filePath,
-                    line: line
-                )
-            }
-        }
+        try fail(failure("the picker's wheels are not those of a date"), filePath: filePath, line: line)
     }
 
     /// Waits for a date picker to show over an app, and returns it.
