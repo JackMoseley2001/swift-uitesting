@@ -163,6 +163,17 @@ jobs:
           fi
           # Starts the simulator if it is not running, and waits until it has finished.
           xcrun simctl bootstatus "$device" -b
+          # A simulator that has just started goes on working for some minutes: it
+          # indexes, fetches assets and draws its wallpaper, and with the build just
+          # over that takes every core of the runner. The tests wait, for five minutes
+          # at most, until a third of the processor is idle.
+          for check in $(seq 1 30); do
+            idle=$(top -l 2 -n 0 -s 10 | awk '/^CPU usage/ { idle = $7 } END { print int(idle) }')
+            echo "Idle: $idle%"
+            if [ "$idle" -ge 33 ]; then
+              break
+            fi
+          done
 
       - name: Show the runner's load before the tests
         # How many cores and how much memory the runner has, how busy it is, and what
