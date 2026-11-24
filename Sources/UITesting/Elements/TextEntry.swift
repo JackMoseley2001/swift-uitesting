@@ -23,6 +23,16 @@ enum TextEntry {
         String(repeating: deleteKey, count: text.count)
     }
 
+    /// Returns how many times the key that goes down a line is pressed to take the
+    /// cursor from anywhere in the given text to its end.
+    ///
+    /// It is once for each line, because the key takes the cursor of the last line to
+    /// the end of it. A line that is too long for the field takes more, which a later
+    /// round of ``clear(text:moveToEnd:type:)`` makes up for.
+    static func downKeys(toEndOf text: String) -> Int {
+        text.split(separator: "\n", omittingEmptySubsequences: false).count
+    }
+
     /// Empties a field without relying on where its cursor is.
     ///
     /// Deleting removes what is before the cursor. The first round deletes from

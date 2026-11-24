@@ -192,8 +192,14 @@ extension UITestElement where Kind: TextEntryKind {
         #if os(visionOS)
         // On visionOS a tap in a field puts the cursor at the start of the text, and a
         // tap away from the text takes the keyboard from the field. The keys that go
-        // to the end of the text are used there.
+        // to the end of the text are used there. Before visionOS 27 the simulator
+        // drops the Command key, which leaves a key that goes down one line, so the
+        // key is then pressed once for each line of the text as well. It does nothing
+        // at the end of the text.
         element.typeKey(.downArrow, modifierFlags: .command)
+        for _ in 0..<TextEntry.downKeys(toEndOf: text) {
+            element.typeKey(.downArrow, modifierFlags: [])
+        }
         #else
         element.coordinate(withNormalizedOffset: CGVector(dx: 0.98, dy: 0.9)).tapOrClick()
         #endif

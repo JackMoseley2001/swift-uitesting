@@ -73,7 +73,8 @@ func opensAMessageAndGoesBack(app: XCUIApplication) throws {
 is empty if there is none. `goBack()` waits for the button to go back and taps it. The
 label of that button is in the language of the app, and on iOS it is the title of the
 screen before, so `goBack()` finds it by what the system calls it, which is the same in
-every language.
+every language. Before iOS 26 and visionOS 26 the system calls it nothing, and `goBack()` taps the first
+button of the navigation bar.
 
 Both work on iOS and on macOS, where the title is in the title bar of the window and
 the button is in its toolbar.

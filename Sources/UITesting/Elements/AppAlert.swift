@@ -182,7 +182,8 @@ public struct AppAlert {
     /// Closes a dialog without choosing any of its buttons, once it is showing.
     ///
     /// A dialog that is shown as a popover has no button to cancel with. It is closed
-    /// by a tap outside it, which is what this does.
+    /// by a tap outside it, which is what this does. An action sheet, which is what
+    /// an iPhone shows before iOS 26, closes in the same way.
     ///
     /// ```swift
     /// try app.dialog.dismiss()
@@ -199,17 +200,28 @@ public struct AppAlert {
         line: UInt = #line
     ) throws {
         try wait(inOrderTo: "dismiss the \(noun.full)", within: timeout, filePath: filePath, line: line)
-        guard let dismissRegion, dismissRegion.exists else {
-            let listed = buttons.map { "\"\($0)\"" }.joined(separator: ", ")
-            try fail(
-                "Could not dismiss the \(noun.full) \"\(title)\": it does not close when tapped outside. "
-                    + "Tap one of its buttons: \(listed)",
-                filePath: filePath,
-                line: line
-            )
+        let title = title
+        let listed = buttons.map { "\"\($0)\"" }.joined(separator: ", ")
+        let failure =
+            "Could not dismiss the \(noun.full) \"\(title)\": it does not close when tapped outside. "
+            + "Tap one of its buttons: \(listed)"
+        if let dismissRegion, dismissRegion.exists {
+            tapOrClick(dismissRegion)
+            _ = ExpectationPolling().wait(timeout: .seconds(2), until: { !element.exists })
+            return
         }
-        tapOrClick(dismissRegion)
-        _ = ExpectationPolling().wait(timeout: .seconds(2), until: { !element.exists })
+        #if os(iOS)
+        // Before iOS 26 a dialog on an iPhone is an action sheet, with no area of its
+        // own around it. A tap on the screen outside it closes it, if it has a button
+        // that cancels.
+        if noun == .dialog, let offset = AppAlertText.offsetOutside(element.frame, in: app.frame) {
+            app.coordinate(withNormalizedOffset: offset).tap()
+            if ExpectationPolling().wait(timeout: .seconds(2), until: { !element.exists }) == .met {
+                return
+            }
+        }
+        #endif
+        try fail(failure, filePath: filePath, line: line)
     }
 
     private func tap(
@@ -346,6 +358,21 @@ enum AppAlertText {
 
     /// The identifier of the button that closes a dialog on watchOS.
     static let watchCloseButtonIdentifier = "AX_ActionContentControllerCancelButton"
+
+    /// Returns a point of the screen that is outside a dialog, as an offset where
+    /// (0, 0) is the top left of the screen and (1, 1) the bottom right, or `nil` if
+    /// the dialog leaves no room above or below it.
+    ///
+    /// The point is half way between the dialog and the edge of the screen that is
+    /// further from it.
+    static func offsetOutside(_ dialog: CGRect, in screen: CGRect) -> CGVector? {
+        guard screen.height > 0 else { return nil }
+        let above = dialog.minY - screen.minY
+        let below = screen.maxY - dialog.maxY
+        guard max(above, below) >= 20 else { return nil }
+        let y = above >= below ? screen.minY + above / 2 : dialog.maxY + below / 2
+        return CGVector(dx: 0.5, dy: (y - screen.minY) / screen.height)
+    }
 
     /// Returns the message of an alert from the text inside it.
     ///

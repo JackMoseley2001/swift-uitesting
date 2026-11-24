@@ -1,7 +1,6 @@
 # swift-uitesting
 
 [![Tests](https://github.com/JackMoseley2001/swift-uitesting/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/JackMoseley2001/swift-uitesting/actions/workflows/tests.yml?query=branch%3Amain)
-[![Demo UI Tests](https://github.com/JackMoseley2001/swift-uitesting/actions/workflows/demo.yml/badge.svg?branch=main)](https://github.com/JackMoseley2001/swift-uitesting/actions/workflows/demo.yml?query=branch%3Amain)
 ![Swift 6.0 or later](https://img.shields.io/badge/Swift-6.0%2B-F05138?logo=swift&logoColor=white)
 ![Xcode 16 or later](https://img.shields.io/badge/Xcode-16%2B-147EFB?logo=xcode&logoColor=white)
 ![Platforms: iOS 16, macOS 13, tvOS 16, watchOS 9, visionOS 1](https://img.shields.io/badge/platforms-iOS%2016%20%7C%20macOS%2013%20%7C%20tvOS%2016%20%7C%20watchOS%209%20%7C%20visionOS%201-lightgrey)
@@ -53,22 +52,15 @@ CI covers that range:
 |---|---|
 | The package's tests | Xcode 16.4, 26.6 and 27.2 |
 | A build of the libraries for iOS, macOS, tvOS, watchOS and visionOS | Xcode 27.2 |
-| The demo's UI tests, on an iPhone simulator | iOS 18.5, 26.5 and 27 |
-| The demo's UI tests, as a Mac app | macOS, with Xcode 27.1 |
-| The demo's UI tests, on an Apple Watch simulator | watchOS 11.5, 26.5 and 27.2 |
-| The demo's UI tests, on an Apple Vision Pro simulator | visionOS 2.5, 26.5 and 27.2 |
-| The demo's UI tests, on an Apple TV simulator | tvOS 18.5, 26.5 and 27.2 |
 
-The latest Xcode of each major version is used, and each version of iOS is tested with
-the Xcode of its own year. With Xcode 16.4, which has Swift 6.1, the package's tests
-leave out one target that needs Swift 6.3.
+The latest Xcode of each major version is used. With Xcode 16.4, which has Swift 6.1,
+the package's tests leave out one target that needs Swift 6.3.
 
-A pull request runs the demo's UI tests on the latest version of each platform. The
-older versions are run by hand, from the Actions tab.
-
-iOS 16 and iOS 17 are supported but not tested in CI, because its runners do not have
-simulators for them. The demo builds for iOS 16.4, so its UI tests can be run on those
-versions from a Mac that has the simulators.
+The demo's UI tests, the only tests that drive a real app, are not run in CI. A hosted
+runner has three cores, and a simulator that has just started takes all of them, so
+tests fail there for want of time and not for anything in the code. They are run on a
+Mac, as [Demo](#demo) describes, on whichever simulators it has. The demo
+builds for iOS 16.4, so that includes iOS 16 and iOS 17.
 
 See [Testing a Mac app](https://jackmoseley2001.github.io/swift-uitesting/documentation/uitesting/testingamacapp/),
 [Testing a watch app](https://jackmoseley2001.github.io/swift-uitesting/documentation/uitesting/testingawatchapp/),
@@ -214,8 +206,7 @@ xcodebuild test -project Examples/Demo/Demo.xcodeproj -scheme Demo -destination 
 Every copy is a simulator of its own, so keep the number of them low: with too many
 running at once, each is slow and tests fail on their time limits. Use `DemoParallel`
 with a simulator only, because the tests of a Mac app share one pointer and one
-keyboard. The workflows use the default plan: each platform already has a runner of its
-own there, and a runner has too few cores to run copies of a simulator.
+keyboard.
 
 ## Developing the package
 
@@ -242,9 +233,10 @@ on every pull request.
 The `UITestingTests` target needs Swift 6.3 or later, because its files import both
 `Testing` and `UITesting`. The libraries and the other test targets build with Swift 6.0.
 
-Three workflows run on every pull request: one runs the package's tests, one builds the
-demo and runs its UI tests on a simulator, and one lints the code. A fourth builds the
-documentation website and publishes it when `main` changes.
+Two workflows run on every pull request: one runs the package's tests and builds the
+libraries for every platform, and one lints the code. A third builds the documentation
+website and publishes it when `main` changes. The demo's UI tests are not run there, so
+run them on a Mac before a pull request that changes the libraries or the demo.
 
 To build that website on a Mac, with both catalogs and a first page that lists the two
 libraries and the tutorials:

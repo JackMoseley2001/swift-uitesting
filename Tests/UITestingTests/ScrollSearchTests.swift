@@ -87,4 +87,20 @@ struct ScrollSearchTests {
         #Testing::expect(ScrollDirection.left.opposite == .right)
         #Testing::expect(ScrollDirection.right.opposite == .left)
     }
+
+    @Test
+    func signatureOfAHierarchyIsTheSameWhenOnlyTheAddressesChange() {
+        let first = "Cell, 0x1068f6c00, {{24.0, 100.0}, {1232.0, 60.0}}\nButton, 0x1069b3860, label: 'Number 2'"
+        let second = "Cell, 0x10a7139b0, {{24.0, 100.0}, {1232.0, 60.0}}\nButton, 0x1069C03B0, label: 'Number 2'"
+
+        #Testing::expect(ScrollSearch.signature(ofHierarchy: first) == ScrollSearch.signature(ofHierarchy: second))
+    }
+
+    @Test
+    func signatureOfAHierarchyChangesWhenTheContentMoves() {
+        let first = "Cell, 0x1068f6c00, {{24.0, 100.0}, {1232.0, 60.0}}"
+        let second = "Cell, 0x1068f6c00, {{24.0, 40.0}, {1232.0, 60.0}}"
+
+        #Testing::expect(ScrollSearch.signature(ofHierarchy: first) != ScrollSearch.signature(ofHierarchy: second))
+    }
 }

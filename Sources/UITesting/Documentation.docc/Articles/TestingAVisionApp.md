@@ -9,8 +9,8 @@ XCTest reports is the same as for an iOS app, and the library takes up what is n
 
 | In an iOS app | In a visionOS app | What the library does |
 |---|---|---|
-| A drag anywhere in the app scrolls the view under it. | The app itself cannot be dragged, and a drag that holds at its end moves nothing. | `scrollIntoView()` swipes slowly. For an element looked up in the app, it swipes the app's first list or scroll view. |
-| A tap in a field puts the cursor where the tap was. | A tap puts the cursor at the start of the text. | `clear()` and `replaceText(with:)` move the cursor to the end with the keyboard. |
+| A drag anywhere in the app scrolls the view under it. | The app itself cannot be dragged, and a drag that holds at its end moves nothing. | `scrollIntoView()` makes two short, slow swipes, which together move the content by about half of a list. For an element looked up in the app, it swipes the app's first list or scroll view. |
+| A tap in a field puts the cursor where the tap was. | A tap puts the cursor at the start of the text. | `clear()` and `replaceText(with:)` move the cursor to the end with the keyboard. Before visionOS 27 the simulator drops the Command key, so they also press the key that goes down a line, once for each line of the text. |
 | A slider's thumb is found from the slider's value. | The slider reports its thumb as an element inside it. | `adjust(to:)` drags that element. |
 | The label of a stepper is the label of the control. | A stepper has no label. | Read `value`, which is the same on both. |
 

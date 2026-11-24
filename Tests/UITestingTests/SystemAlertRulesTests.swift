@@ -26,8 +26,77 @@ struct SystemAlertRulesTests {
         let service = String(identifier.dropLast("-alert".count))
         return SystemAlertRules(rules: rules).positionOfButton(
             inAlertWithIdentifier: identifier,
-            buttons: buttons(for: service)
+            buttons: buttons(for: service),
+            marked: true
         )
+    }
+
+    /// The buttons of a permission alert of a system that marks nothing, as before iOS 27.
+    fileprivate static let unmarkedButtons = [
+        SystemAlertButtonInfo(label: "Don’t Allow"),
+        SystemAlertButtonInfo(label: "Allow")
+    ]
+
+    /// The position that rules give in the alert for location, on a system that marks its alerts.
+    private func locationPosition(_ rules: SystemAlertRules) -> Int? {
+        rules.positionOfButton(inAlertWithIdentifier: "", buttons: locationButtons, marked: true)
+    }
+
+    @Test
+    func unmarkedAlertIsAnsweredOnlyWithSomethingToFallBackOn() {
+        let allow = SystemAlertRules(rules: [SystemAlertRule(answer: .allow)])
+        let allowOrLabel = SystemAlertRules(rules: [SystemAlertRule(answer: .allow(orTap: "Allow"))])
+        let denyOrIndex = SystemAlertRules(rules: [SystemAlertRule(answer: .deny(orTapButtonAt: 0))])
+
+        #Testing::expect(allow.unmarkedPosition == nil)
+        #Testing::expect(allowOrLabel.unmarkedPosition == 1)
+        #Testing::expect(denyOrIndex.unmarkedPosition == 0)
+    }
+
+    @Test
+    func traitWithNothingToFallBackOnIsAProblemOnASystemThatMarksNothing() {
+        let allow = SystemAlertRule(answer: .allow)
+        let deny = SystemAlertRule(answer: .deny)
+
+        #Testing::expect(SystemAlertsTrait.problem(with: allow, marked: true) == nil)
+        let allowProblem = SystemAlertsTrait.problem(with: allow, marked: false) ?? ""
+        let denyProblem = SystemAlertsTrait.problem(with: deny, marked: false) ?? ""
+        #Testing::expect(allowProblem.contains(".systemAlerts(.allow(orTapButtonAt: 1))"))
+        #Testing::expect(denyProblem.contains(".systemAlerts(.deny(orTapButtonAt: 0))"))
+    }
+
+    @Test
+    func traitThatCanAnswerIsNoProblemOnASystemThatMarksNothing() {
+        let rules = [
+            SystemAlertRule(answer: .allow(orTap: "Allow")),
+            SystemAlertRule(answer: .deny(orTapButtonAt: 0)),
+            SystemAlertRule(answer: .button("OK")),
+            // A rule for a resource answers nothing there, and the test's log says so.
+            SystemAlertRule(answer: .allow, services: ["kTCCServiceCamera"])
+        ]
+
+        for rule in rules {
+            #Testing::expect(SystemAlertsTrait.problem(with: rule, marked: false) == nil)
+        }
+    }
+
+    @Test
+    func ruleForAServiceAnswersNoAlertOfASystemThatMarksNothing() {
+        let rules = SystemAlertRules(rules: [SystemAlertRule(answer: .deny, services: ["kTCCServiceCamera"])])
+        let buttons = Self.unmarkedButtons
+
+        // No alert says that it is the camera's, so the rule could not leave the others alone.
+        #Testing::expect(rules.positionOfButton(inAlertWithIdentifier: "", buttons: buttons, marked: false) == nil)
+    }
+
+    @Test
+    func ruleForEveryAlertStillAnswersBehindARuleForAServiceThatCannotApply() {
+        let rules = SystemAlertRules(rules: [
+            SystemAlertRule(answer: .allow(orTapButtonAt: 1)),
+            SystemAlertRule(answer: .deny, services: ["kTCCServiceCamera"])
+        ])
+
+        #Testing::expect(rules.unmarkedPosition == 1)
     }
 
     @Test
@@ -79,14 +148,14 @@ struct SystemAlertRulesTests {
     func alertThatDoesNotSayWhichButtonAllowsIsNotAnswered() {
         let rules = SystemAlertRules(rules: [SystemAlertRule(answer: .allow)])
 
-        #Testing::expect(rules.positionOfButton(inAlertWithIdentifier: "", buttons: locationButtons) == nil)
+        #Testing::expect(locationPosition(rules) == nil)
     }
 
     @Test
     func ruleForALabelAnswersAnAlertWithThatButton() {
         let rules = SystemAlertRules(rules: [SystemAlertRule(answer: .button("Allow While Using App"))])
 
-        #Testing::expect(rules.positionOfButton(inAlertWithIdentifier: "", buttons: locationButtons) == 1)
+        #Testing::expect(locationPosition(rules) == 1)
     }
 
     @Test
@@ -96,7 +165,7 @@ struct SystemAlertRulesTests {
             SystemAlertRule(answer: .button("Allow While Using App"))
         ])
 
-        #Testing::expect(rules.positionOfButton(inAlertWithIdentifier: "", buttons: locationButtons) == 1)
+        #Testing::expect(locationPosition(rules) == 1)
         #Testing::expect(position(rules.rules, inAlert: microphone) == 0)
     }
 
@@ -155,5 +224,12 @@ struct SystemAlertRulesTests {
 
         #Testing::expect(outcome == .met)
         #Testing::expect(steps == 2)
+    }
+}
+
+extension SystemAlertRules {
+    /// The position these rules give in a permission alert of a system that marks nothing.
+    fileprivate var unmarkedPosition: Int? {
+        positionOfButton(inAlertWithIdentifier: "", buttons: SystemAlertRulesTests.unmarkedButtons, marked: false)
     }
 }

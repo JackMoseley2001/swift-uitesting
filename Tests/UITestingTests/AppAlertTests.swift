@@ -1,3 +1,4 @@
+import CoreGraphics
 import Testing
 
 @testable import UITesting
@@ -76,5 +77,29 @@ struct AppAlertTests {
             SystemAlertChoice.alertStayed(titled: "Share the draft?", after: .seconds(1), noun: .dialog)
                 == "The dialog \"Share the draft?\" was still showing after 1 second"
         )
+    }
+
+    @Test
+    func pointOutsideAnActionSheetIsInTheSpaceAboveIt() {
+        let screen = CGRect(x: 0, y: 0, width: 400, height: 800)
+        let sheet = CGRect(x: 8, y: 600, width: 384, height: 180)
+
+        #Testing::expect(AppAlertText.offsetOutside(sheet, in: screen) == CGVector(dx: 0.5, dy: 0.375))
+    }
+
+    @Test
+    func pointOutsideADialogAtTheTopIsBelowIt() {
+        let screen = CGRect(x: 0, y: 0, width: 400, height: 800)
+        let dialog = CGRect(x: 8, y: 0, width: 384, height: 400)
+
+        #Testing::expect(AppAlertText.offsetOutside(dialog, in: screen) == CGVector(dx: 0.5, dy: 0.75))
+    }
+
+    @Test
+    func dialogThatFillsTheScreenHasNoPointOutside() {
+        let screen = CGRect(x: 0, y: 0, width: 400, height: 800)
+
+        #Testing::expect(AppAlertText.offsetOutside(screen, in: screen) == nil)
+        #Testing::expect(AppAlertText.offsetOutside(.zero, in: .zero) == nil)
     }
 }

@@ -41,9 +41,13 @@ extension UITestElement {
     ) throws -> UITestElement {
         let scrollView = try (scope ?? owningApp(inOrderTo: "scroll to", filePath: filePath, line: line)).viewToScroll
         // What is looked at to tell whether the content moved. On macOS it is the view,
-        // because the screen has other windows on it, which change on their own, and on
-        // visionOS because XCTest cannot take a picture of the screen there.
-        #if os(macOS) || os(visionOS)
+        // because the screen has other windows on it, which change on their own. On
+        // visionOS it is what the view reports of its content, because XCTest cannot
+        // take a picture of the screen there, and before visionOS 26 a picture of a
+        // view is blank.
+        #if os(visionOS)
+        let picture = { Data(ScrollSearch.signature(ofHierarchy: scrollView.debugDescription).utf8) }
+        #elseif os(macOS)
         let picture = { scrollView.screenshot().pngRepresentation }
         #else
         let picture = { XCUIScreen.main.screenshot().pngRepresentation }
@@ -113,7 +117,8 @@ extension XCUIElement {
     ///
     /// The drag is slow and holds at its end, so the content does not carry on moving
     /// and nothing is skipped. On macOS, where a drag does not scroll, this turns the
-    /// scroll wheel by half the size of the element. On visionOS it is a slow swipe.
+    /// scroll wheel by half the size of the element. On visionOS it is two short, slow
+    /// swipes.
     fileprivate func drag(towards direction: ScrollDirection) {
         #if os(macOS)
         let size = frame.size
@@ -124,18 +129,33 @@ extension XCUIElement {
         case .left: scroll(byDeltaX: size.width / 2, deltaY: 0)
         }
         #elseif os(visionOS)
-        // A drag that holds at its end moves nothing on visionOS. A slow swipe does.
-        switch direction {
-        case .down: swipeUp(velocity: .slow)
-        case .up: swipeDown(velocity: .slow)
-        case .right: swipeLeft(velocity: .slow)
-        case .left: swipeRight(velocity: .slow)
+        // A drag that holds at its end moves nothing on visionOS. A swipe does, but at
+        // the speed that XCTest calls slow the content carries on, and before
+        // visionOS 26 it goes a whole screen, which takes rows past before they can be
+        // seen. A slower swipe moves a third of that and does not carry on, so two are
+        // made.
+        let velocity = XCUIGestureVelocity(ScrollSearch.visionSwipeVelocity)
+        for _ in 0..<2 {
+            switch direction {
+            case .down: swipeUp(velocity: velocity)
+            case .up: swipeDown(velocity: velocity)
+            case .right: swipeLeft(velocity: velocity)
+            case .left: swipeRight(velocity: velocity)
+            }
         }
         #else
+        // A drag upwards starts lower on a watch. Before watchOS 26 the bar at the top
+        // takes a quarter of the screen, and a drag that starts on what is fixed under
+        // it, above the list, moves nothing.
+        #if os(watchOS)
+        let top = 0.45
+        #else
+        let top = 0.3
+        #endif
         let (from, to): (CGVector, CGVector) =
             switch direction {
             case .down: (CGVector(dx: 0.5, dy: 0.7), CGVector(dx: 0.5, dy: 0.3))
-            case .up: (CGVector(dx: 0.5, dy: 0.3), CGVector(dx: 0.5, dy: 0.7))
+            case .up: (CGVector(dx: 0.5, dy: top), CGVector(dx: 0.5, dy: top + 0.4))
             case .right: (CGVector(dx: 0.7, dy: 0.5), CGVector(dx: 0.3, dy: 0.5))
             case .left: (CGVector(dx: 0.3, dy: 0.5), CGVector(dx: 0.7, dy: 0.5))
             }

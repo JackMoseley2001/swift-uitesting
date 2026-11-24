@@ -95,6 +95,13 @@ struct TextEntryTests {
     }
 
     @Test
+    func downKeyIsPressedOnceForEachLineOfTheText() {
+        #Testing::expect(TextEntry.downKeys(toEndOf: "One") == 1)
+        #Testing::expect(TextEntry.downKeys(toEndOf: "One\nTwo") == 2)
+        #Testing::expect(TextEntry.downKeys(toEndOf: "One\n\nThree\n") == 4)
+    }
+
+    @Test
     func clearingAnEmptyFieldTypesNothing() {
         var typed = 0
 
