@@ -333,24 +333,8 @@ public struct SystemAlert {
             withButtons: buttons.map(\.info)
         )
         switch choice {
-        case .success(let position): tapUntilAnswered(buttons[position].element)
+        case .success(let position): buttons[position].element.tap()
         case .failure(let error): try fail(error.message, filePath: filePath, line: line)
-        }
-    }
-
-    /// Taps a button of the alert, and once more if the alert takes no notice.
-    ///
-    /// An alert that is still coming onto the screen can be found before it answers to
-    /// a tap, and the tap is then lost. The second tap is only for an alert with the
-    /// same title that still has the button a second later.
-    private func tapUntilAnswered(_ button: XCUIElement) {
-        let title = element.label
-        button.tap()
-        let answered = ExpectationPolling().wait(timeout: .seconds(1)) {
-            !element.exists || element.label != title
-        }
-        if answered != .met, button.exists {
-            button.tap()
         }
     }
 
