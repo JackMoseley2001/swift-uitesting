@@ -88,9 +88,9 @@ jobs:
     runs-on: ${{ matrix.runner }}
     # The suite takes longest on a watch, where scrolling is slow, and on visionOS,
     # and a slow runner takes several times as long as a fast one. The limit is above
-    # that of the step that runs the tests, so that a run that is stopped there still
-    # uploads its results.
-    timeout-minutes: 70
+    # that of the steps that start the simulator and run the tests together, so that a
+    # run that is stopped there still uploads its results.
+    timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:
@@ -130,6 +130,39 @@ jobs:
             sleep 45
           done
           exit 1
+
+      # The first launch of the app on a simulator that is still starting takes minutes
+      # on a runner, and the first test then fails on a launch that timed out. xcodebuild
+      # does not run that test again, because the test runner restarts after it. So the
+      # simulator is started here, and the tests begin once it has finished.
+      - name: Start the simulator
+        if: matrix.platform != 'macOS'
+        # The tests still run if the simulator could not be found or was not ready in
+        # time: they start it themselves, as they did before.
+        continue-on-error: true
+        timeout-minutes: 10
+        run: |
+          name=$(sed -n 's/.*name=\([^,]*\).*/\1/p' <<< "$DESTINATION")
+          version=$(sed -n 's/.*OS=\([^,]*\).*/\1/p' <<< "$DESTINATION")
+          # The simulator with the name in the destination, on the runtime of its
+          # version, or on the newest runtime when the destination names no version.
+          device=$(xcrun simctl list devices available --json | jq -r \
+            --arg name "$name" --arg version "$version" '
+              .devices | to_entries
+              | map({
+                  version: [.key | scan("-([0-9]+)") | .[0] | tonumber],
+                  devices: .value
+                })
+              | map(select($version == "" or (.version | map(tostring) | join(".")) == $version))
+              | sort_by(.version) | reverse
+              | map(.devices[] | select(.name == $name) | .udid)
+              | first // empty')
+          if [ -z "$device" ]; then
+            echo "::warning::No simulator was found for $DESTINATION."
+            exit 1
+          fi
+          # Starts the simulator if it is not running, and waits until it has finished.
+          xcrun simctl bootstatus "$device" -b
 
       - name: Run UI tests
         timeout-minutes: 55
