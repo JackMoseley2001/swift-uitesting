@@ -208,6 +208,21 @@ running at once, each is slow and tests fail on their time limits. Use `DemoPara
 with a simulator only, because the tests of a Mac app share one pointer and one
 keyboard.
 
+`scripts/run-demo-tests.sh` runs the tests on several platforms and versions, one after
+another, with the suites of each side by side:
+
+```bash
+scripts/run-demo-tests.sh                    # choose the rows from a list
+scripts/run-demo-tests.sh all                # every row this Mac has a simulator for
+scripts/run-demo-tests.sh ios watchos-26.5   # the rows that are named
+```
+
+The list has one version from each major version of each platform, and the demo as a
+Mac app. A version whose simulator is not on the Mac is shown with the command that
+downloads it, and cannot be chosen. The Mac app's tests run last, one at a time. The
+script ends with a table of what passed and failed, and keeps the log and the result
+bundle of each row in `.build/demo-tests`. `--help` lists its options.
+
 ## Developing the package
 
 Run the package's tests on a Mac with:
@@ -236,7 +251,8 @@ The `UITestingTests` target needs Swift 6.3 or later, because its files import b
 Two workflows run on every pull request: one runs the package's tests and builds the
 libraries for every platform, and one lints the code. A third builds the documentation
 website and publishes it when `main` changes. The demo's UI tests are not run there, so
-run them on a Mac before a pull request that changes the libraries or the demo.
+run them on a Mac, with `scripts/run-demo-tests.sh`, before a pull request that changes the
+libraries or the demo.
 
 To build that website on a Mac, with both catalogs and a first page that lists the two
 libraries and the tutorials:
