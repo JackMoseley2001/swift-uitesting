@@ -31,6 +31,18 @@ struct AppAlertTests {
     }
 
     @Test
+    func titleThatIsReportedWithAFullStopAfterItIsNotTheMessage() {
+        // tvOS reports the title with a full stop after it.
+        let title = "Delete the draft?"
+
+        let message = AppAlertText.message(title: title, texts: ["Delete the draft?.", "This cannot be undone."])
+        #Testing::expect(message == "This cannot be undone.")
+        #Testing::expect(AppAlertText.message(title: title, texts: ["Delete the draft?."]) == nil)
+        // Only one full stop is the title.
+        #Testing::expect(AppAlertText.message(title: title, texts: ["Delete the draft?.."]) == "Delete the draft?..")
+    }
+
+    @Test
     func messageIsFoundWhenTheTitleIsNotAmongTheTexts() {
         #Testing::expect(AppAlertText.message(title: "", texts: ["This cannot be undone."]) == "This cannot be undone.")
     }

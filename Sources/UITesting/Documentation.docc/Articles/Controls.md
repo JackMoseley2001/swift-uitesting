@@ -52,12 +52,10 @@ and close them again.
   `setDate(year: 2026, month: 3, day: 9, locale: Locale(identifier: "fr"))`.
 - **A date outside the picker's range** fails, because its day cannot be selected.
 - **A `wheel` picker that shows a date and a time** has one wheel for the day, such as
-  "Tue, Nov 14", in place of a month, a day and a year. `setDate` turns it in steps of
-  up to 45 days, so the app is given each date on the way to one that is further off.
-  The wheel shows no year, so the picker is taken to be on the nearest date to the
-  one asked for that reads the same. That is right for a date within two years of the
-  picker's own. XCTest can only turn this wheel when the app runs in the language and
-  region of the device, so not in a test that uses `.locale(_:)` or `.language(_:)`.
+  "Tue, Nov 14", in place of a month, a day and a year. `setDate` fails for it, and
+  says so, because XCTest can only turn that wheel where a day is written as the
+  United States writes it. `setTime` works on it. To set both, use a picker that shows
+  a calendar, or one with wheels for a date beside one for a time.
 
 ## Topics
 
