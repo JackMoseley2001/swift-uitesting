@@ -91,3 +91,7 @@ a first suite and a trait of your own step by step.
 ### Reading a test and its failures
 
 - <doc:StepsAndFailures>
+
+### Accessibility
+
+- <doc:AccessibilityAudits>
