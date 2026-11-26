@@ -169,6 +169,7 @@ has a documentation comment.
 | Receiving those messages in the app | [Receiving messages from a UI test](https://jackmoseley2001.github.io/swift-uitesting/documentation/uitestingcore/receivingmessages/) |
 | Running the app without animations | [Running without animations](https://jackmoseley2001.github.io/swift-uitesting/documentation/uitestingcore/runningwithoutanimations/) |
 | Named steps, and what a failed test attaches | [Steps and failures](https://jackmoseley2001.github.io/swift-uitesting/documentation/uitesting/stepsandfailures/) |
+| Auditing a screen for accessibility issues, and ignoring known ones | [Accessibility audits](https://jackmoseley2001.github.io/swift-uitesting/documentation/uitesting/accessibilityaudits/) |
 | What is different in a Mac app | [Testing a Mac app](https://jackmoseley2001.github.io/swift-uitesting/documentation/uitesting/testingamacapp/) |
 | What is different in a watch app | [Testing a watch app](https://jackmoseley2001.github.io/swift-uitesting/documentation/uitesting/testingawatchapp/) |
 | What is different in a visionOS app | [Testing a visionOS app](https://jackmoseley2001.github.io/swift-uitesting/documentation/uitesting/testingavisionapp/) |
